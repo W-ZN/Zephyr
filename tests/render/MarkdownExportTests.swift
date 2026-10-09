@@ -330,4 +330,27 @@ import ZephyrCore
         let html = try String(contentsOf: output, encoding: .utf8)
         #expect(!html.contains("<div align=\"center\">") && html.contains("&lt;div"))
     }
+
+    @Test func imageExportsKeepTheMarginAroundThePage() throws {
+        let folder = try folder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let output = folder.appendingPathComponent("margins.png")
+        let settings = MarkdownExport.Settings(format: .png, margin: 36, rasterWidth: 480, rasterScale: 1)
+        let text = "# Margins\n\n" + String(repeating: "Words that fill the column to its edge. ", count: 30) + "\n"
+        try MarkdownExport.write(text: text, typography: Typography(), baseURL: folder, format: .png, output: output, settings: settings)
+        let image = try #require(NSBitmapImageRep(data: Data(contentsOf: output)))
+        #expect(image.pixelsWide == 480)
+        let page = try pixel(image, x: 0, y: 0)
+        // Only the page's color within 33 pt of every edge (the margin is 36 pt)…
+        for y in stride(from: 0, to: image.pixelsHigh, by: 5) {
+            for x in [0, 16, 32, 447, 463, 479] { #expect(try pixel(image, x: x, y: y) == page, "x \(x), y \(y)") }
+        }
+        for x in stride(from: 0, to: image.pixelsWide, by: 5) {
+            for y in [0, 16, 32, image.pixelsHigh - 33, image.pixelsHigh - 1] { #expect(try pixel(image, x: x, y: y) == page, "x \(x), y \(y)") }
+        }
+        // …and the text inside it, reaching close to both sides of the column.
+        var inked: [Int] = []
+        for x in 33..<447 where (0..<image.pixelsHigh).contains(where: { (try? pixel(image, x: x, y: $0)) != page }) { inked.append(x) }
+        #expect((inked.min() ?? 999) < 40 && (inked.max() ?? 0) > 420)
+    }
 }

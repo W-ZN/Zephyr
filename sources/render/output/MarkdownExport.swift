@@ -179,7 +179,10 @@ public enum MarkdownExport {
         case .png, .jpg:
             let sheet = outputSheet(editor)
             let paper = settings.rasterPaperSize
-            sheet.paginate(size: paper)
+            // The margin surrounds each image as it does a PDF page; the column is what remains
+            // (at least 240 pt of it on the narrowest page).
+            let margin = min(settings.margin, max(0, (paper.width - 240) / 2))
+            sheet.paginate(size: NSSize(width: paper.width - margin * 2, height: paper.height - margin * 2))
             let pixels = Int(paper.width * settings.rasterScale) * Int(paper.height * settings.rasterScale) * sheet.pages.count
             guard sheet.pages.count <= rasterPageLimit, pixels <= rasterPixelLimit else { throw Error.rasterLimit }
             let targets = rasterTargets(for: output, pages: sheet.pages.count)
@@ -188,7 +191,7 @@ public enum MarkdownExport {
             defer { try? FileManager.default.removeItem(at: folder) }
             let staged = rasterTargets(for: folder.appendingPathComponent(output.lastPathComponent), pages: sheet.pages.count)
             let type: NSBitmapImageRep.FileType = format == .png ? .png : .jpeg
-            for (page, url) in zip(sheet.pages, staged) { try render(sheet, page: page, scale: settings.rasterScale).representation(using: type, properties: [:])!.write(to: url) }
+            for (page, url) in zip(sheet.pages, staged) { try render(sheet, page: page, margin: margin, scale: settings.rasterScale).representation(using: type, properties: [:])!.write(to: url) }
             try commit(zip(staged, targets).map { ($0.0, $0.1) }, in: folder, overwrite: overwrite, approved: approved)
             return targets
         }
@@ -296,17 +299,22 @@ public enum MarkdownExport {
         return (1...pages).map { folder.appendingPathComponent(name + ($0 == 1 ? "" : "-\($0)")).appendingPathExtension(ext) }
     }
 
-    private static func render(_ sheet: PrintSheet, page: NSRect, scale: CGFloat) -> NSBitmapImageRep {
-        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int((page.width * scale).rounded(.up)), pixelsHigh: Int((page.height * scale).rounded(.up)), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
-        rep.size = page.size
+    private static func render(_ sheet: PrintSheet, page: NSRect, margin: CGFloat, scale: CGFloat) -> NSBitmapImageRep {
+        let size = NSSize(width: page.width + margin * 2, height: page.height + margin * 2)
+        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int((size.width * scale).rounded(.up)), pixelsHigh: Int((size.height * scale).rounded(.up)), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        rep.size = size
         NSGraphicsContext.saveGraphicsState()
         let graphics = NSGraphicsContext(bitmapImageRep: rep)!
         let context = graphics.cgContext
+        // The margin in the page's color, like the paper around a PDF page.
+        context.setFillColor(sheet.pageBackground.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
         // `NSBitmapImageRep.size` already maps its 2× pixels to page points. Scaling the
         // context again magnifies and clips the document instead of increasing resolution.
-        context.translateBy(x: 0, y: page.height)
+        context.translateBy(x: margin, y: size.height - margin)
         context.scaleBy(x: 1, y: -1)
         context.translateBy(x: 0, y: -page.minY)
+        context.clip(to: page)
         // `PrintSheet` is a flipped view. Core Text sets its own text matrix, but AppKit's
         // attributed-string drawing (used by diagram labels) consults this context flag.
         NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)

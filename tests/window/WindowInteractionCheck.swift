@@ -493,7 +493,7 @@ struct WindowInteractionCheck {
         let format = popUps()[0]
         format.selectItem(at: MarkdownExport.Format.allCases.firstIndex(of: .png)!)
         _ = format.sendAction(format.action, to: format.target)
-        precondition(reported?.format == .png && shownRows() == [0, 1, 2, 3, 6, 7], "PNG shows format, theme, text, width and scale: \(shownRows())")
+        precondition(reported?.format == .png && shownRows() == [0, 1, 2, 3, 5, 6, 7], "PNG shows format, theme, text, margins, width and scale: \(shownRows())")
         // A text size chosen in the panel reaches the settings.
         let size = popUps()[2]
         size.selectItem(withTitle: "12 pt")

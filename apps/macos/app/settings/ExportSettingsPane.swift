@@ -39,11 +39,21 @@ final class ExportSettingsPane: SettingsPage {
         theme.widthAnchor.constraint(equalToConstant: 220).isActive = true
         addRow(String(localized: "Theme"), String(localized: "Use the selected reader theme, or keep one theme for exports."), control: theme)
 
-        addSection(String(localized: "Text"))
+        // What every visual format shares: the text and the room around it.
+        addSection(String(localized: "Page"))
         let size = optionPopUp(ExportOptionsView.textSizes(keeping: export.textSize), selected: export.textSize) { [weak self] value in self?.update { $0.textSize = value } }
         addRow(String(localized: "Text size"), String(localized: "For PDF, HTML and images; headings, code and tables keep their proportions."), control: size)
         let height = optionPopUp(ExportOptionsView.lineHeights(keeping: export.lineHeight), selected: export.lineHeight) { [weak self] value in self?.update { $0.lineHeight = value } }
         addRow(String(localized: "Line height"), nil, control: height)
+        var margins: [CGFloat] = [0, 36, 54, 72]
+        if !margins.contains(export.margin) { margins.append(export.margin); margins.sort() }
+        let margin = SegmentedPicker(items: margins.map { $0 == 0 ? String(localized: "None") : "\(Int($0)) pt" })
+        margin.selectedIndex = margins.firstIndex(of: export.margin) ?? 1
+        margin.onChange = { [weak self] index in
+            guard let self else { return }
+            self.update { $0.margin = margins[index] }
+        }
+        addRow(String(localized: "Margins"), String(localized: "On each side of PDF pages and exported images."), control: margin)
 
         addSection(String(localized: "PDF"))
         let papers = MarkdownExport.Settings.Paper.allCases
@@ -55,15 +65,6 @@ final class ExportSettingsPane: SettingsPage {
         }
         addRow(String(localized: "Paper size"), nil, control: paper)
 
-        var margins: [CGFloat] = [0, 36, 54, 72]
-        if !margins.contains(export.margin) { margins.append(export.margin); margins.sort() }
-        let margin = SegmentedPicker(items: margins.map { $0 == 0 ? String(localized: "None") : "\(Int($0)) pt" })
-        margin.selectedIndex = margins.firstIndex(of: export.margin) ?? 1
-        margin.onChange = { [weak self] index in
-            guard let self else { return }
-            self.update { $0.margin = margins[index] }
-        }
-        addRow(String(localized: "Margins"), String(localized: "Applied on each side of PDF pages."), control: margin)
 
         addSection(String(localized: "PNG and JPEG"))
         var widths: [CGFloat] = [480, 612, 768, 1024]

@@ -143,12 +143,13 @@ final class ExportOptionsView: NSView {
         onChange?(settings)
     }
 
-    /// Only the chosen format's options: paper and margins for PDF, width and scale for images; plain
-    /// text has no theme and no text settings.
+    /// Only the chosen format's options: paper for PDF, width and scale for images, margins for
+    /// both; plain text has no theme and no text settings.
     private func showRows() {
         let format = settings.format
         for row in [1, 2, 3] { grid.row(at: row).isHidden = format == .txt }
-        for row in [4, 5] { grid.row(at: row).isHidden = format != .pdf }
+        grid.row(at: 4).isHidden = format != .pdf
+        grid.row(at: 5).isHidden = format != .pdf && format != .png && format != .jpg
         for row in [6, 7] { grid.row(at: row).isHidden = format != .png && format != .jpg }
         setFrameSize(fittingSize)
     }

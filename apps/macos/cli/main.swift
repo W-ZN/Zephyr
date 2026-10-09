@@ -289,7 +289,7 @@ case "config", "theme":
 case "mcp":
     MCPServer.run()
 case "--version", "-v":
-    print("zephyr 0.1.0")
+    print("zephyr 0.1.1")
 default:
     fail(usage)
 }

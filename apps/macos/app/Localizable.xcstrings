@@ -781,16 +781,6 @@
         }
       }
     },
-    "Applied on each side of PDF pages." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "应用于 PDF 页面的四周。"
-          }
-        }
-      }
-    },
     "Applied · withdraw from Recent changes" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4177,6 +4167,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "关闭时显示 TeX 源码。"
+          }
+        }
+      }
+    },
+    "On each side of PDF pages and exported images." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF 页面与导出图片的四周。"
           }
         }
       }
