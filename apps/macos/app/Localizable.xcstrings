@@ -1,0 +1,7426 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    " in the folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（在文件夹中）"
+          }
+        }
+      }
+    },
+    "# Release plan\n\nThe text below a heading, for comparing sizes and spacing.\n\n## Goals\n\nReading, editing and working with agents.\n\n### Details\n\nOne more paragraph." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# 发布计划\n\n标题下方的正文，用来比较字号与间距。\n\n## 目标\n\n阅读、编辑，以及与代理协作。\n\n### 细节\n\n再多一段文字。"
+          }
+        }
+      }
+    },
+    "# Release plan\n\nThe text below a heading, for comparing sizes and spacing.\n\n> A short quote.\n\n| Stage | Status |\n|---|---|\n| Draft | Done |" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "# 发布计划\n\n标题下方的正文，用来比较字号与间距。\n\n> 一小段引用。\n\n| 阶段 | 状态 |\n|---|---|\n| 草稿 | 完成 |"
+          }
+        }
+      }
+    },
+    "## A quiet place to read\n\nGood reading starts with comfortable type and line spacing. 好的阅读，从清晰的文字和舒适的行距开始。\n\nThe column leaves room on both sides." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "## 安静地阅读\n\n好的阅读，从清晰的文字和舒适的行距开始。Good reading starts with comfortable type and line spacing.\n\n阅读栏的两侧留出空间。"
+          }
+        }
+      }
+    },
+    "%@ chars" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 字"
+          }
+        }
+      }
+    },
+    "%@ is not installed; a fallback is used." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 未安装，暂用备选字体。"
+          }
+        }
+      }
+    },
+    "%@ paragraphs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 段"
+          }
+        }
+      }
+    },
+    "%@ reset" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 已恢复默认"
+          }
+        }
+      }
+    },
+    "%@ seconds" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 秒"
+          }
+        }
+      }
+    },
+    "%@ words" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 词"
+          }
+        }
+      }
+    },
+    "%@ · %lld of %lld done" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · 已完成 %2$lld / %3$lld"
+          }
+        }
+      }
+    },
+    "%@ — Missing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — 未找到"
+          }
+        }
+      }
+    },
+    "%@ — Not installed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（未安装）"
+          }
+        }
+      }
+    },
+    "%@, modified" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@，已修改"
+          }
+        }
+      }
+    },
+    "%@: %lld opened · %lld added · %lld changed · %lld removed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@：打开 %lld · 新增 %lld · 修改 %lld · 移除 %lld"
+          }
+        }
+      }
+    },
+    "%@: %lld opened, %lld changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@：打开 %lld 个文件，变更 %lld 项"
+          }
+        }
+      }
+    },
+    "%lld Markdown files in %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ 中有 %1$lld 个 Markdown 文件"
+          }
+        }
+      }
+    },
+    "%lld applied · %lld ignored" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已应用 %lld 条 · 已忽略 %lld 条"
+          }
+        }
+      }
+    },
+    "%lld blocks" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个块"
+          }
+        }
+      }
+    },
+    "%lld characters" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每行 %lld 字"
+          }
+        }
+      }
+    },
+    "%lld edits · waiting for your review" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 处修改 · 等待你审阅"
+          }
+        }
+      }
+    },
+    "%lld files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个文件"
+          }
+        }
+      }
+    },
+    "%lld goals · %lld complete" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld 个目标 · %2$lld 个已完成"
+          }
+        }
+      }
+    },
+    "%lld min" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 分钟"
+          }
+        }
+      }
+    },
+    "%lld models listed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列出了 %lld 个模型。"
+          }
+        }
+      }
+    },
+    "%lld of %lld done" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已完成 %1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "%lld of %lld tasks" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld 个待办"
+          }
+        }
+      }
+    },
+    "%lld results" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 个结果"
+          }
+        }
+      }
+    },
+    "1 char" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 字"
+          }
+        }
+      }
+    },
+    "1 paragraph" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 段"
+          }
+        }
+      }
+    },
+    "1 word" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 词"
+          }
+        }
+      }
+    },
+    "2 em is common for Chinese." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中文常用 2 em。"
+          }
+        }
+      }
+    },
+    "<1 min" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不到 1 分钟"
+          }
+        }
+      }
+    },
+    "A base palette with a light and a dark side; change single colors on top. Click a color to pick another, right-click to go back." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础色板分浅色和深色两面，可以在其上单独修改某个颜色。点按颜色换一个，右键点按恢复。"
+          }
+        }
+      }
+    },
+    "A busy day reached the activity storage limit, so its totals are shown with +." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "某天的记录达到存储上限，计数以 + 表示。"
+          }
+        }
+      }
+    },
+    "A document is sent only when you ask. Keys are stored encrypted on this Mac." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只在你提问时发送文档；密钥加密保存在本机。"
+          }
+        }
+      }
+    },
+    "A file named %@ already exists." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已有名为 %@ 的文件。"
+          }
+        }
+      }
+    },
+    "A new theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新主题"
+          }
+        }
+      }
+    },
+    "A paragraph with enough text to show alignment, line spacing and the first-line indent. 段落里的中英文可以一起展示对齐、行距和首行缩进的效果。\n\nA second paragraph shows the space between paragraphs.\n\n- Read the draft\n- Review the layout\n  - Check the details\n\n> Keep the important words in view." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "段落里的中英文可以一起展示对齐、行距和首行缩进的效果。A paragraph shows alignment, line spacing and the first-line indent.\n\n第二段文字展示段落之间的距离。\n\n- 阅读草稿\n- 检查排版\n  - 核对细节\n\n> 让重要的文字留在视线里。"
+          }
+        }
+      }
+    },
+    "A theme is the whole look, and each keeps its own typefaces, light or dark, zoom, layout and colors. Switching themes switches all of it. None of this is written into your files." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题决定整体外观，每个主题各自保存字体、浅色或深色、缩放、版式和颜色，切换主题就一起切换。这些都不会写进你的文件。"
+          }
+        }
+      }
+    },
+    "A thumbnail is unavailable. Open this document in its default app." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法生成缩略图，请在默认应用中打开。"
+          }
+        }
+      }
+    },
+    "A tool call was refused: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一次工具调用被拒绝：%@"
+          }
+        }
+      }
+    },
+    "A4" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A4"
+          }
+        }
+      }
+    },
+    "API base URL" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API 基础地址"
+          }
+        }
+      }
+    },
+    "API key" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API key"
+          }
+        }
+      }
+    },
+    "Aa 文字\n\nClear type, quiet colors. 清晰的文字，舒适的阅读。\n\nA [link](https://example.com), **bold text** and *emphasis*." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aa 文字\n\n清晰的文字，舒适的阅读。Clear type, quiet colors.\n\n这里有[链接](https://example.com)、**粗体**和*强调*。"
+          }
+        }
+      }
+    },
+    "About %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于 %@"
+          }
+        }
+      }
+    },
+    "Accent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "强调色"
+          }
+        }
+      }
+    },
+    "Activity" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "活动"
+          }
+        }
+      }
+    },
+    "Actual Size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实际大小"
+          }
+        }
+      }
+    },
+    "Add Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加块"
+          }
+        }
+      }
+    },
+    "Add Goal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加目标"
+          }
+        }
+      }
+    },
+    "Add Link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加链接"
+          }
+        }
+      }
+    },
+    "Add Link…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加链接…"
+          }
+        }
+      }
+    },
+    "Add Task" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加待办"
+          }
+        }
+      }
+    },
+    "Add a Markdown file to this folder to see it here." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在此文件夹中添加 Markdown 文件后，即可在这里查看。"
+          }
+        }
+      }
+    },
+    "Add a goal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加目标"
+          }
+        }
+      }
+    },
+    "Add a provider and an API key in Settings → Agents." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在“设置 → 代理”中选择服务商并添加 API key。"
+          }
+        }
+      }
+    },
+    "Add a task" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加待办"
+          }
+        }
+      }
+    },
+    "Add a task, or start with a time like 10:00 to schedule it" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加待办；以时间开头（如 10:00）即加入日程"
+          }
+        }
+      }
+    },
+    "Add to today" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加到今日"
+          }
+        }
+      }
+    },
+    "Advanced" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高级"
+          }
+        }
+      }
+    },
+    "Agents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理"
+          }
+        }
+      }
+    },
+    "Agents can read this document and propose changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理可以读取这份文档并提出修改"
+          }
+        }
+      }
+    },
+    "Agents can read this document and the files in %@, and propose changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理可以读取这份文档和 %@ 中的文件，并提出修改"
+          }
+        }
+      }
+    },
+    "Align Center" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "居中对齐"
+          }
+        }
+      }
+    },
+    "Align Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左对齐"
+          }
+        }
+      }
+    },
+    "Align image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片对齐"
+          }
+        }
+      }
+    },
+    "Align image left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片靠左"
+          }
+        }
+      }
+    },
+    "Alignment" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对齐"
+          }
+        }
+      }
+    },
+    "Allow Agent Access" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许代理访问"
+          }
+        }
+      }
+    },
+    "An earlier version kept by macOS, opened read-only for comparison." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 保留的较早版本，以只读方式打开以便对照。"
+          }
+        }
+      }
+    },
+    "An empty page. Add a block, or write “## sections” in the note." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空页面。添加一个块，或在笔记里写“## 小节”。"
+          }
+        }
+      }
+    },
+    "Angled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折线"
+          }
+        }
+      }
+    },
+    "Another app changed this file where you are editing." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一个应用修改了你正在编辑的位置。"
+          }
+        }
+      }
+    },
+    "App" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用"
+          }
+        }
+      }
+    },
+    "Appearance from the terminal" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在终端调整外观"
+          }
+        }
+      }
+    },
+    "Applied changes can be withdrawn from the AI panel." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已应用的修改可以在 AI 面板中撤回。"
+          }
+        }
+      }
+    },
+    "Applied on each side of PDF pages." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用于 PDF 页面的四周。"
+          }
+        }
+      }
+    },
+    "Applied · withdraw from Recent changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已应用 · 可在“最近的修改”中撤回"
+          }
+        }
+      }
+    },
+    "Applies after a restart." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重启后生效。"
+          }
+        }
+      }
+    },
+    "Apply" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用"
+          }
+        }
+      }
+    },
+    "Apply Proposed Change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "应用修改提议"
+          }
+        }
+      }
+    },
+    "As a multiple of the text size." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正文字号的倍数。"
+          }
+        }
+      }
+    },
+    "Ask AI" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "询问 AI"
+          }
+        }
+      }
+    },
+    "Ask Assistant" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "问助手"
+          }
+        }
+      }
+    },
+    "Ask Assistant About This Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "就这个块问助手"
+          }
+        }
+      }
+    },
+    "Ask Zephyr (⌘J)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "问 Zephyr（⌘J）"
+          }
+        }
+      }
+    },
+    "Ask about this document, or describe a change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "询问这份文档，或描述要做的修改"
+          }
+        }
+      }
+    },
+    "Ask the endpoint for its models again" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新向端点获取模型列表"
+          }
+        }
+      }
+    },
+    "Assistant" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "助手"
+          }
+        }
+      }
+    },
+    "Assistant button" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "助手按钮"
+          }
+        }
+      }
+    },
+    "Authentication rejected. Check the key." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "身份验证被拒绝，请检查 key。"
+          }
+        }
+      }
+    },
+    "Automatic" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后退"
+          }
+        }
+      }
+    },
+    "Background" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景"
+          }
+        }
+      }
+    },
+    "Before zoom." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩放之前的大小。"
+          }
+        }
+      }
+    },
+    "Beside the Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正文旁"
+          }
+        }
+      }
+    },
+    "Between Rows" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行间线"
+          }
+        }
+      }
+    },
+    "Bigger" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放大"
+          }
+        }
+      }
+    },
+    "Blank Page" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空白页面"
+          }
+        }
+      }
+    },
+    "Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "块"
+          }
+        }
+      }
+    },
+    "Block Quote" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引用"
+          }
+        }
+      }
+    },
+    "Block menu" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "块菜单"
+          }
+        }
+      }
+    },
+    "Body Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正文"
+          }
+        }
+      }
+    },
+    "Bold" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粗体"
+          }
+        }
+      }
+    },
+    "Bold header" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表头加粗"
+          }
+        }
+      }
+    },
+    "Bring All to Front" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前置全部窗口"
+          }
+        }
+      }
+    },
+    "Browse All Versions…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览所有版本…"
+          }
+        }
+      }
+    },
+    "Built-in" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内置主题"
+          }
+        }
+      }
+    },
+    "Bulleted List" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项目符号列表"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Card" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片"
+          }
+        }
+      }
+    },
+    "Cell padding" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单元格内边距"
+          }
+        }
+      }
+    },
+    "Center image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片居中"
+          }
+        }
+      }
+    },
+    "Centered" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "居中"
+          }
+        }
+      }
+    },
+    "Change Block Width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改块宽度"
+          }
+        }
+      }
+    },
+    "Change history" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改记录"
+          }
+        }
+      }
+    },
+    "Changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需修改"
+          }
+        }
+      }
+    },
+    "Changes from the assistant and agents can no longer be withdrawn. Your documents are not affected." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "之后将无法撤回助手与代理的修改。文档本身不受影响。"
+          }
+        }
+      }
+    },
+    "Changes proposed by %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 提出的修改"
+          }
+        }
+      }
+    },
+    "Characters" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字数"
+          }
+        }
+      }
+    },
+    "Characters with spaces" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字数（含空格）"
+          }
+        }
+      }
+    },
+    "Charts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图表"
+          }
+        }
+      }
+    },
+    "Charts and images" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图表与图片"
+          }
+        }
+      }
+    },
+    "Check Document Now" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即检查文稿"
+          }
+        }
+      }
+    },
+    "Check Spelling While Typing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键入时检查拼写"
+          }
+        }
+      }
+    },
+    "Check Task" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "勾选待办"
+          }
+        }
+      }
+    },
+    "Checklist" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待办清单"
+          }
+        }
+      }
+    },
+    "Chinese" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中文"
+          }
+        }
+      }
+    },
+    "Choose Folder…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选取文件夹…"
+          }
+        }
+      }
+    },
+    "Choose a Markdown file to show as a page" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择作为页面显示的 Markdown 文件"
+          }
+        }
+      }
+    },
+    "Choose a different file from the source image." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请选择其他位置，避免覆盖原始图片。"
+          }
+        }
+      }
+    },
+    "Choose a folder for your themes." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择存放主题的文件夹。"
+          }
+        }
+      }
+    },
+    "Choose a model" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择模型"
+          }
+        }
+      }
+    },
+    "Choose another name." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请换一个名字。"
+          }
+        }
+      }
+    },
+    "Choose how Zephyr exports documents by default." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配置文档导出的默认格式和外观。"
+          }
+        }
+      }
+    },
+    "Choose notes to follow on this page" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择要在此页面跟踪的笔记"
+          }
+        }
+      }
+    },
+    "Choose this folder again to show its current files." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新选择此文件夹以显示当前文件。"
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除"
+          }
+        }
+      }
+    },
+    "Clear Menu" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除菜单"
+          }
+        }
+      }
+    },
+    "Clear the change history?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除修改记录？"
+          }
+        }
+      }
+    },
+    "Clear…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除…"
+          }
+        }
+      }
+    },
+    "Click to rename" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点按以重命名"
+          }
+        }
+      }
+    },
+    "Close" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        }
+      }
+    },
+    "Close All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部关闭"
+          }
+        }
+      }
+    },
+    "Close Folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭文件夹"
+          }
+        }
+      }
+    },
+    "Close Others" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭其他"
+          }
+        }
+      }
+    },
+    "Close Window" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭窗口"
+          }
+        }
+      }
+    },
+    "Close preview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭预览"
+          }
+        }
+      }
+    },
+    "Code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码"
+          }
+        }
+      }
+    },
+    "Code Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码块"
+          }
+        }
+      }
+    },
+    "Code and formulas" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码与公式"
+          }
+        }
+      }
+    },
+    "Code background" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码背景"
+          }
+        }
+      }
+    },
+    "Code blocks" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码块"
+          }
+        }
+      }
+    },
+    "Code line height" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码行高"
+          }
+        }
+      }
+    },
+    "Code size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代码字号"
+          }
+        }
+      }
+    },
+    "Collapse (⌘J)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起（⌘J）"
+          }
+        }
+      }
+    },
+    "Collapse AI" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起 AI"
+          }
+        }
+      }
+    },
+    "Collapse properties" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "折叠属性"
+          }
+        }
+      }
+    },
+    "Colors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "颜色"
+          }
+        }
+      }
+    },
+    "Colors apply in light mode; add @media (prefers-color-scheme: dark) { … } for dark mode." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些颜色只用于浅色模式；深色模式请写在 @media (prefers-color-scheme: dark) { … } 中。"
+          }
+        }
+      }
+    },
+    "Column Alignment" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列对齐"
+          }
+        }
+      }
+    },
+    "Column Width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读栏宽"
+          }
+        }
+      }
+    },
+    "Command Palette…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "命令面板…"
+          }
+        }
+      }
+    },
+    "Command-line tool" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "命令行工具"
+          }
+        }
+      }
+    },
+    "Compact" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "紧凑"
+          }
+        }
+      }
+    },
+    "Compatible" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "兼容端点"
+          }
+        }
+      }
+    },
+    "Contrast" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对比"
+          }
+        }
+      }
+    },
+    "Contrast sets all levels at once; a level's own values win over it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“对比”一次调整所有级别；某一级自己的设置优先。"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝"
+          }
+        }
+      }
+    },
+    "Copy Link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝链接"
+          }
+        }
+      }
+    },
+    "Copy Mermaid source" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制 Mermaid 源码"
+          }
+        }
+      }
+    },
+    "Copy Session ID" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝会话 ID"
+          }
+        }
+      }
+    },
+    "Copy image Markdown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制图片 Markdown"
+          }
+        }
+      }
+    },
+    "Corner radius" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圆角"
+          }
+        }
+      }
+    },
+    "Create" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建"
+          }
+        }
+      }
+    },
+    "Current: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前：%@"
+          }
+        }
+      }
+    },
+    "Curved" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "曲线"
+          }
+        }
+      }
+    },
+    "Custom CSS" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义 CSS"
+          }
+        }
+      }
+    },
+    "Custom endpoint" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义端点"
+          }
+        }
+      }
+    },
+    "Cut" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪切"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        }
+      }
+    },
+    "Dashboard" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仪表盘"
+          }
+        }
+      }
+    },
+    "Days in a row" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连续天数"
+          }
+        }
+      }
+    },
+    "Decisions, links and anything else, in Markdown." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "决定、链接和其他内容，用 Markdown 写在这里。"
+          }
+        }
+      }
+    },
+    "Default (SF Pro + PingFang)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认（SF Pro + 苹方）"
+          }
+        }
+      }
+    },
+    "Default Markdown editor" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认 Markdown 编辑器"
+          }
+        }
+      }
+    },
+    "Default output" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认输出"
+          }
+        }
+      }
+    },
+    "Default position" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认对齐"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
+          }
+        }
+      }
+    },
+    "Delete Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除块"
+          }
+        }
+      }
+    },
+    "Delete Column" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除列"
+          }
+        }
+      }
+    },
+    "Delete Row" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除行"
+          }
+        }
+      }
+    },
+    "Diagrams" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图示"
+          }
+        }
+      }
+    },
+    "Discard" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃"
+          }
+        }
+      }
+    },
+    "Discarded" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已放弃"
+          }
+        }
+      }
+    },
+    "Display" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示"
+          }
+        }
+      }
+    },
+    "Display only; the file is unchanged." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅显示，不改文件。"
+          }
+        }
+      }
+    },
+    "Divider" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分隔线"
+          }
+        }
+      }
+    },
+    "Document" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文档"
+          }
+        }
+      }
+    },
+    "Document path and folder scope" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文稿路径与文件夹范围"
+          }
+        }
+      }
+    },
+    "Documents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文档"
+          }
+        }
+      }
+    },
+    "Documents you open appear here." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开过的文档会出现在这里。"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "Done today" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日完成"
+          }
+        }
+      }
+    },
+    "Double-click to edit in the note" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双击在笔记中编辑"
+          }
+        }
+      }
+    },
+    "Double-click to rename" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双击重命名"
+          }
+        }
+      }
+    },
+    "Draft" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "草稿"
+          }
+        }
+      }
+    },
+    "Draw diagrams" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绘制图表"
+          }
+        }
+      }
+    },
+    "Draw formulas" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渲染公式"
+          }
+        }
+      }
+    },
+    "Drop" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖放"
+          }
+        }
+      }
+    },
+    "Duplicate" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制"
+          }
+        }
+      }
+    },
+    "Duplicate Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制块"
+          }
+        }
+      }
+    },
+    "Edit" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑"
+          }
+        }
+      }
+    },
+    "Edit Formula…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑公式…"
+          }
+        }
+      }
+    },
+    "Edit Markdown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑 Markdown"
+          }
+        }
+      }
+    },
+    "Edit Properties" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑属性"
+          }
+        }
+      }
+    },
+    "Edit as Markdown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑 Markdown 源码"
+          }
+        }
+      }
+    },
+    "Empty" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空白"
+          }
+        }
+      }
+    },
+    "Enable Preview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用预览"
+          }
+        }
+      }
+    },
+    "Enable Zephyr in System Settings → General → Login Items & Extensions → Quick Look." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在系统设置 → 通用 → 登录项与扩展 → 快速查看中启用 Zephyr。"
+          }
+        }
+      }
+    },
+    "Endpoint unreachable. Enter an ID, or try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接端点。请手动输入模型 ID，或稍后重试。"
+          }
+        }
+      }
+    },
+    "Excludes code, formulas and diagrams." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不含代码、公式和图表。"
+          }
+        }
+      }
+    },
+    "Expand properties" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开属性"
+          }
+        }
+      }
+    },
+    "Export" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出"
+          }
+        }
+      }
+    },
+    "Export As…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出为…"
+          }
+        }
+      }
+    },
+    "Export must use a different file from the Markdown source." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出文件不能覆盖 Markdown 原文件。"
+          }
+        }
+      }
+    },
+    "Export will not overwrite an existing file: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出不会覆盖已有文件：%@"
+          }
+        }
+      }
+    },
+    "Export will not overwrite existing files: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出不会覆盖已有文件：%@"
+          }
+        }
+      }
+    },
+    "File" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "File name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件名"
+          }
+        }
+      }
+    },
+    "File → Allow Agent Access. Lasts up to 8 hours." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件 → 允许代理访问，最长 8 小时。"
+          }
+        }
+      }
+    },
+    "File → Export As starts with these choices and keeps changes made there." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“文件 → 导出为”以这些选项开始，并保留在那里所做的更改。"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "Filled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "填充"
+          }
+        }
+      }
+    },
+    "Find" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找"
+          }
+        }
+      }
+    },
+    "Find Next" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找下一个"
+          }
+        }
+      }
+    },
+    "Find Previous" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找上一个"
+          }
+        }
+      }
+    },
+    "Find and Replace…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找并替换…"
+          }
+        }
+      }
+    },
+    "Find typos and awkward sentences" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找出错别字和不通顺的句子"
+          }
+        }
+      }
+    },
+    "Finder preview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "访达预览"
+          }
+        }
+      }
+    },
+    "Finder's Space-bar preview uses the Zephyr Quick Look extension." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "访达空格键预览使用 Zephyr 快速查看扩展。"
+          }
+        }
+      }
+    },
+    "Find…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找…"
+          }
+        }
+      }
+    },
+    "First-line indent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首行缩进"
+          }
+        }
+      }
+    },
+    "Fit Content" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适应内容"
+          }
+        }
+      }
+    },
+    "Folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹"
+          }
+        }
+      }
+    },
+    "Folder Home" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹首页"
+          }
+        }
+      }
+    },
+    "Folder scope" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹范围"
+          }
+        }
+      }
+    },
+    "Follow System" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "Fonts and colors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字体与配色"
+          }
+        }
+      }
+    },
+    "For PDF, HTML and images; headings, code and tables keep their proportions." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于 PDF、HTML 和图片；标题、代码和表格保持相对比例。"
+          }
+        }
+      }
+    },
+    "For all agents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适用于所有代理"
+          }
+        }
+      }
+    },
+    "For example https://api.anthropic.com" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如 https://api.anthropic.com"
+          }
+        }
+      }
+    },
+    "For example https://api.openai.com/v1" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如 https://api.openai.com/v1"
+          }
+        }
+      }
+    },
+    "For example: Answer in Chinese. Keep my headings." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例如：用中文回答。保留我的标题。"
+          }
+        }
+      }
+    },
+    "For headings that wrap." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于折行的标题。"
+          }
+        }
+      }
+    },
+    "For pictures without an explicit HTML align attribute." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于未明确指定对齐的图片。"
+          }
+        }
+      }
+    },
+    "For tables narrower than the column." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于比阅读栏窄的表格。"
+          }
+        }
+      }
+    },
+    "Format" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "格式"
+          }
+        }
+      }
+    },
+    "Formula size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公式字号"
+          }
+        }
+      }
+    },
+    "Formula source" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公式源码"
+          }
+        }
+      }
+    },
+    "Forward" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前进"
+          }
+        }
+      }
+    },
+    "From your notes in Zephyr's space and the documents you read" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自 Zephyr 空间里的笔记，以及你读过的文档"
+          }
+        }
+      }
+    },
+    "Full Width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全宽"
+          }
+        }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通用"
+          }
+        }
+      }
+    },
+    "Get the Font" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获取字体"
+          }
+        }
+      }
+    },
+    "Go" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往"
+          }
+        }
+      }
+    },
+    "Goals" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标"
+          }
+        }
+      }
+    },
+    "Goals on average" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标平均进度"
+          }
+        }
+      }
+    },
+    "Grid" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网格"
+          }
+        }
+      }
+    },
+    "HTML" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTML"
+          }
+        }
+      }
+    },
+    "Half Width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "半宽"
+          }
+        }
+      }
+    },
+    "Header" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表头"
+          }
+        }
+      }
+    },
+    "Heading %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题 %lld"
+          }
+        }
+      }
+    },
+    "Heading 1" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一级标题"
+          }
+        }
+      }
+    },
+    "Heading 2" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "二级标题"
+          }
+        }
+      }
+    },
+    "Heading 3" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "三级标题"
+          }
+        }
+      }
+    },
+    "Headings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题"
+          }
+        }
+      }
+    },
+    "Heavy" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "特粗"
+          }
+        }
+      }
+    },
+    "Help" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮助"
+          }
+        }
+      }
+    },
+    "Help me plan today: suggest a schedule with times for what is in this note and my goals, as a change to this note." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮我规划今天：根据这份笔记和我的目标，给出带时间的安排，并以修改这份笔记的方式提出。"
+          }
+        }
+      }
+    },
+    "Help me understand this linked content:" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请帮我理解以下链接内容："
+          }
+        }
+      }
+    },
+    "Hi, I'm Zephyr." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "嗨，我是 Zephyr。"
+          }
+        }
+      }
+    },
+    "Hide %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏 %@"
+          }
+        }
+      }
+    },
+    "Hide Others" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏其他"
+          }
+        }
+      }
+    },
+    "Hide Sidebar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏侧栏"
+          }
+        }
+      }
+    },
+    "Hide everything but the text. ⌃⌘M" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只留正文。⌃⌘M"
+          }
+        }
+      }
+    },
+    "Higher scale makes larger, sharper image files." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更高倍数使导出图像更清晰，文件也更大。"
+          }
+        }
+      }
+    },
+    "History" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录"
+          }
+        }
+      }
+    },
+    "Home" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首页"
+          }
+        }
+      }
+    },
+    "Home notes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首页笔记"
+          }
+        }
+      }
+    },
+    "How much larger headings are than the text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标题比正文大多少。"
+          }
+        }
+      }
+    },
+    "I read this document when you ask. Every change I suggest waits for your review." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你提问时我才读这篇文档；我提出的每处修改都会先等你审阅。"
+          }
+        }
+      }
+    },
+    "Ignored: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已忽略：%@"
+          }
+        }
+      }
+    },
+    "Image alignment" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片对齐"
+          }
+        }
+      }
+    },
+    "Image not found" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到图片"
+          }
+        }
+      }
+    },
+    "Image or diagram actions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片或图表操作"
+          }
+        }
+      }
+    },
+    "Image preview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片预览"
+          }
+        }
+      }
+    },
+    "Image unavailable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片无法读取"
+          }
+        }
+      }
+    },
+    "Images" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片"
+          }
+        }
+      }
+    },
+    "Image…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片…"
+          }
+        }
+      }
+    },
+    "In characters." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以字符数计。"
+          }
+        }
+      }
+    },
+    "In em." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单位为 em。"
+          }
+        }
+      }
+    },
+    "In the Top Bar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顶栏"
+          }
+        }
+      }
+    },
+    "In the “%@” section of this page, " : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在这个页面的“%@”一节中，"
+          }
+        }
+      }
+    },
+    "Indent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩进"
+          }
+        }
+      }
+    },
+    "Inline Code" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行内代码"
+          }
+        }
+      }
+    },
+    "Inline Formula" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行内公式"
+          }
+        }
+      }
+    },
+    "Insert Column Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在左侧插入列"
+          }
+        }
+      }
+    },
+    "Insert Column Right" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在右侧插入列"
+          }
+        }
+      }
+    },
+    "Insert Example" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "插入示例"
+          }
+        }
+      }
+    },
+    "Insert Row Above" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在上方插入行"
+          }
+        }
+      }
+    },
+    "Insert Row Below" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在下方插入行"
+          }
+        }
+      }
+    },
+    "Instructions" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指令"
+          }
+        }
+      }
+    },
+    "Italic" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "斜体"
+          }
+        }
+      }
+    },
+    "JPEG Image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JPEG 图像"
+          }
+        }
+      }
+    },
+    "Jump to Selection" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳到所选内容"
+          }
+        }
+      }
+    },
+    "Justified" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "两端对齐"
+          }
+        }
+      }
+    },
+    "Keep" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留"
+          }
+        }
+      }
+    },
+    "Keep Mine" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留我的版本"
+          }
+        }
+      }
+    },
+    "Kept so changes from the assistant and agents can be withdrawn." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留助手与代理的修改，以便撤回。"
+          }
+        }
+      }
+    },
+    "Keywords, strings, numbers and comments in fenced code, in the theme's colors." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以主题配色显示围栏代码中的关键字、字符串、数字和注释。"
+          }
+        }
+      }
+    },
+    "Language" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言"
+          }
+        }
+      }
+    },
+    "Last 365 days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近 365 天"
+          }
+        }
+      }
+    },
+    "Last Saved Version" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次存储的版本"
+          }
+        }
+      }
+    },
+    "Latin" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西文"
+          }
+        }
+      }
+    },
+    "Latin and Chinese text each take their own family. Themes name open-source families first and fall back to the ones macOS has." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "西文和中文各用各的字体。主题优先选用开源字体，未安装时退回 macOS 自带的字体。"
+          }
+        }
+      }
+    },
+    "Latin, Chinese, headings and code." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分别设置中英文、标题和代码字体。"
+          }
+        }
+      }
+    },
+    "Lay out this note as a Zephyr page. Each “## heading” is a block: tasks (- [ ] …), links to notes (- [Title](path)), figures (- Label: value) or any Markdown; a line <!-- zephyr: wide --> under a heading gives it the full width, and <!-- zephyr: today --> (or goals, activity, recent) brings in a live block. The page is for: " : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把这篇笔记排成 Zephyr 页面。每个“## 标题”是一个块：待办（- [ ] …）、指向笔记的链接（- [标题](路径)）、数字（- 名称: 值）或任意 Markdown；标题下一行写 <!-- zephyr: wide --> 让它占满整行，写 <!-- zephyr: today -->（或 goals、activity、recent）放入实时块。这个页面用来："
+          }
+        }
+      }
+    },
+    "Left" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "靠左"
+          }
+        }
+      }
+    },
+    "Left Aligned" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左对齐"
+          }
+        }
+      }
+    },
+    "Letter" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letter"
+          }
+        }
+      }
+    },
+    "Level" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "级别"
+          }
+        }
+      }
+    },
+    "Levels" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "层级"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
+          }
+        }
+      }
+    },
+    "Light or dark" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色或深色"
+          }
+        }
+      }
+    },
+    "Line %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %lld 行"
+          }
+        }
+      }
+    },
+    "Line height" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行高"
+          }
+        }
+      }
+    },
+    "Line numbers" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行号"
+          }
+        }
+      }
+    },
+    "Lines" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连线"
+          }
+        }
+      }
+    },
+    "Link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接"
+          }
+        }
+      }
+    },
+    "Link notes to follow their progress." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接笔记，跟踪它们的进展。"
+          }
+        }
+      }
+    },
+    "Link previews" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接预览"
+          }
+        }
+      }
+    },
+    "Links" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接"
+          }
+        }
+      }
+    },
+    "List indent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表缩进"
+          }
+        }
+      }
+    },
+    "List item spacing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表项间距"
+          }
+        }
+      }
+    },
+    "Loading models…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在获取模型…"
+          }
+        }
+      }
+    },
+    "Loading preview…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在加载预览…"
+          }
+        }
+      }
+    },
+    "Loading remote image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在载入远程图片"
+          }
+        }
+      }
+    },
+    "Local file" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地文件"
+          }
+        }
+      }
+    },
+    "Look Up “%@”" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查询“%@”"
+          }
+        }
+      }
+    },
+    "MCP server" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 服务"
+          }
+        }
+      }
+    },
+    "Make a Page with the Assistant…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让助手做一个页面…"
+          }
+        }
+      }
+    },
+    "Make the selected paragraph clearer" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "把选中的段落改得更清楚"
+          }
+        }
+      }
+    },
+    "Margins" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页边距"
+          }
+        }
+      }
+    },
+    "Markdown Reference" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markdown 参考"
+          }
+        }
+      }
+    },
+    "Math Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公式块"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中等"
+          }
+        }
+      }
+    },
+    "Merge All Windows" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合并所有窗口"
+          }
+        }
+      }
+    },
+    "Merged changes made in another app." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已合并另一个应用所做的修改。"
+          }
+        }
+      }
+    },
+    "Mermaid flowcharts and sequence diagrams, drawn by Zephyr. The source stays in your file." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mermaid 流程图和时序图由 Zephyr 绘制，源码仍保留在文件里。"
+          }
+        }
+      }
+    },
+    "Message" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "消息"
+          }
+        }
+      }
+    },
+    "Minimal Mode" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "极简模式"
+          }
+        }
+      }
+    },
+    "Minimal mode" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "极简模式"
+          }
+        }
+      }
+    },
+    "Minimize" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最小化"
+          }
+        }
+      }
+    },
+    "Missing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已缺失"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型"
+          }
+        }
+      }
+    },
+    "Model name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型名称"
+          }
+        }
+      }
+    },
+    "Models this endpoint offers" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个端点提供的模型"
+          }
+        }
+      }
+    },
+    "Modified" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已修改"
+          }
+        }
+      }
+    },
+    "Monospace (SF Mono)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等宽（SF Mono）"
+          }
+        }
+      }
+    },
+    "Move" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移动"
+          }
+        }
+      }
+    },
+    "Move %@ to the Trash?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 %@ 移到废纸篓？"
+          }
+        }
+      }
+    },
+    "Move Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移动块"
+          }
+        }
+      }
+    },
+    "Move Block Down" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下移块"
+          }
+        }
+      }
+    },
+    "Move Block Up" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上移块"
+          }
+        }
+      }
+    },
+    "Move Down" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下移"
+          }
+        }
+      }
+    },
+    "Move To…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到…"
+          }
+        }
+      }
+    },
+    "Move Up" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上移"
+          }
+        }
+      }
+    },
+    "Move to New Window" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到新窗口"
+          }
+        }
+      }
+    },
+    "Move to Trash" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移到废纸篓"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称"
+          }
+        }
+      }
+    },
+    "Names in the list; section titles and details follow." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列表中的名称；分区标题与附注随之调整。"
+          }
+        }
+      }
+    },
+    "Needed to read documents and propose edits." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "读取文档、提出修改都需要它。"
+          }
+        }
+      }
+    },
+    "Neutral" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中性"
+          }
+        }
+      }
+    },
+    "New" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建"
+          }
+        }
+      }
+    },
+    "New Chat" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新对话"
+          }
+        }
+      }
+    },
+    "New Page" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建页面"
+          }
+        }
+      }
+    },
+    "New Theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建主题"
+          }
+        }
+      }
+    },
+    "New in This Window" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在本窗口新建"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一步"
+          }
+        }
+      }
+    },
+    "Next: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一步：%@"
+          }
+        }
+      }
+    },
+    "No Folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有文件夹"
+          }
+        }
+      }
+    },
+    "No Markdown files" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有 Markdown 文件"
+          }
+        }
+      }
+    },
+    "No custom CSS" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有自定义 CSS"
+          }
+        }
+      }
+    },
+    "No folder yet. Choose one from the menu above to browse and search it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有文件夹。从上方菜单选择一个，即可浏览和搜索。"
+          }
+        }
+      }
+    },
+    "No goals yet." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有目标。"
+          }
+        }
+      }
+    },
+    "No goals yet. Each “## heading” in the note is a goal." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有目标。笔记里的每个“## 标题”就是一个目标。"
+          }
+        }
+      }
+    },
+    "No key saved for this endpoint." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个端点还没有保存 key。"
+          }
+        }
+      }
+    },
+    "No matches for “%@”." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有找到“%@”。"
+          }
+        }
+      }
+    },
+    "No models listed yet" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有模型列表"
+          }
+        }
+      }
+    },
+    "No models returned." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端点没有返回模型。"
+          }
+        }
+      }
+    },
+    "No network connection. Local files can still be previewed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有网络连接。本地文件仍可预览。"
+          }
+        }
+      }
+    },
+    "No tasks yet" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有待办"
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无"
+          }
+        }
+      }
+    },
+    "Not found" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到文件"
+          }
+        }
+      }
+    },
+    "Notes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "笔记"
+          }
+        }
+      }
+    },
+    "Nothing planned yet." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有计划。"
+          }
+        }
+      }
+    },
+    "Now" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在"
+          }
+        }
+      }
+    },
+    "Number from" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编号起始"
+          }
+        }
+      }
+    },
+    "Numbered List" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编号列表"
+          }
+        }
+      }
+    },
+    "Numbering" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编号"
+          }
+        }
+      }
+    },
+    "Numbers" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "数字"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
+    "Observed file changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "观察到的文件变更"
+          }
+        }
+      }
+    },
+    "Off shows the Mermaid source." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭时显示 Mermaid 源码。"
+          }
+        }
+      }
+    },
+    "Off shows the TeX source." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭时显示 TeX 源码。"
+          }
+        }
+      }
+    },
+    "One JSON file per theme." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每个主题一个 JSON 文件。"
+          }
+        }
+      }
+    },
+    "Open" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开"
+          }
+        }
+      }
+    },
+    "Open Earlier Version" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开较早的版本"
+          }
+        }
+      }
+    },
+    "Open Link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开链接"
+          }
+        }
+      }
+    },
+    "Open Note" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开笔记"
+          }
+        }
+      }
+    },
+    "Open Quickly" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速打开"
+          }
+        }
+      }
+    },
+    "Open Quickly…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速打开…"
+          }
+        }
+      }
+    },
+    "Open Recent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开最近使用"
+          }
+        }
+      }
+    },
+    "Open Settings…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开设置…"
+          }
+        }
+      }
+    },
+    "Open as Markdown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以 Markdown 打开"
+          }
+        }
+      }
+    },
+    "Open documents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开的文档"
+          }
+        }
+      }
+    },
+    "Open in Sidebar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在侧栏中打开"
+          }
+        }
+      }
+    },
+    "Open this file in its default app to view its contents." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在默认应用中打开此文件以查看内容。"
+          }
+        }
+      }
+    },
+    "OpenAI-compatible covers local servers such as Ollama." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "兼容端点可接入 Ollama 等本地服务。"
+          }
+        }
+      }
+    },
+    "Opened Markdown files, successful saves and folder changes Zephyr observed on demand" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记录打开的 Markdown 文件、成功保存和按需观察到的文件夹变更"
+          }
+        }
+      }
+    },
+    "Open…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开…"
+          }
+        }
+      }
+    },
+    "Optional: local servers usually need no key." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可选：本地服务通常不需要 key。"
+          }
+        }
+      }
+    },
+    "Outdent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消缩进"
+          }
+        }
+      }
+    },
+    "Outline" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大纲"
+          }
+        }
+      }
+    },
+    "Outline (⌃⌘2)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大纲（⌃⌘2）"
+          }
+        }
+      }
+    },
+    "Outline, %lld headings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大纲，%lld 个标题"
+          }
+        }
+      }
+    },
+    "Outlined" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "描边"
+          }
+        }
+      }
+    },
+    "Overview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "概览"
+          }
+        }
+      }
+    },
+    "PDF" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF"
+          }
+        }
+      }
+    },
+    "PNG Image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PNG 图像"
+          }
+        }
+      }
+    },
+    "PNG and JPEG" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PNG 与 JPEG"
+          }
+        }
+      }
+    },
+    "Page" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面"
+          }
+        }
+      }
+    },
+    "Page 1 of %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 1 页，共 %lld 页"
+          }
+        }
+      }
+    },
+    "Page Setup…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面设置…"
+          }
+        }
+      }
+    },
+    "Page snapshot" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面快照"
+          }
+        }
+      }
+    },
+    "Page title" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面标题"
+          }
+        }
+      }
+    },
+    "Page width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面宽度"
+          }
+        }
+      }
+    },
+    "Pages" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面"
+          }
+        }
+      }
+    },
+    "Palette" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "色板"
+          }
+        }
+      }
+    },
+    "Palette and individual light or dark colors." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择配色，并微调浅色与深色模式。"
+          }
+        }
+      }
+    },
+    "Paper size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "纸张尺寸"
+          }
+        }
+      }
+    },
+    "Paragraph spacing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "段落间距"
+          }
+        }
+      }
+    },
+    "Paragraphs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "段落"
+          }
+        }
+      }
+    },
+    "Paragraphs and lists" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "段落与列表"
+          }
+        }
+      }
+    },
+    "Paste" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴"
+          }
+        }
+      }
+    },
+    "Paste an API key" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴 API key"
+          }
+        }
+      }
+    },
+    "Pause over a link to preview Markdown, PDF or a web page." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将鼠标停留在链接上，预览 Markdown、PDF 或网页。"
+          }
+        }
+      }
+    },
+    "Plain" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无样式"
+          }
+        }
+      }
+    },
+    "Plain Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "纯文本"
+          }
+        }
+      }
+    },
+    "Plan with Assistant" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让助手规划"
+          }
+        }
+      }
+    },
+    "Position" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置"
+          }
+        }
+      }
+    },
+    "Preview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览"
+          }
+        }
+      }
+    },
+    "Preview Link" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览链接"
+          }
+        }
+      }
+    },
+    "Preview delay" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览等待时间"
+          }
+        }
+      }
+    },
+    "Print…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打印…"
+          }
+        }
+      }
+    },
+    "Project" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "项目"
+          }
+        }
+      }
+    },
+    "Prominent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "醒目"
+          }
+        }
+      }
+    },
+    "Properties" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "属性"
+          }
+        }
+      }
+    },
+    "Proposed change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改提议"
+          }
+        }
+      }
+    },
+    "Proposed changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改内容"
+          }
+        }
+      }
+    },
+    "Provider" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务商"
+          }
+        }
+      }
+    },
+    "Publish" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发布"
+          }
+        }
+      }
+    },
+    "Quick switcher" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速切换"
+          }
+        }
+      }
+    },
+    "Quit %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 %@"
+          }
+        }
+      }
+    },
+    "Quit with the last window" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭最后一个窗口时退出"
+          }
+        }
+      }
+    },
+    "Quote" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引用"
+          }
+        }
+      }
+    },
+    "Quote bar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "引用竖线"
+          }
+        }
+      }
+    },
+    "Read-only: this file is not valid UTF-8, so Zephyr will not rewrite it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只读：此文件不是有效的 UTF-8，Zephyr 不会改写它。"
+          }
+        }
+      }
+    },
+    "Reading %@, %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取 %@，%@"
+          }
+        }
+      }
+    },
+    "Reading comfort" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读习惯"
+          }
+        }
+      }
+    },
+    "Reading the theme settings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取主题设置"
+          }
+        }
+      }
+    },
+    "Reading time" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读时间"
+          }
+        }
+      }
+    },
+    "Reading width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读宽度"
+          }
+        }
+      }
+    },
+    "Reads and proposes edits only in a document you share with File → Allow Agent Access." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只能读取你用“文件 → 允许代理访问”共享的文档，并对它提出修改，由你审阅。"
+          }
+        }
+      }
+    },
+    "Reads body, p, h1–h6, code, table, th, td, a, blockquote and .mermaid; overrides the settings above." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "读取 body、p、h1–h6、code、table、th、td、a、blockquote 与 .mermaid，优先于上方设置。"
+          }
+        }
+      }
+    },
+    "Recent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近"
+          }
+        }
+      }
+    },
+    "Recent Folders" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近的文件夹"
+          }
+        }
+      }
+    },
+    "Recent changes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近的修改"
+          }
+        }
+      }
+    },
+    "Recent documents, by length" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近的文档（按字数）"
+          }
+        }
+      }
+    },
+    "Redo" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重做"
+          }
+        }
+      }
+    },
+    "Refresh Folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新文件夹"
+          }
+        }
+      }
+    },
+    "Refresh models" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新模型"
+          }
+        }
+      }
+    },
+    "Regular" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常规"
+          }
+        }
+      }
+    },
+    "Relative to the text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相对于正文。"
+          }
+        }
+      }
+    },
+    "Relative to the text; auto follows Contrast." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相对于正文；“自动”跟随“对比”。"
+          }
+        }
+      }
+    },
+    "Remote image not loaded" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程图片未加载"
+          }
+        }
+      }
+    },
+    "Remote images" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远程图片"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
+      }
+    },
+    "Remove Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除块"
+          }
+        }
+      }
+    },
+    "Remove from Recent" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从最近中移除"
+          }
+        }
+      }
+    },
+    "Rename" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新命名"
+          }
+        }
+      }
+    },
+    "Rename Heading" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新命名标题"
+          }
+        }
+      }
+    },
+    "Rename Page" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名页面"
+          }
+        }
+      }
+    },
+    "Rename the theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新命名主题"
+          }
+        }
+      }
+    },
+    "Rename…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新命名…"
+          }
+        }
+      }
+    },
+    "Rendered preview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渲染预览"
+          }
+        }
+      }
+    },
+    "Rendering page…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在渲染页面…"
+          }
+        }
+      }
+    },
+    "Replace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换"
+          }
+        }
+      }
+    },
+    "Replace exported files?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换已存在的导出文件？"
+          }
+        }
+      }
+    },
+    "Reset Colors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复颜色"
+          }
+        }
+      }
+    },
+    "Reset Level" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复此级别"
+          }
+        }
+      }
+    },
+    "Resize image" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "调整图片大小"
+          }
+        }
+      }
+    },
+    "Restart Now" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即重新启动"
+          }
+        }
+      }
+    },
+    "Restore Defaults" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复默认"
+          }
+        }
+      }
+    },
+    "Revert To" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复原到"
+          }
+        }
+      }
+    },
+    "Review" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "评审"
+          }
+        }
+      }
+    },
+    "Review my goals: for each, suggest the next concrete tasks and anything to drop, as a change to this note." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮我回顾目标：为每个目标建议下一步的具体待办和可以放下的事项，并以修改这份笔记的方式提出。"
+          }
+        }
+      }
+    },
+    "Review with Assistant" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让助手回顾"
+          }
+        }
+      }
+    },
+    "Review…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅…"
+          }
+        }
+      }
+    },
+    "Right Aligned" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右对齐"
+          }
+        }
+      }
+    },
+    "Roomy" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "宽松"
+          }
+        }
+      }
+    },
+    "Row spacing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行距"
+          }
+        }
+      }
+    },
+    "Rule below" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下方横线"
+          }
+        }
+      }
+    },
+    "Rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表格线"
+          }
+        }
+      }
+    },
+    "Same as System" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "Same as Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与正文相同"
+          }
+        }
+      }
+    },
+    "Same as theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随主题"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储"
+          }
+        }
+      }
+    },
+    "Save a key to list this endpoint's models." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存 key 后即可列出这个端点的模型。"
+          }
+        }
+      }
+    },
+    "Save as New Theme…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存为新主题…"
+          }
+        }
+      }
+    },
+    "Save as a new theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存为新主题"
+          }
+        }
+      }
+    },
+    "Save image…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存图片…"
+          }
+        }
+      }
+    },
+    "Save the document first: changes from AI and agents need a file with system versions." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先保存文档：AI 和代理的修改需要一个有系统版本记录的文件。"
+          }
+        }
+      }
+    },
+    "Saved, encrypted on this Mac." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已加密保存在这台 Mac 上。"
+          }
+        }
+      }
+    },
+    "Scale" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分辨率倍数"
+          }
+        }
+      }
+    },
+    "Scanning…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在扫描…"
+          }
+        }
+      }
+    },
+    "Schedule" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日程"
+          }
+        }
+      }
+    },
+    "Scroll to zoom · Drag to move" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滚动缩放 · 拖动平移"
+          }
+        }
+      }
+    },
+    "Scroll to zoom · Drag to move · Double-click to edit Markdown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滚动缩放 · 拖动平移 · 双击编辑 Markdown"
+          }
+        }
+      }
+    },
+    "Search Commands" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索命令"
+          }
+        }
+      }
+    },
+    "Search in %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 %@ 中搜索"
+          }
+        }
+      }
+    },
+    "Search in Folder…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在文件夹中搜索…"
+          }
+        }
+      }
+    },
+    "Search in folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在文件夹中搜索"
+          }
+        }
+      }
+    },
+    "Search results" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索结果"
+          }
+        }
+      }
+    },
+    "Searching for “%@”%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在搜索“%@”%@"
+          }
+        }
+      }
+    },
+    "Secondary text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次要文字"
+          }
+        }
+      }
+    },
+    "Section colors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本组颜色"
+          }
+        }
+      }
+    },
+    "Select All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全选"
+          }
+        }
+      }
+    },
+    "Selected %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选中 %@"
+          }
+        }
+      }
+    },
+    "Selection" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选区"
+          }
+        }
+      }
+    },
+    "Semibold" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "半粗"
+          }
+        }
+      }
+    },
+    "Send" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送"
+          }
+        }
+      }
+    },
+    "Send (↩)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送（↩）"
+          }
+        }
+      }
+    },
+    "Sends your message and %@ (%@) to %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将你的消息和 %@（%@）发送给 %@。"
+          }
+        }
+      }
+    },
+    "Sends your message, %@ (%@) and files it reads in %@ to %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将你的消息、%@（%@）以及它在 %@ 中读取的文件发送给 %@。"
+          }
+        }
+      }
+    },
+    "Serif (New York + Songti)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "衬线（New York + 宋体）"
+          }
+        }
+      }
+    },
+    "Services" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务"
+          }
+        }
+      }
+    },
+    "Set as Default" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为默认"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置"
+          }
+        }
+      }
+    },
+    "Settings sections" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置分区"
+          }
+        }
+      }
+    },
+    "Settings…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置…"
+          }
+        }
+      }
+    },
+    "Shaded" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "底色"
+          }
+        }
+      }
+    },
+    "Shaded header" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表头底色"
+          }
+        }
+      }
+    },
+    "Shapes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "形状"
+          }
+        }
+      }
+    },
+    "Share a document" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "共享文档"
+          }
+        }
+      }
+    },
+    "Show AI Button" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 AI 按钮"
+          }
+        }
+      }
+    },
+    "Show All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部显示"
+          }
+        }
+      }
+    },
+    "Show Next Document" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示下一个文档"
+          }
+        }
+      }
+    },
+    "Show Previous Document" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示上一个文档"
+          }
+        }
+      }
+    },
+    "Show Sidebar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示侧栏"
+          }
+        }
+      }
+    },
+    "Show Spelling and Grammar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示拼写和语法"
+          }
+        }
+      }
+    },
+    "Show as Page…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作为页面显示…"
+          }
+        }
+      }
+    },
+    "Show images from the web, such as a README's badges. Off, click an image to show a document's." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示网络上的图片，例如 README 里的徽章。关闭时，点按一张图片即可显示该文档的远程图片。"
+          }
+        }
+      }
+    },
+    "Show in Finder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中显示"
+          }
+        }
+      }
+    },
+    "Show in the top bar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在顶栏显示"
+          }
+        }
+      }
+    },
+    "Show the folder scope" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示文件夹范围"
+          }
+        }
+      }
+    },
+    "Shown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前显示"
+          }
+        }
+      }
+    },
+    "Shown as source to stay fast." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为保持流畅，按源码显示。"
+          }
+        }
+      }
+    },
+    "Sidebar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "侧栏"
+          }
+        }
+      }
+    },
+    "Sidebar, %lld documents open" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "侧栏，已打开 %lld 个文档"
+          }
+        }
+      }
+    },
+    "Single colors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单项颜色"
+          }
+        }
+      }
+    },
+    "Size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字号"
+          }
+        }
+      }
+    },
+    "Smaller" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩小"
+          }
+        }
+      }
+    },
+    "Source excerpt" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "源码片段"
+          }
+        }
+      }
+    },
+    "Space above" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上方间距"
+          }
+        }
+      }
+    },
+    "Space below" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下方间距"
+          }
+        }
+      }
+    },
+    "Spacing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "间距"
+          }
+        }
+      }
+    },
+    "Speech" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语音"
+          }
+        }
+      }
+    },
+    "Spelling and Grammar" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拼写和语法"
+          }
+        }
+      }
+    },
+    "Standard" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标准"
+          }
+        }
+      }
+    },
+    "Start Speaking" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始朗读"
+          }
+        }
+      }
+    },
+    "Starts from %@ as it looks now." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 %@ 当前的样子开始。"
+          }
+        }
+      }
+    },
+    "Starts from Zephyr's design." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 Zephyr 的设计开始。"
+          }
+        }
+      }
+    },
+    "Static page snapshot" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "静态网页快照"
+          }
+        }
+      }
+    },
+    "Stop (⌘.)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止（⌘.）"
+          }
+        }
+      }
+    },
+    "Stop Agent Access" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止代理访问"
+          }
+        }
+      }
+    },
+    "Stop Speaking" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止朗读"
+          }
+        }
+      }
+    },
+    "Stopped after reading several times; ask again to continue." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连续读取多次，先停在这里；再问一次即可继续。"
+          }
+        }
+      }
+    },
+    "Stopped." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停止。"
+          }
+        }
+      }
+    },
+    "Straight" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直线"
+          }
+        }
+      }
+    },
+    "Strikethrough" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除线"
+          }
+        }
+      }
+    },
+    "Striped rows" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "斑马纹"
+          }
+        }
+      }
+    },
+    "Style sheet" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "样式表"
+          }
+        }
+      }
+    },
+    "Sub-item" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "子项"
+          }
+        }
+      }
+    },
+    "Sub-task" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "子任务"
+          }
+        }
+      }
+    },
+    "Summarize this document" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "总结这篇文档"
+          }
+        }
+      }
+    },
+    "Syntax colors" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语法着色"
+          }
+        }
+      }
+    },
+    "System Monospaced" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统等宽字体"
+          }
+        }
+      }
+    },
+    "Table" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表格"
+          }
+        }
+      }
+    },
+    "Table Layout" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表格布局"
+          }
+        }
+      }
+    },
+    "Table cell" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表格单元格"
+          }
+        }
+      }
+    },
+    "Table header" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表头"
+          }
+        }
+      }
+    },
+    "Table rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表格线"
+          }
+        }
+      }
+    },
+    "Tables" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表格"
+          }
+        }
+      }
+    },
+    "Tasks" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待办"
+          }
+        }
+      }
+    },
+    "Tasks done, last 14 days" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近 14 天完成的待办"
+          }
+        }
+      }
+    },
+    "Terminal agents" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "终端代理"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正文"
+          }
+        }
+      }
+    },
+    "Text preview" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正文预览"
+          }
+        }
+      }
+    },
+    "Text size" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字大小"
+          }
+        }
+      }
+    },
+    "Text statistics" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本统计"
+          }
+        }
+      }
+    },
+    "Text statistics (excludes code, formulas and diagrams)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本统计（不含代码、公式和图表）"
+          }
+        }
+      }
+    },
+    "The Markdown file could not be read." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取此 Markdown 文件。"
+          }
+        }
+      }
+    },
+    "The Markdown file is not UTF-8 text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Markdown 文件不是 UTF-8 文本。"
+          }
+        }
+      }
+    },
+    "The PDF could not be read." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取此 PDF。"
+          }
+        }
+      }
+    },
+    "The YAML front matter at the top." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文档顶部的 YAML 属性。"
+          }
+        }
+      }
+    },
+    "The answer reached its length limit." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回答达到了长度上限。"
+          }
+        }
+      }
+    },
+    "The base URL is not valid (HTTPS, or a server on this Mac)." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础地址无效（需要 HTTPS，或这台 Mac 上的服务）。"
+          }
+        }
+      }
+    },
+    "The defaults for every table; a table's own menu changes one." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有表格的默认样式；单个表格可在自己的菜单里修改。"
+          }
+        }
+      }
+    },
+    "The document changed while the edit was prepared. Review it again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备修改时文档发生了变化，请重新审阅。"
+          }
+        }
+      }
+    },
+    "The document changed while this was open. Review the updated changes, then apply again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审阅期间文档有改动。请查看更新后的修改，再点一次应用。"
+          }
+        }
+      }
+    },
+    "The export theme %@ is no longer available." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出主题 %@ 已不可用。"
+          }
+        }
+      }
+    },
+    "The first scan of a folder is a baseline. Successful saves and later Refresh Folder scans count each changed file once per day; no files are watched in the background." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首次扫描建立基线。成功保存和后续刷新按天记录文件变更，不在后台监控文件。"
+          }
+        }
+      }
+    },
+    "The image could not be read." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取此图片。"
+          }
+        }
+      }
+    },
+    "The key could not be removed: credentials.json in ~/Library/Application Support/Zephyr is unreadable or the folder is not writable." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法移除密钥：~/Library/Application Support/Zephyr 中的 credentials.json 无法读取，或该文件夹不可写。"
+          }
+        }
+      }
+    },
+    "The key could not be saved: credentials.json in ~/Library/Application Support/Zephyr is unreadable or the folder is not writable." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法保存密钥：~/Library/Application Support/Zephyr 中的 credentials.json 无法读取，或该文件夹不可写。"
+          }
+        }
+      }
+    },
+    "The model declined this request." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模型拒绝了这个请求。"
+          }
+        }
+      }
+    },
+    "The network connection was lost. Local files can still be previewed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络连接已中断。本地文件仍可预览。"
+          }
+        }
+      }
+    },
+    "The page snapshot could not be rendered." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法生成页面快照。可返回正文预览，或打开链接查看。"
+          }
+        }
+      }
+    },
+    "The requested lines could not be read within the preview limit." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在预览读取范围内找不到指定行。请打开文件查看。"
+          }
+        }
+      }
+    },
+    "The requested lines could not be read." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取指定行。"
+          }
+        }
+      }
+    },
+    "The text file could not be read." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取此文本文件。"
+          }
+        }
+      }
+    },
+    "The text it wrote has been edited since. Zephyr won't overwrite those edits; you can open the version from before the change and compare." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它写入的文字之后又被修改过。Zephyr 不会覆盖这些修改；你可以打开修改前的版本对照。"
+          }
+        }
+      }
+    },
+    "The theme was changed outside Zephyr." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题在 Zephyr 之外被修改了。"
+          }
+        }
+      }
+    },
+    "The theme was not changed: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题未修改：%@"
+          }
+        }
+      }
+    },
+    "The website could not be reached." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接此网站。"
+          }
+        }
+      }
+    },
+    "The website did not provide readable text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此网站没有返回可读取的正文。"
+          }
+        }
+      }
+    },
+    "The website did not return a preview." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此网站没有返回可预览内容。"
+          }
+        }
+      }
+    },
+    "The website text encoding could not be read." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取网页的文字编码。"
+          }
+        }
+      }
+    },
+    "The website took too long to respond. Open the link to try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网页响应超时。可打开链接重试。"
+          }
+        }
+      }
+    },
+    "The width before resolution scaling." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分辨率倍数生效前的页面宽度。"
+          }
+        }
+      }
+    },
+    "Theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题"
+          }
+        }
+      }
+    },
+    "Theme change undone." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已撤销主题修改。"
+          }
+        }
+      }
+    },
+    "Theme changed: %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题已修改：%@"
+          }
+        }
+      }
+    },
+    "Theme folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题文件夹"
+          }
+        }
+      }
+    },
+    "Thinking…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "思考中…"
+          }
+        }
+      }
+    },
+    "This Folder Home belongs to a scope that is no longer active." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此首页对应的文件夹已不在当前范围内。"
+          }
+        }
+      }
+    },
+    "This Markdown file is too large to preview. Open it or specify line numbers." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markdown 文件较大，未加载预览。请打开文件或指定行号。"
+          }
+        }
+      }
+    },
+    "This PDF is too large to preview." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 PDF 超过预览大小上限。"
+          }
+        }
+      }
+    },
+    "This change can't be withdrawn automatically" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法自动撤回这处修改"
+          }
+        }
+      }
+    },
+    "This chat already includes text from %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这段对话里已包含来自 %@ 的文字。"
+          }
+        }
+      }
+    },
+    "This component cannot be saved as an image." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此内容无法保存为图片。"
+          }
+        }
+      }
+    },
+    "This document is read-only." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这份文档是只读的。"
+          }
+        }
+      }
+    },
+    "This document is too large to preview. Open it in its default app." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此文档过大，请在默认应用中打开。"
+          }
+        }
+      }
+    },
+    "This endpoint does not list models. Enter an ID." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个端点不提供模型列表，请输入模型 ID。"
+          }
+        }
+      }
+    },
+    "This file is not valid UTF-8 and was opened read-only." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此文件不是有效的 UTF-8，已以只读方式打开。"
+          }
+        }
+      }
+    },
+    "This file is too large to preview. Open it or specify line numbers." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件较大，未加载预览。请打开文件或在链接中指定行号。"
+          }
+        }
+      }
+    },
+    "This file type cannot be previewed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此文件类型暂不支持内容预览。"
+          }
+        }
+      }
+    },
+    "This folder has no Markdown files yet." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此文件夹还没有 Markdown 文件。"
+          }
+        }
+      }
+    },
+    "This image is too large to preview." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此图片超过预览大小上限。"
+          }
+        }
+      }
+    },
+    "This link does not provide text to preview." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此链接没有可供预览的文本。"
+          }
+        }
+      }
+    },
+    "This local file cannot be previewed." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法预览此本地文件。"
+          }
+        }
+      }
+    },
+    "This local file is not UTF-8 text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此本地文件不是 UTF-8 文本。"
+          }
+        }
+      }
+    },
+    "This note is not valid UTF-8, so Zephyr leaves it unchanged." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这条笔记不是有效的 UTF-8，Zephyr 不会修改它。"
+          }
+        }
+      }
+    },
+    "This proposal was written against an earlier version of the document. The changes below are placed in the current text." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这份提议基于文档的较早版本写成，下面的修改已定位到当前文本。"
+          }
+        }
+      }
+    },
+    "This raster export exceeds Zephyr's 100-page or 100-megapixel limit." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像导出超过 Zephyr 的 100 页或 1 亿像素上限。"
+          }
+        }
+      }
+    },
+    "Thumbnail" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩略图"
+          }
+        }
+      }
+    },
+    "To-do List" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待办列表"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日"
+          }
+        }
+      }
+    },
+    "Today’s Date" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天的日期"
+          }
+        }
+      }
+    },
+    "Tool calls" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工具调用"
+          }
+        }
+      }
+    },
+    "Tracking" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟踪"
+          }
+        }
+      }
+    },
+    "Turn Into" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转换为"
+          }
+        }
+      }
+    },
+    "Typeface" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字体"
+          }
+        }
+      }
+    },
+    "Typefaces" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字体"
+          }
+        }
+      }
+    },
+    "Typing" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键入"
+          }
+        }
+      }
+    },
+    "Uncheck Task" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消勾选待办"
+          }
+        }
+      }
+    },
+    "Undo" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销"
+          }
+        }
+      }
+    },
+    "Unique files opened" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每日打开的文件"
+          }
+        }
+      }
+    },
+    "Untitled" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未命名"
+          }
+        }
+      }
+    },
+    "Update this page: " : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新这个页面："
+          }
+        }
+      }
+    },
+    "Use Default" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用默认"
+          }
+        }
+      }
+    },
+    "Use Enclosing Folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用所在文件夹"
+          }
+        }
+      }
+    },
+    "Use Folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用此文件夹"
+          }
+        }
+      }
+    },
+    "Use Other Version" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用另一版本"
+          }
+        }
+      }
+    },
+    "Use Selection for Find" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用所选内容查找"
+          }
+        }
+      }
+    },
+    "Use for All Tables" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于所有表格"
+          }
+        }
+      }
+    },
+    "Use selected theme" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随当前主题"
+          }
+        }
+      }
+    },
+    "Use the Palette's Color" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用色板颜色"
+          }
+        }
+      }
+    },
+    "Use the selected reader theme, or keep one theme for exports." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随阅读主题，或指定固定的导出主题。"
+          }
+        }
+      }
+    },
+    "View" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示"
+          }
+        }
+      }
+    },
+    "View image or diagram" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看图片或图表"
+          }
+        }
+      }
+    },
+    "View image or diagram (⌘Return)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看图片或图表（⌘Return）"
+          }
+        }
+      }
+    },
+    "Website summary" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网页摘要"
+          }
+        }
+      }
+    },
+    "Weight" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字重"
+          }
+        }
+      }
+    },
+    "What this project is for, in a line or two." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个项目要做什么，一两句话说清。"
+          }
+        }
+      }
+    },
+    "What you are working toward, with the tasks that get you there" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你正在追求的事，以及通往它的待办"
+          }
+        }
+      }
+    },
+    "Width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "宽度"
+          }
+        }
+      }
+    },
+    "Window" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗口"
+          }
+        }
+      }
+    },
+    "Window Width" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗口宽"
+          }
+        }
+      }
+    },
+    "With the sidebar hidden, a window's open documents show as dots on its left edge; point at them to switch or close." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "侧栏收起时，窗口里打开的文档以圆点显示在左缘；指向它们即可切换或关闭。"
+          }
+        }
+      }
+    },
+    "With the version path, for example http://localhost:11434/v1 for Ollama" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "包含版本路径，例如 Ollama 用 http://localhost:11434/v1"
+          }
+        }
+      }
+    },
+    "Withdraw" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤回"
+          }
+        }
+      }
+    },
+    "Withdraw Change" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤回修改"
+          }
+        }
+      }
+    },
+    "Withdrawn" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已撤回"
+          }
+        }
+      }
+    },
+    "Words" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "词数"
+          }
+        }
+      }
+    },
+    "Write anything here in the note, in Markdown." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在笔记里用 Markdown 写任何内容。"
+          }
+        }
+      }
+    },
+    "Write lines like “- Done: 3/10” in the note." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在笔记里写“- 完成: 3/10”这样的行。"
+          }
+        }
+      }
+    },
+    "You can restore it from the Trash." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可以从废纸篓恢复。"
+          }
+        }
+      }
+    },
+    "Your themes" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的主题"
+          }
+        }
+      }
+    },
+    "Zephyr" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyr"
+          }
+        }
+      }
+    },
+    "Zephyr AI" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyr AI"
+          }
+        }
+      }
+    },
+    "Zephyr could not create the PDF." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyr 无法生成 PDF。"
+          }
+        }
+      }
+    },
+    "Zephyr opens Markdown files from Finder." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从访达打开 Markdown 文件时使用 Zephyr。"
+          }
+        }
+      }
+    },
+    "Zephyr preview enabled. Select a Markdown file in Finder and press Space." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已启用 Zephyr 预览。在访达选择 Markdown 文件后按空格键。"
+          }
+        }
+      }
+    },
+    "Zephyr's change history is full. Clear it in Settings, then try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zephyr 的修改记录已满。请在设置中清除后再试。"
+          }
+        }
+      }
+    },
+    "Zoom" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩放"
+          }
+        }
+      }
+    },
+    "auto" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动"
+          }
+        }
+      }
+    },
+    "due %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截止 %@"
+          }
+        }
+      }
+    },
+    "edited %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑于 %@"
+          }
+        }
+      }
+    },
+    "lines %lld–%lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %lld–%lld 行"
+          }
+        }
+      }
+    },
+    "macOS could not keep a version of this file, so Zephyr will not let AI or agents change it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 无法为这个文件保留版本，因此 Zephyr 不允许 AI 或代理修改它。"
+          }
+        }
+      }
+    },
+    "now %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在为 %@"
+          }
+        }
+      }
+    },
+    "the whole text" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全文"
+          }
+        }
+      }
+    },
+    "updated %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新于 %@"
+          }
+        }
+      }
+    },
+    "| Stage | Owner | Due | Status |\n|---|---|---|:---:|\n| Design review | Mira | 10-04 | Done |\n| Layout engine | Leo | 10-09 | In progress |\n| Public beta | Everyone | 10-16 | Not started |" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "| 阶段 | 负责人 | 截止 | 状态 |\n|---|---|---|:---:|\n| 设计评审 | Mira | 10-04 | 已完成 |\n| 排版引擎 | Leo | 10-09 | 进行中 |\n| 公开测试 | 全体 | 10-16 | 未开始 |"
+          }
+        }
+      }
+    },
+    "⌘+ and ⌘−" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘+ 和 ⌘−"
+          }
+        }
+      }
+    },
+    "⌘J opens the assistant either way." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无论开关，⌘J 都能打开助手。"
+          }
+        }
+      }
+    },
+    "⌘↩ to apply · Esc to cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘↩ 应用 · Esc 取消"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

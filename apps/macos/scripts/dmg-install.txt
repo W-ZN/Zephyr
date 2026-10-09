@@ -1,0 +1,25 @@
+Installing Zephyr
+=================
+
+1. Drag Zephyr.app onto the Applications folder.
+
+2. Sign it on your Mac (once per download).
+
+   Zephyr is open source and is not notarized by Apple: the project has no
+   paid Apple Developer ID, so the app in this disk image carries only an
+   ad-hoc signature and macOS refuses to open the downloaded copy. Open
+   Terminal and run:
+
+     xattr -dr com.apple.quarantine /Applications/Zephyr.app
+     codesign --force --deep --preserve-metadata=entitlements,flags --sign - /Applications/Zephyr.app
+
+   The first command removes the "downloaded from the internet" mark; the
+   second signs the app ad-hoc on your own Mac, keeping the entitlements of
+   the Quick Look extension.
+
+3. Open Zephyr from Applications.
+
+Requirements: macOS 15 or later, on Apple silicon or Intel.
+
+Finder preview (Space bar): Zephyr > Settings > General > Documents.
+Source code, issues and license texts: https://github.com/W-ZN/Zephyr

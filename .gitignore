@@ -1,0 +1,23 @@
+# Packaged products, directly (dist/Zephyr.app, the disk image; later platforms' packages beside
+# them), and everything retained (dist/archive/: old packages, evidence per round, design assets).
+/dist/
+# Everything the build can make again: intermediates, SwiftPM checkouts/caches, tools (XcodeGen),
+# test outputs, snapshots.
+/build.noindex/
+# Local self-signed signing identity (private key). Never commit.
+/.signing/
+
+# Generated from apps/macos/project.yml by XcodeGen.
+*.xcodeproj/
+# SwiftPM / Xcode local state when the package is opened or built directly.
+.build/
+.swiftpm/
+xcuserdata/
+
+.DS_Store
+
+# Development notes stay local: the design baseline, the progress log and notes on single
+# improvements. Published documentation is the README, CONTRIBUTING and docs/guide.md.
+/docs/design.md
+/docs/progress.md
+/docs/font-settings.md

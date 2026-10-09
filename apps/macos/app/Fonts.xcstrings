@@ -1,0 +1,146 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%ld fonts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%ld 款字体"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Chinese name, English name or pinyin" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入中文名、英文名或拼音"
+          }
+        }
+      }
+    },
+    "Find a Font" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找字体"
+          }
+        }
+      }
+    },
+    "Font Results" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字体搜索结果"
+          }
+        }
+      }
+    },
+    "Font Website" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字体官网"
+          }
+        }
+      }
+    },
+    "Install it in Font Book, then refresh." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在“字体册”中安装后刷新。"
+          }
+        }
+      }
+    },
+    "No matching fonts. Try another name or refresh after installing." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到匹配字体。试试其他名称，或安装后刷新。"
+          }
+        }
+      }
+    },
+    "Not installed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装"
+          }
+        }
+      }
+    },
+    "Refresh Fonts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新字体"
+          }
+        }
+      }
+    },
+    "Search Fonts" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索字体"
+          }
+        }
+      }
+    },
+    "Search Fonts…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索字体…"
+          }
+        }
+      }
+    },
+    "This font is not installed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这款字体尚未安装"
+          }
+        }
+      }
+    },
+    "Use Font" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用字体"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
