@@ -3,7 +3,7 @@ import ZephyrCore
 import ZephyrRender
 
 /// Keep in step with MARKETING_VERSION in apps/macos/project.yml.
-let zephyrVersion = "0.1.2"
+let zephyrVersion = "0.1.3"
 
 /// `zephyr` command-line tool. Local commands read files directly; agent commands go through the
 /// running app and see only documents the user shared, as currently edited. Document changes are

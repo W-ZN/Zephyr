@@ -12,7 +12,7 @@
 
 **Zephyr** opens the Markdown files you already have, renders them as you read, and writes back only the bytes you change. It is a native AppKit app with its own Core Text block canvas: no Electron, no web view for the document, no library or index in your folders.
 
-> **Status: pre-alpha (v0.1.2).** The v1 feature set — reading, editing, the assistant with CLI/MCP access, customization — is implemented. Some performance targets and the full Quick Look matrix are still being verified.
+> **Status: pre-alpha (v0.1.3).** The v1 feature set — reading, editing, the assistant with CLI/MCP access, customization — is implemented. Some performance targets and the full Quick Look matrix are still being verified.
 
 <p align="center">
   <img src="docs/images/screenshot-light.png" alt="Zephyr in light mode with the sidebar open" width="49%">
@@ -23,7 +23,7 @@ The [user guide](docs/guide.md) describes each part in detail.
 
 ## Install
 
-1. Download **`Zephyr-0.1.2.dmg`** from the [latest release](https://github.com/W-ZN/Zephyr/releases/latest) and open it.
+1. Download **`Zephyr-0.1.3.dmg`** from the [latest release](https://github.com/W-ZN/Zephyr/releases/latest) and open it.
 2. Drag **Zephyr.app** onto **Applications**.
 3. **Sign it on your Mac (required).** Zephyr is not notarized by Apple: the project has no paid Apple Developer ID, so the release carries only an ad-hoc signature and macOS refuses to open the downloaded copy ("Apple could not verify…"). Open Terminal and run:
 
@@ -41,7 +41,7 @@ The [user guide](docs/guide.md) describes each part in detail.
 
 **Requirements:** macOS 15 Sequoia or later, on Apple silicon or Intel (universal binary).
 
-To check the download, compare `shasum -a 256 Zephyr-0.1.2.dmg` with the `.sha256` file attached to the release. If you prefer not to run a downloaded binary at all, [build it from source](#build-from-source) — it takes one command.
+To check the download, compare `shasum -a 256 Zephyr-0.1.3.dmg` with the `.sha256` file attached to the release. If you prefer not to run a downloaded binary at all, [build it from source](#build-from-source) — it takes one command.
 
 **Updates:** version 0.1.2 introduces signed updates from GitHub Releases. Install it manually once when upgrading from 0.1.1. **Settings → General → Updates** provides a manual check, daily checks, and optional automatic installation after quitting. Automatic installation is off by default. Updates replace the app bundle and keep your preferences and editable theme files in `~/Library/Application Support/Zephyr/`.
 

@@ -55,12 +55,37 @@ import Testing
         #expect(bold.string == "a **b**" && caret(bold) == 7, "the closing stars are stepped over")
         let (bullet, _) = editor("")
         bullet.type("*")
+        #expect(bullet.string == "**" && caret(bullet) == 1, "one star at the start of a line pairs too")
         bullet.type(" ")
-        #expect(bullet.string == "* ", "a star at the start of a line can still start a bullet")
+        #expect(bullet.string == "* " && caret(bullet) == 2, "a space inside that pair makes it a bullet")
+        let (quoted, _) = editor("> ")
+        quoted.type("*")
+        quoted.type(" ")
+        #expect(quoted.string == "> * ")
         let (start, _) = editor("")
         start.type("*")
         start.type("*")
         #expect(start.string == "****" && caret(start) == 2, "two stars at the start of a line open bold")
+        start.type("*")
+        #expect(start.string == "******" && caret(start) == 3, "three stars at most")
+        let (plain, _) = editor("")
+        plain.type(" ")
+        #expect(plain.string == " ", "a space elsewhere is plain")
+    }
+
+    @Test func starsPairBesideChineseText() {
+        let (e, _) = editor("这是")
+        e.type("*")
+        #expect(e.string == "这是**" && caret(e) == 3, "no space is needed before CJK text")
+        e.type("*")
+        #expect(e.string == "这是****" && caret(e) == 4)
+        let (mid, _) = editor("前文后文")
+        mid.select(NSRange(location: 2, length: 0))
+        mid.type("*")
+        #expect(mid.string == "前文**后文" && caret(mid) == 3, "a pair opens between CJK characters")
+        let (word, _) = editor("2")
+        word.type("*")
+        #expect(word.string == "2*", "after a Latin digit a star stays single")
     }
 
     @Test func backspaceTakesAnEmptyPair() {

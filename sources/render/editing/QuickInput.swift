@@ -16,6 +16,19 @@ extension MarkdownEditor {
         return CharacterSet.whitespacesAndNewlines.contains(scalar) || CharacterSet.punctuationCharacters.contains(scalar)
     }
 
+    /// Chinese, Japanese and Korean text is written without spaces, so a marker typed right after
+    /// or before it pairs like one beside a space.
+    private static func pairOpens(_ c: unichar?) -> Bool {
+        if opens(c) { return true }
+        guard let c, let scalar = Unicode.Scalar(c) else { return false }
+        return scalar.isCJK
+    }
+    private static func pairCloses(_ c: unichar?) -> Bool {
+        if closes(c) { return true }
+        guard let c, let scalar = Unicode.Scalar(c) else { return false }
+        return scalar.isCJK
+    }
+
     /// The caret's line is prose (not code, a fence or a component).
     private func inProse(_ location: Int) -> Bool {
         guard let kind = lineMetrics(at: location)?.kind else { return true }
@@ -24,11 +37,13 @@ extension MarkdownEditor {
 
     /// `$` and `*` typed with nothing selected come in pairs, the caret between: typed again in an
     /// empty pair they nest (`$$`, `**`, `***` at most); after text, the closing one is stepped
-    /// over. A `*` at the start of a line stays single (it may start a bullet), and a second one
-    /// there opens `**`. With a selection, the selection is wrapped. Returns false to type it plainly.
+    /// over. At the start of a line a lone `*` pairs too, and a space typed inside that pair turns
+    /// it into a bullet (`* `). With a selection, the selection is wrapped. Returns false to type
+    /// it plainly.
     func typePaired(_ text: String) -> Bool {
-        guard isEditable, text == "$" || text == "*", inProse(selection.location) else { return false }
+        guard isEditable, text == "$" || text == "*" || text == " ", inProse(selection.location) else { return false }
         let ns = source, sel = selection
+        if text == " " { return bulletFromStarPair() }
         if sel.length > 0 {
             guard !ns.substring(with: sel).contains(where: \.isNewline) else { return false }
             toggleWrap(text)
@@ -42,13 +57,13 @@ extension MarkdownEditor {
         while i + r < ns.length, ns.character(at: i + r) == mark { r += 1 }
         let before: unichar? = i - l > line.location ? ns.character(at: i - l - 1) : nil
         let after: unichar? = i + r < ns.length ? ns.character(at: i + r) : nil
-        let opening = Self.opens(before)
+        let opening = Self.pairOpens(before)
         // After text, a closing marker: step over it.
         if r > 0, !opening {
             selection = NSRange(location: i + 1, length: 0)
             return true
         }
-        guard opening, Self.closes(after), l < most else { return false }
+        guard opening, Self.pairCloses(after), l < most else { return false }
         if l == r, l >= 1 {
             typeText(text + text, replacing: sel)
             selection = NSRange(location: i + 1, length: 0)
@@ -58,13 +73,25 @@ extension MarkdownEditor {
         let head = ns.substring(with: NSRange(location: line.location, length: i - l - line.location))
         let atLineStart = head.allSatisfy { $0 == " " || $0 == "\t" || $0 == ">" }
         if l == 0 {
-            if mark == 0x2A, atLineStart { return false }
             typeText(text + text, replacing: sel)
         } else {
             // A single `*` left at the start of a line: the second opens a pair of `**`.
             guard mark == 0x2A, atLineStart else { return false }
             typeText(text + String(repeating: text, count: l + 1), replacing: sel)
         }
+        selection = NSRange(location: i + 1, length: 0)
+        return true
+    }
+
+    /// A space typed between a lone pair of stars at the start of a line (`*‸*`) means a bullet:
+    /// the pair becomes `* ` and the caret follows it. Anywhere else the space is typed plainly.
+    private func bulletFromStarPair() -> Bool {
+        let ns = source, sel = selection, i = sel.location
+        guard sel.length == 0, i > 0, i < ns.length, ns.character(at: i - 1) == 0x2A, ns.character(at: i) == 0x2A else { return false }
+        let line = ns.lineRange(for: NSRange(location: i, length: 0))
+        let head = ns.substring(with: NSRange(location: line.location, length: i - 1 - line.location))
+        guard head.allSatisfy({ $0 == " " || $0 == "\t" || $0 == ">" }) else { return false }
+        replace(NSRange(location: i - 1, length: 2), with: "* ")
         selection = NSRange(location: i + 1, length: 0)
         return true
     }
@@ -80,7 +107,7 @@ extension MarkdownEditor {
         while i - l > line.location, ns.character(at: i - l - 1) == mark { l += 1 }
         while i + r < ns.length, ns.character(at: i + r) == mark { r += 1 }
         let before: unichar? = i - l > line.location ? ns.character(at: i - l - 1) : nil
-        guard l == r, Self.opens(before) else { return false }
+        guard l == r, Self.pairOpens(before) else { return false }
         replace(NSRange(location: i - 1, length: 2), with: "")
         selection = NSRange(location: i - 1, length: 0)
         return true

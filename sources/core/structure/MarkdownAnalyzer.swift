@@ -8,9 +8,45 @@ public enum MarkdownAnalyzer {
     /// - Parameter references: link reference definitions from the whole document. They are appended
     ///   after the chunk (where they produce no nodes) so `[text][ref]` resolves across chunks.
     public static func analyze(_ text: String, references: String = "") -> ChunkAnalysis {
+        var builder: Builder
+        switch parse(text, references: references) {
+        case let .plain(analysis): return analysis
+        case let .parsed(parsed): builder = parsed
+        }
+        return builder.finish()
+    }
+
+    /// The text with the emphasis cmark leaves literal (`**差异A：**内容`, see `LooseEmphasis`) turned
+    /// into `<strong>`, `<em>` and `<del>` tags, for outputs that go through cmark again (exports).
+    public static func rewritingLooseEmphasis(_ text: String) -> String {
+        guard text.contains(where: { $0 == "*" || $0 == "_" || $0 == "~" }), case let .parsed(builder) = parse(text, references: "") else { return text }
+        guard !builder.loose.isEmpty else { return text }
+        var units = Array(text.utf16)
+        var edits: [(range: Range<Int>, tag: String)] = []
+        for pair in builder.loose {
+            let name = switch pair.style {
+            case .strong: "strong"
+            case .strikethrough: "del"
+            default: "em"
+            }
+            edits.append((pair.open, "<\(name)>"))
+            edits.append((pair.close, "</\(name)>"))
+        }
+        for edit in edits.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
+            units.replaceSubrange(edit.range, with: Array(edit.tag.utf16))
+        }
+        return String(decoding: units, as: UTF16.self)
+    }
+
+    private enum Parsed {
+        case plain(ChunkAnalysis)
+        case parsed(Builder)
+    }
+
+    private static func parse(_ text: String, references: String) -> Parsed {
         let lines = TextLines(text)
         if (0..<lines.lineCount).contains(where: { lines.contentEnd(ofLine: $0) - lines.lineStarts[$0] > maximumLineLength }) {
-            return plain(lines)
+            return .plain(plain(lines))
         }
         let math = MathScanner.scan(lines)
         var source = MathScanner.mask(text, spans: math)
@@ -24,7 +60,7 @@ public enum MarkdownAnalyzer {
             builder.walk(children[i], quote: 0, list: 0)
             i += 1
         }
-        return builder.finish()
+        return .parsed(builder)
     }
 
     /// Chunks with a longer line are shown as plain source, as VS Code stops tokenizing at the same
@@ -271,6 +307,8 @@ private struct Builder {
     var lines: [LineInfo]
     var markers: [Marker] = []
     var inlines: [InlineToken] = []
+    /// Pairs found by `LooseEmphasis` (already in `inlines`), kept for exports.
+    var loose: [LooseEmphasis.Pair] = []
     var components: [ComponentToken] = []
     var codeBlocks: [CodeBlockToken] = []
     /// Line → offset where its list marker starts, for lines that open a list item.
@@ -400,6 +438,24 @@ private struct Builder {
     mutating func inlineChildren(_ node: Markup) {
         for child in node.children { inline(child) }
         pairInlineTags(node.children)
+        pairLooseEmphasis(node)
+    }
+
+    /// `**差异A：**内容`: delimiters cmark left as text (it wants a space or a letter beside the
+    /// closing run), paired by `LooseEmphasis` among one parent's literal text.
+    mutating func pairLooseEmphasis(_ node: Markup) {
+        var texts: [Range<Int>] = []
+        for child in node.children where child is Text {
+            if let r = span(child) { texts.append(r) }
+        }
+        guard !texts.isEmpty else { return }
+        for pair in LooseEmphasis.pairs(in: t.units, texts: texts, blocked: math.map(\.range)) {
+            let whole = pair.open.lowerBound..<pair.close.upperBound
+            hide(pair.open, reveal: whole)
+            hide(pair.close, reveal: whole)
+            inlines.append(InlineToken(style: pair.style, range: Self.ns(whole)))
+            loose.append(pair)
+        }
     }
 
     /// `<kbd>⌘</kbd>`: a pair of styled tags among one parent's inline nodes. The tags hide like

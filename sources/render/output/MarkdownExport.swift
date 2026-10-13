@@ -334,7 +334,7 @@ public enum MarkdownExport {
 
 private enum HTML {
     static func render(_ source: String, baseURL: URL?, typography: Typography, dark: Bool) -> String {
-        let document = Document(parsing: source, options: [.disableSmartOpts])
+        let document = Document(parsing: MarkdownAnalyzer.rewritingLooseEmphasis(source), options: [.disableSmartOpts])
         let style = stylesheet(typography, dark: dark)
         return "<!doctype html>\n<html><head><meta charset=\"utf-8\"><title>Zephyr export</title><style>\(style)</style></head><body>\n" + children(document, baseURL: baseURL) + "</body></html>\n"
     }
@@ -358,7 +358,7 @@ private enum HTML {
         return "body{max-width:\(Int(typography.readableWidth.rounded()))pt;margin:3rem auto;padding:0 1.25rem;font:\(typography.fontSize)pt/\(typography.lineSpacing) \(font(typography.bodyFont));color:\(color(.text));background:\(color(.background))}a{color:\(color(.link))}\(headings)img{max-width:100%;height:auto;\(imageAlignment)}img[align=\"left\"]{margin-left:0;margin-right:0}img[align=\"center\"]{margin-left:auto;margin-right:auto}table{border-collapse:collapse}th,td{border:1px solid \(color(.tableBorder));padding:\(typography.tablePadding)pt;text-align:left}th{background:\(color(.tableHeader))}code{font-family:\(font(typography.codeFont));background:\(color(.inlineCodeBackground));padding:.1em .25em;border-radius:3px}pre{padding:.8rem;overflow:auto;background:\(color(.codeBackground));border:1px solid \(color(.codeBorder))}blockquote{border-left:3px solid \(color(.quote));padding-left:1em;color:\(color(.muted))}"
     }
 
-    static func plainText(_ source: String) -> String { text(Document(parsing: source, options: [.disableSmartOpts])).trimmingCharacters(in: .whitespacesAndNewlines) + "\n" }
+    static func plainText(_ source: String) -> String { text(Document(parsing: MarkdownAnalyzer.rewritingLooseEmphasis(source), options: [.disableSmartOpts])).trimmingCharacters(in: .whitespacesAndNewlines) + "\n" }
     /// Children in order; an aligned container (`<div align="center">` … `</div>`) exports as the
     /// one element the editor draws.
     private static func children(_ markup: Markup, baseURL: URL?) -> String {

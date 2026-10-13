@@ -19,6 +19,32 @@ import Testing
         #expect(sub(s, heading.revealRange) == "## Title **bold** ##")
     }
 
+    /// cmark keeps `**差异A：**内容` literal (punctuation before the closing run, a letter after);
+    /// the loose pass styles it, and leaves `snake_case`, spaced stars and formulas alone.
+    @Test func emphasisBesidePunctuationAndCJK() {
+        func styled(_ s: String) -> [String] { MarkdownAnalyzer.analyze(s).inlines.map { sub(s, $0.range) } }
+        let a = "**差异A：**内容"
+        #expect(styled(a) == ["**差异A：**"])
+        #expect(hidden(a, MarkdownAnalyzer.analyze(a)) == ["**", "**"])
+        #expect(styled("**Note:**text") == ["**Note:**"])
+        #expect(styled("前文*强调。*后文") == ["*强调。*"])
+        #expect(styled("这是_斜体_文字") == ["_斜体_"])
+        #expect(styled("~~删除：~~后文") == ["~~删除：~~"])
+        #expect(styled("***粗斜：***后") == ["***粗斜：***", "**粗斜：**"], "emphasis around strong")
+        #expect(styled("**差异：**内容 与 *次要：*文本") == ["**差异：**", "*次要：*"])
+        #expect(styled("snake_case_name and 2 * 3 * 4") == [])
+        #expect(styled("literal \\*\\*差异：\\*\\*内容") == [])
+        #expect(styled("$a**b：**c$ 与 **好：**吗") == ["**好：**"])
+    }
+
+    /// Exports parse again with cmark, so the loose pairs become tags there; text cmark already
+    /// pairs, and escaped or unpaired markers, pass through untouched.
+    @Test func looseEmphasisRewritesForExport() {
+        #expect(MarkdownAnalyzer.rewritingLooseEmphasis("**差异A：**内容与*斜：*体") == "<strong>差异A：</strong>内容与<em>斜：</em>体")
+        #expect(MarkdownAnalyzer.rewritingLooseEmphasis("**好**和\\*x\\*和 2 * 3") == "**好**和\\*x\\*和 2 * 3")
+        #expect(MarkdownAnalyzer.rewritingLooseEmphasis("plain") == "plain")
+    }
+
     /// cmark ends a setext heading on the next line when text follows the underline directly; the
     /// underline is still the `===` line, and the text after it is a paragraph block of its own.
     @Test func setextHeadingFollowedDirectlyByText() {
