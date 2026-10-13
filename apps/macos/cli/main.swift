@@ -2,6 +2,9 @@ import AppKit
 import ZephyrCore
 import ZephyrRender
 
+/// Keep in step with MARKETING_VERSION in apps/macos/project.yml.
+let zephyrVersion = "0.1.2"
+
 /// `zephyr` command-line tool. Local commands read files directly; agent commands go through the
 /// running app and see only documents the user shared, as currently edited. Document changes are
 /// proposals the user approves in Zephyr; `export` is the explicit output-file exception.
@@ -289,7 +292,7 @@ case "config", "theme":
 case "mcp":
     MCPServer.run()
 case "--version", "-v":
-    print("zephyr 0.1.1")
+    print("zephyr \(zephyrVersion)")
 default:
     fail(usage)
 }

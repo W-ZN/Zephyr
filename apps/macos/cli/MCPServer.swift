@@ -31,7 +31,7 @@ enum MCPServer {
             case "initialize":
                 if let info = params["clientInfo"] as? [String: Any], let name = info["name"] as? String { clientName = "\(name) (MCP)" }
                 let version = params["protocolVersion"] as? String ?? "2025-06-18"
-                respond(id, ["protocolVersion": version, "capabilities": ["tools": [:]], "serverInfo": ["name": "zephyr", "version": "0.1.1"],
+                respond(id, ["protocolVersion": version, "capabilities": ["tools": [:]], "serverInfo": ["name": "zephyr", "version": zephyrVersion],
                              "instructions": "Work on the Markdown document the user shared from Zephyr. Edits are proposals the user approves in Zephyr. get_appearance and set_appearance read and change how Zephyr shows documents, never the files."])
             case "ping":
                 respond(id, [:])

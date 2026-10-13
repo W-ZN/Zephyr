@@ -119,9 +119,10 @@ private struct Painter {
             case let .path(segments, dashed, thick, head, tail): path(segments, dashed: dashed, thick: thick, head: head, tail: tail)
             case let .text(r, label, boxed):
                 let box = rect(r)
-                // Labels on lines sit on a chip of the raised surface, 6 × 3 pt around them.
+                // Labels on lines interrupt them: a chip of the card's own color, 6 × 3 pt around
+                // the text, with no edge, so it reads as a gap in the line rather than a box.
                 if boxed {
-                    Tokens.raised.setFill()
+                    Palette.codeBackground.setFill()
                     NSBezierPath(roundedRect: box.insetBy(dx: -6 * unit, dy: -3 * unit), xRadius: 5 * unit, yRadius: 5 * unit).fill()
                 }
                 text(label, in: box, color: Palette.muted, weight: .regular, size: round(em * 12 / 14 * 2) / 2)
@@ -346,7 +347,10 @@ private struct Painter {
         let style = NSMutableParagraphStyle()
         style.alignment = .center
         let text = NSAttributedString(string: label, attributes: [.font: font, .foregroundColor: color, .paragraphStyle: style])
-        let bounds = text.boundingRect(with: NSSize(width: max(box.width, 1), height: 10_000), options: [.usesLineFragmentOrigin])
-        text.draw(with: NSRect(x: box.minX, y: box.midY - ceil(bounds.height) / 2, width: box.width, height: ceil(bounds.height)), options: [.usesLineFragmentOrigin])
+        // Wrapped where the layout measured it (240 pt at a 14 pt label), not at the box's edge,
+        // so a long name keeps the box's padding.
+        let width = max(1, min(box.width, 240 * em / 14))
+        let bounds = text.boundingRect(with: NSSize(width: width, height: 10_000), options: [.usesLineFragmentOrigin])
+        text.draw(with: NSRect(x: box.midX - width / 2, y: box.midY - ceil(bounds.height) / 2, width: width, height: ceil(bounds.height)), options: [.usesLineFragmentOrigin])
     }
 }

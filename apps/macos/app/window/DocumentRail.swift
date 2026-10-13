@@ -113,7 +113,7 @@ final class DocumentRail: NSView {
     }
     private var restZone: NSRect {
         let first = restY(0), last = restY(items.count - 1)
-        return NSRect(x: 0, y: first - 12, width: 38, height: last - first + 24)
+        return NSRect(x: 0, y: first - 12, width: 36, height: last - first + 24)
     }
 
     private var panelHeight: CGFloat { min(CGFloat(items.count) * Self.row, bounds.height - 2 * (Self.edge + Self.pad)) + 2 * Self.pad }
@@ -462,4 +462,8 @@ private final class RailRowElement: NSAccessibilityElement {
         action()
         return true
     }
+}
+
+extension DocumentRail: InterfaceFontObserver {
+    func interfaceFontChanged() { changed() }
 }

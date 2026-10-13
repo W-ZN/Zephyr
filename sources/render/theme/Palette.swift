@@ -260,6 +260,24 @@ public enum Palette {
     public static let accent = color(.accent)
     public static let link = color(.link)
     public static let quote = color(.quote)
+    /// The quote bar: the theme's quote color, kept apart from both the caret and the page. A gray
+    /// as dark as the text (a monochrome theme) would read as a second caret beside the real one,
+    /// so it is drawn halfway to the background; one barely off the background is drawn a third
+    /// of the way to the text. Colored bars stay as the theme sets them.
+    public static let quoteBar = NSColor(name: nil) { appearance in
+        let dark = appearance.isDark
+        guard let quote = resolved(.quote, dark: dark).usingColorSpace(.sRGB), let page = resolved(.background, dark: dark).usingColorSpace(.sRGB),
+              let ink = resolved(.text, dark: dark).usingColorSpace(.sRGB) else { return resolved(.quote, dark: dark) }
+        func luminance(_ c: NSColor) -> CGFloat {
+            func channel(_ v: CGFloat) -> CGFloat { v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4) }
+            return 0.2126 * channel(c.redComponent) + 0.7152 * channel(c.greenComponent) + 0.0722 * channel(c.blueComponent)
+        }
+        let a = luminance(quote), b = luminance(page)
+        let contrast = (max(a, b) + 0.05) / (min(a, b) + 0.05)
+        if quote.saturationComponent < 0.15, contrast > 3.5 { return page.blended(withFraction: 0.5, of: quote) ?? quote }
+        if contrast < 1.6 { return quote.blended(withFraction: 0.35, of: ink) ?? quote }
+        return quote
+    }
     public static let codeBackground = color(.codeBackground)
     public static let codeBorder = color(.codeBorder)
     public static let inlineCodeBackground = color(.inlineCodeBackground)

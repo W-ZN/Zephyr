@@ -21,10 +21,21 @@ Optional:
 ```bash
 make signing-init   # create a self-signed identity in .signing/ so rebuilt apps keep a stable signature
 make dmg            # release disk image: dist/Zephyr-<version>.dmg, signed ad-hoc, with license texts
+make appcast        # package, then sign dist/appcast.xml with the Sparkle key in the login Keychain
 make install        # copy the packaged app to ~/Applications
 ```
 
 Please run `make test` and, for app-level changes, `make build window-check save-check` before sending a pull request.
+
+## Publishing macOS updates
+
+The macOS target pins Sparkle in `apps/macos/project.yml`. Keep `CFBundleVersion` monotonically increasing, and keep the bundle identifier and `SUPublicEDKey` stable so existing installations can update. The first updater-enabled release is 0.1.2; older versions need one manual installation.
+
+The current local/ad-hoc distribution has no Apple Team ID. Its main app carries the explicitly approved `disable-library-validation` entitlement so macOS can load the bundled Sparkle framework; this relaxes process library validation, while signed-feed and pre-extraction update verification remain mandatory. Quick Look and the CLI do not receive this entitlement. When switching to Developer ID signing for the whole bundle, remove this exception and verify the packaged launch again.
+
+Sparkle's signing tools are resolved with the Xcode dependencies under `build.noindex/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin/`. The release key is in the login Keychain under account `dev.zephyr.Zephyr`. Back it up securely with the vendor's `generate_keys -x` command; never commit or upload the exported private key. A new machine must import the same key, not silently generate a replacement. The app embeds only the public key.
+
+After the tests and packaged app launch pass, run `make appcast`. It produces the versioned DMG, checksum and signed `dist/appcast.xml`. Create a draft GitHub release for the matching source tag, upload all three files, and publish only after the complete set is present. The app reads `releases/latest/download/appcast.xml`; each feed enclosure points to the immutable versioned release URL. Never edit the feed or DMG after signing. Configuration remains outside the app bundle and must not be included in an update archive.
 
 Build output stays inside the checkout, in two places. `dist/` is what is kept: the packaged products at its top (today `dist/Zephyr.app` and the release disk image, later other platforms' packages beside them) and `dist/archive/` for everything retained. The build moves the app there out of Xcode's build folder, so it is the active Zephyr.app: the copy that runs, is tested and is registered with macOS. `build.noindex/` (below) holds only what the build can make again and can be deleted at any time; `.signing/` holds the local signing identity.
 

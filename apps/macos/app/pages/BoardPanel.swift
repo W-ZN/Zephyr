@@ -558,6 +558,11 @@ final class LinkRow: NSView {
         }
         var views: [NSView] = [title]
         let line = flatLabel(meta.joined(separator: " · "), size: 12, color: Tokens.ink3)
+        for label in [title, line] {
+            label.maximumNumberOfLines = 1
+            label.lineBreakMode = .byTruncatingMiddle
+            label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        }
         if !meta.isEmpty { views.append(line) }
         if let progress { views.append(Meter(value: progress, height: 4)) }
         if let next {

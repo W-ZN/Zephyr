@@ -104,17 +104,18 @@ import Testing
         #expect(boxes.count == 2)
         let first = boxes[0], second = boxes[1]
         let narrow = first.drawnRect
+        let column = editor.blockCanvas.columnWidth
+        #expect(narrow.width < column / 2, "small tables fit their content by default")
         #expect(abs(narrow.midX - (editor.blockCanvas.columnX + editor.blockCanvas.columnWidth / 2)) < 6, "centered by default")
 
         let menu = editor.contextMenu(at: NSPoint(x: narrow.midX, y: narrow.midY), base: nil)
-        let item = menu?.items.compactMap(\.submenu).flatMap(\.items).first { $0.title == String(localized: "Fit Content") }
+        let item = menu?.items.compactMap(\.submenu).flatMap(\.items).first { $0.title == String(localized: "Column Width") }
         #expect(item != nil)
         _ = item.map { NSApp.sendAction($0.action!, to: $0.target, from: $0) }
         editor.layoutAll()
         render()
-        let column = editor.blockCanvas.columnWidth
-        #expect(first.drawnRect.width < column / 2, "this table now fits its content")
-        #expect(abs(second.drawnRect.width - column) < 2, "the other table keeps the column-width default")
+        #expect(abs(first.drawnRect.width - column) < 2, "this table uses the reading column")
+        #expect(second.drawnRect.width < column / 2, "the other table keeps the fit-content default")
     }
 
     @Test func caretInsideFormulaRevealsItsSource() throws {

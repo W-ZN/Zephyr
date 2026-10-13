@@ -68,8 +68,6 @@ public struct Spring: Equatable {
         self.tick = tick
     }
 
-    public var isRunning: Bool { link != nil }
-
     public func start() {
         guard link == nil, let view else { return }
         let link = view.displayLink(target: self, selector: #selector(frame(_:)))

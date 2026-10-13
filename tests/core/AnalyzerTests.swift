@@ -179,6 +179,17 @@ import Testing
         #expect(markup != nil)
         #expect(markup.flatMap(MarkdownAnalyzer.safeHTMLImage)?.width?.isFinite == true)
     }
+
+    /// `> ` alone, or an empty quote line at the end of a quote, is a line of the quote (it has
+    /// its bar as soon as it is typed); one between two quoted lines is the gap between them.
+    @Test func emptyQuoteLinesShowUnlessTheySeparate() {
+        let started = MarkdownAnalyzer.analyze("Before.\n\n> \n")
+        #expect(started.lines.map(\.kind) == [.paragraph, .blank, .paragraph] && started.lines[2].quoteDepth == 1)
+        let ending = MarkdownAnalyzer.analyze("> a\n> \n")
+        #expect(ending.lines.map(\.kind) == [.paragraph, .paragraph])
+        let gap = MarkdownAnalyzer.analyze("> a\n>\n> b\n")
+        #expect(gap.lines.map(\.kind) == [.paragraph, .blank, .paragraph])
+    }
 }
 
 @Suite struct AnalyzerFuzzTests {

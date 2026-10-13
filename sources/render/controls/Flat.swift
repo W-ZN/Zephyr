@@ -29,8 +29,51 @@ public enum Tokens {
         public static let panel: CGFloat = 12
     }
 
+    /// The interface's typeface, from the theme's `font.interface`: system, serif, mono or an
+    /// installed family. Text the system draws (menus, window titles) keeps the system font.
+    public private(set) static var interfaceFamily = "system"
+
     public static func font(_ size: CGFloat, _ weight: NSFont.Weight = .regular) -> NSFont {
-        .systemFont(ofSize: size, weight: weight)
+        Typography.font(family: interfaceFamily, size: size, weight: weight) ?? .systemFont(ofSize: size, weight: weight)
+    }
+
+    /// Takes a theme's `font.interface` (the first installed family of the list); returns the
+    /// family it replaced, or nil when nothing changed.
+    public static func setInterfaceFont(_ list: String) -> String? {
+        let family = Typography.available(list, installed: NSFontManager.shared.availableFontFamilies) ?? "system"
+        guard family != interfaceFamily else { return nil }
+        defer { interfaceFamily = family }
+        return interfaceFamily
+    }
+
+    /// Views already on screen take the new interface typeface: fonts set in the `old` family
+    /// change family and keep their size and weight; views that measure their own titles
+    /// (`InterfaceFontObserver`) measure again. Code fonts and the document's text are not in
+    /// the interface family, so they stay.
+    public static func restyleInterface(in view: NSView, from old: String) {
+        let oldName = Typography.font(family: old, size: 13, weight: .regular)?.familyName
+        func converted(_ font: NSFont) -> NSFont? {
+            guard font.familyName == oldName else { return nil }
+            let traits = font.fontDescriptor.object(forKey: .traits) as? [NSFontDescriptor.TraitKey: Any]
+            return Self.font(font.pointSize, NSFont.Weight(traits?[.weight] as? CGFloat ?? 0))
+        }
+        func visit(_ view: NSView) {
+            switch view {
+            case let button as FlatButton: if let font = converted(button.titleFont) { button.titleFont = font }
+            case let button as ChromeButton: if let font = converted(button.titleFont) { button.titleFont = font }
+            case let picker as SegmentedPicker:
+                if let font = converted(picker.segmentFont) {
+                    picker.segmentFont = font
+                    picker.needsLayout = true
+                }
+            case let control as NSControl: if let font = control.font.flatMap(converted) { control.font = font }
+            default: break
+            }
+            (view as? InterfaceFontObserver)?.interfaceFontChanged()
+            view.needsDisplay = true
+            view.subviews.forEach(visit)
+        }
+        visit(view)
     }
 
     /// A symbol image tinted with a fixed color (`contentTintColor` is not honored everywhere).
@@ -67,6 +110,12 @@ public enum FocusRing {
 // MARK: - Surfaces
 
 /// A solid rounded surface with an optional hairline border and soft shadow.
+/// A view that measures its titles ahead of drawing and must measure again when the interface
+/// typeface changes (`Tokens.restyleInterface`).
+public protocol InterfaceFontObserver: AnyObject {
+    func interfaceFontChanged()
+}
+
 open class SurfaceView: NSView {
     public var fill: NSColor? { didSet { needsDisplay = true } }
     public var border: NSColor? { didSet { needsDisplay = true } }

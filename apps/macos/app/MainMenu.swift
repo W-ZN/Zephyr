@@ -1,4 +1,5 @@
 import AppKit
+import Sparkle
 import ZephyrRender
 
 /// The menu bar, built in code. The command palette lists these same items, so menus,
@@ -14,13 +15,13 @@ enum MainMenu {
         for item in fileItems { menu.addItem(item) }
     }
 
-    static func build(delegate: AppDelegate) -> NSMenu {
+    static func build(delegate: AppDelegate, updater: AppUpdater? = nil) -> NSMenu {
         let main = NSMenu()
-        main.addItem(submenu(appName, appMenu(delegate)))
+        main.addItem(submenu(appName, appMenu(delegate, updater: updater)))
         main.addItem(submenu(String(localized: "File"), fileMenu(delegate)))
         main.addItem(submenu(String(localized: "Edit"), editMenu()))
         main.addItem(submenu(String(localized: "Format"), formatMenu()))
-        main.addItem(submenu(String(localized: "View"), viewMenu(delegate)))
+        main.addItem(submenu(String(localized: "View"), viewMenu()))
         main.addItem(submenu(String(localized: "Go"), goMenu()))
         let window = windowMenu()
         main.addItem(submenu(String(localized: "Window"), window))
@@ -50,11 +51,14 @@ enum MainMenu {
         return i
     }
 
-    private static func appMenu(_ delegate: AppDelegate) -> NSMenu {
+    private static func appMenu(_ delegate: AppDelegate, updater: AppUpdater?) -> NSMenu {
         let m = NSMenu()
         m.addItem(item(String(localized: "About \(appName)"), #selector(NSApplication.orderFrontStandardAboutPanel(_:)), ""))
         m.addItem(.separator())
         m.addItem(item(String(localized: "Settings…"), #selector(AppDelegate.showSettings(_:)), ",", target: delegate))
+        if let updater {
+            m.addItem(item(String(localized: "Check for Updates…"), #selector(SPUStandardUpdaterController.checkForUpdates(_:)), "", target: updater.controller))
+        }
         m.addItem(.separator())
         let services = NSMenu()
         m.addItem(submenu(String(localized: "Services"), services))
@@ -135,7 +139,9 @@ enum MainMenu {
         let m = NSMenu()
         m.addItem(item(String(localized: "Bold"), #selector(BlockCanvasView.toggleBoldface(_:)), "b", symbol: "bold"))
         m.addItem(item(String(localized: "Italic"), #selector(BlockCanvasView.toggleItalics(_:)), "i", symbol: "italic"))
+        m.addItem(item(String(localized: "Underline"), #selector(BlockCanvasView.toggleUnderlined(_:)), "u", symbol: "underline"))
         m.addItem(item(String(localized: "Strikethrough"), #selector(BlockCanvasView.toggleStrikethrough(_:)), "x", [.command, .shift], symbol: "strikethrough"))
+        m.addItem(item(String(localized: "Highlight"), #selector(BlockCanvasView.toggleHighlight(_:)), "h", [.command, .shift], symbol: "highlighter"))
         m.addItem(item(String(localized: "Inline Code"), #selector(BlockCanvasView.toggleInlineCode(_:)), "`", [.control], symbol: "chevron.left.forwardslash.chevron.right"))
         m.addItem(item(String(localized: "Link"), #selector(BlockCanvasView.insertMarkdownLink(_:)), "k", symbol: "link"))
         m.addItem(.separator())
@@ -158,7 +164,7 @@ enum MainMenu {
         return m
     }
 
-    private static func viewMenu(_ delegate: AppDelegate) -> NSMenu {
+    private static func viewMenu() -> NSMenu {
         let m = NSMenu()
         m.addItem(item(String(localized: "Show Sidebar"), #selector(DocumentWindowController.toggleScopeSidebar(_:)), "s", [.command, .control], symbol: "sidebar.leading"))
         m.addItem(item(String(localized: "Files"), #selector(DocumentWindowController.showFilesTab(_:)), "1", [.command, .control]))

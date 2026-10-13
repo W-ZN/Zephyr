@@ -84,10 +84,10 @@ enum LinkPreviewHTML {
         return result
     }
 
+    private static let attributePattern = try! NSRegularExpression(pattern: #"(?i)([a-z][a-z0-9:_-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>`=]+))"#)
     private static func attributes(_ tag: String) -> [String: String] {
-        let regex = try! NSRegularExpression(pattern: #"(?i)([a-z][a-z0-9:_-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>`=]+))"#)
         var result: [String: String] = [:]
-        for match in regex.matches(in: tag, range: NSRange(tag.startIndex..., in: tag)) {
+        for match in attributePattern.matches(in: tag, range: NSRange(tag.startIndex..., in: tag)) {
             guard let key = Range(match.range(at: 1), in: tag), let value = (2...4).compactMap({ Range(match.range(at: $0), in: tag) }).first else { continue }
             result[String(tag[key]).lowercased()] = decodeEntities(String(tag[value]))
         }

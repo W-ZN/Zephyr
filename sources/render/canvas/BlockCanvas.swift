@@ -75,6 +75,11 @@ public final class BlockCanvas: NSObject {
     public var leadingInset: CGFloat = 0 {
         didSet { if leadingInset != oldValue { widthChanged() } }
     }
+    /// Width at the trailing edge that is outside the reader's usable area (the compact outline
+    /// rail, measured against the scroll view's actual content viewport).
+    public var trailingInset: CGFloat = 0 {
+        didSet { if trailingInset != oldValue { widthChanged() } }
+    }
     /// Room each side of the column keeps for something drawn beside it (the outline rail): the
     /// column narrows to keep it, the same on both sides (design §8).
     public var reservedMargin: CGFloat = 0 {
@@ -84,6 +89,7 @@ public final class BlockCanvas: NSObject {
     /// Where the band a table set to the window's width may use starts; it keeps the same margins
     /// as the column, so it never reaches under a rail.
     private var bandLeading: CGFloat { isPrinting || fillsWidth ? 0 : sideMargin + leadingInset }
+    private var bandTrailing: CGFloat { isPrinting || fillsWidth ? 0 : sideMargin + trailingInset }
 
     public private(set) var selection = NSRange(location: 0, length: 0)
     /// Text the input method is composing; it lives in the text like typed text.
@@ -137,10 +143,13 @@ public final class BlockCanvas: NSObject {
         if mode == .rendered, let context { presenter = MarkdownPresenter(canvas: self, context: context, typography: typography) }
         view.canvas = self
         scrollView.documentView = view
+        scrollView.verticalScroller = ReaderScroller()
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
-        scrollView.autohidesScrollers = true
-        scrollView.scrollerStyle = .overlay
+        // Follow the system's "Show scroll bars" choice. In legacy mode the reading surface keeps
+        // a reserved gutter, while overlay mode remains clear of the canvas's reading margins.
+        scrollView.scrollerStyle = NSScroller.preferredScrollerStyle
+        scrollView.autohidesScrollers = scrollView.scrollerStyle == .overlay
         scrollView.drawsBackground = true
         scrollView.backgroundColor = Tokens.canvas
         scrollView.findBarPosition = .aboveContent
@@ -232,8 +241,8 @@ public final class BlockCanvas: NSObject {
         (columnX, columnWidth) = column(for: view.bounds.width)
     }
 
-    /// The reading column is centered and narrows with the available surface; on the left it keeps
-    /// the handle's and the markers' slots, and clear of whatever covers the leading side.
+    /// The reading column is centered between its insets (what a rail covers on either side) and
+    /// narrows with that room; the left keeps the handle's and markers' slots.
     private func column(for width: CGFloat) -> (x: CGFloat, width: CGFloat) {
         if fillsWidth { return (0, max(40, width)) }
         if isPrinting {
@@ -241,8 +250,11 @@ public final class BlockCanvas: NSObject {
             return (max(0, (width - w) / 2), w)
         }
         let leading = sideMargin + leadingInset
-        let w = min(typography.readableWidth + 10, max(120, width - leading - sideMargin))
-        return (max(leading, floor((width - w) / 2)) + 5, w - 10)
+        let trailing = sideMargin + trailingInset
+        let readerWidth = width - leading - trailing
+        let w = min(typography.readableWidth + 10, max(40, readerWidth))
+        let centered = floor((width + sideMargin + leadingInset - trailing - w) / 2)
+        return (max(leading, centered) + 5, w - 10)
     }
 
     private func estimate(_ length: Int) -> Double {
@@ -293,6 +305,7 @@ public final class BlockCanvas: NSObject {
         lastUse.removeAll()
         cachedCost = 0
         view.needsDisplay = true
+        scrollView.verticalScroller?.needsDisplay = true
     }
 
     // MARK: - Layout
@@ -336,7 +349,7 @@ public final class BlockCanvas: NSObject {
     /// margins that only a table set to the window's width uses (design §8.1).
     func blockSpace(_ content: UnitContent) -> BlockSpace {
         let column = max(40, columnWidth - content.metrics.indent)
-        return BlockSpace(column: column, wide: max(column, view.bounds.width - bandLeading - (isPrinting || fillsWidth ? 0 : sideMargin)))
+        return BlockSpace(column: column, wide: max(column, view.bounds.width - bandLeading - bandTrailing))
     }
 
     /// Least recently used first, down to three quarters of the budget.
@@ -623,8 +636,9 @@ public final class BlockCanvas: NSObject {
             let lineTop = unitTop + layout.tops[k]
             if let area, lineTop > area.maxY || lineTop + layout.heights[k] < area.minY { continue }
             let x0 = layout.xs[k] + CTLineGetOffsetForStringIndex(layout.lines[k], max(da, start), nil)
-            // Selected through the line's end (a wrap or the line break): to the column's edge.
-            let throughEnd = db > end || (db == end && k + 1 < layout.starts.count) || b > layout.contentLength
+            // A selected visual wrap fills the rest of that visual line. A source line break does
+            // not: its final line stops after its last displayed character.
+            let throughEnd = db > end || (db == end && k + 1 < layout.starts.count)
             let x1 = throughEnd ? columnWidth : layout.xs[k] + CTLineGetOffsetForStringIndex(layout.lines[k], min(db, end), nil)
             if x1 > x0 || throughEnd { result.append(NSRect(x: columnX + x0, y: lineTop, width: max(x1 - x0, 4), height: layout.heights[k])) }
         }
@@ -782,8 +796,7 @@ public final class BlockCanvas: NSObject {
             let column = NSRect(x: columnX + m.indent, y: top, width: space.column, height: 0)
             var wide = column
             if space.wide > space.column {
-                let margin = isPrinting || fillsWidth ? 0 : sideMargin
-                wide = NSRect(x: (bandLeading + (view.bounds.width - bandLeading - margin - space.wide) / 2).rounded(), y: top, width: space.wide, height: 0)
+                wide = NSRect(x: (bandLeading + (view.bounds.width - bandLeading - bandTrailing - space.wide) / 2).rounded(), y: top, width: space.wide, height: 0)
             }
             box.draw(in: BlockFrame(column: column, wide: wide), context: context)
             return
@@ -918,7 +931,7 @@ public final class BlockCanvas: NSObject {
         let m = content.metrics
         let skip = content.quoteSkip
         guard height - skip > 0 else { return }
-        Palette.quote.setFill()
+        Palette.quoteBar.setFill()
         let base = columnX + CGFloat(m.listDepth) * typography.listIndent
         for d in 0..<m.quoteDepth {
             // Square ends: one unit's bar meets the next without a notch.

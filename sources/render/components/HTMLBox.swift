@@ -301,7 +301,7 @@ struct HTMLLayout {
                 y += gap + 1
             }
             if e.name == "blockquote", y > top {
-                out.marks.append(.fill(CGRect(x: saved.indent, y: top, width: 3, height: y - top), Palette.quote))
+                out.marks.append(.fill(CGRect(x: saved.indent, y: top, width: 3, height: y - top), Palette.quoteBar))
             }
             margin = max(margin, below)
             block = saved

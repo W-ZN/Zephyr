@@ -22,8 +22,8 @@ import ZephyrCore
         return context.makeImage()!
     }
 
-    private func editor(_ text: String, folder: URL, typography: Typography = Typography()) -> (MarkdownEditor, NSWindow) {
-        let editor = MarkdownEditor(text: text, typography: typography, baseURL: folder, isEditable: true, canvas: .block)
+    private func editor(_ text: String, folder: URL, typography: Typography = Typography(), isEditable: Bool = true) -> (MarkdownEditor, NSWindow) {
+        let editor = MarkdownEditor(text: text, typography: typography, baseURL: folder, isEditable: isEditable, canvas: .block)
         let window = NSWindow(contentRect: NSRect(x: -20_000, y: 0, width: 900, height: 700), styleMask: [.titled], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = editor.scrollView
@@ -210,8 +210,8 @@ import ZephyrCore
         viewer.pan(by: NSPoint(x: 10_000, y: 10_000))
 
         #expect(viewer.zoomScale > initial)
-        #expect(viewer.viewportRect.size == NSSize(width: 352, height: 252))
-        #expect(viewer.panOffset == NSPoint(x: 224, y: 74))
+        #expect(viewer.viewportRect.size == NSSize(width: 352, height: 224))
+        #expect(viewer.panOffset == NSPoint(x: 224, y: 88))
     }
 
     @Test func resizeOnlyChangesWidthInStrictHTMLImage() throws {
@@ -303,7 +303,7 @@ import ZephyrCore
         let host = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
         let viewer = ComponentViewer(box: box, frame: host.bounds, enterSource: {})
         viewer.show(in: host)
-        for _ in 0..<100 where box.viewerNeedsLoad() {
+        for _ in 0..<400 where box.viewerNeedsLoad() {   // up to 2 s: the full suite runs in parallel
             try? await Task.sleep(nanoseconds: 5_000_000)
         }
         #expect(!box.viewerNeedsLoad())
@@ -331,6 +331,188 @@ import ZephyrCore
         #expect(!titledBox.resizeHandleVisible)
         titledBox.setResizeHandleVisible(true)
         #expect(!titledBox.shouldDrawResizeGrip(drawingToScreen: false))
+    }
+
+    @Test(arguments: [false, true], [0.0, 2.0]) func singleComponentClickPreviewsAfterTheDoubleClickInterval(diagram: Bool, jitter: Double) async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-viewer-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try image(at: folder.appendingPathComponent("photo.png"))
+        let source = diagram ? "```mermaid\nflowchart TD\n  A --> B\n```\n" : "![A](photo.png)\n"
+        let (editor, window) = editor(source, folder: folder)
+        defer { window.close() }
+        let box = try #require(editor.componentBox(at: 0))
+        let view = editor.blockCanvas.view
+        let point = view.convert(NSPoint(x: box.drawnRect.midX, y: box.drawnRect.midY), to: nil)
+        let click = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let up = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: point, modifierFlags: [], timestamp: 0.01, windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 0))
+
+        view.mouseDown(with: click)
+        if jitter > 0 {
+            let move = try #require(NSEvent.mouseEvent(with: .leftMouseDragged, location: NSPoint(x: point.x + jitter, y: point.y), modifierFlags: [], timestamp: 0.005, windowNumber: window.windowNumber, context: nil, eventNumber: 2, clickCount: 1, pressure: 1))
+            view.mouseDragged(with: move)
+        }
+        view.mouseUp(with: up)
+        #expect(editor.blockCanvas.focusedComponent == box.lastKnownRange)
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer } == false)
+        try await Task.sleep(nanoseconds: UInt64((NSEvent.doubleClickInterval + 0.05) * 1_000_000_000))
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer })
+        #expect(editor.string == source)
+    }
+
+    @Test func doubleComponentClickEntersTheExactEditableSourceWithoutOpeningAViewer() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-viewer-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try image(at: folder.appendingPathComponent("photo.png"))
+        let source = "![A](photo.png)\n"
+        let (editor, window) = editor(source, folder: folder)
+        defer { window.close() }
+        let box = try #require(editor.componentBox(at: 0))
+        let view = editor.blockCanvas.view
+        let point = view.convert(NSPoint(x: box.drawnRect.midX, y: box.drawnRect.midY), to: nil)
+        let first = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let firstUp = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: point, modifierFlags: [], timestamp: 0.01, windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 0))
+        let second = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0.1, windowNumber: window.windowNumber, context: nil, eventNumber: 2, clickCount: 2, pressure: 1))
+        let secondUp = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: point, modifierFlags: [], timestamp: 0.11, windowNumber: window.windowNumber, context: nil, eventNumber: 3, clickCount: 2, pressure: 0))
+
+        view.mouseDown(with: first)
+        view.mouseUp(with: firstUp)
+        view.mouseDown(with: second)
+        view.mouseUp(with: secondUp)
+        #expect(editor.selectedRange.location == NSMaxRange(box.lastKnownRange))
+        #expect(window.firstResponder === editor.focusView)
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer } == false)
+        try await Task.sleep(nanoseconds: UInt64((NSEvent.doubleClickInterval + 0.05) * 1_000_000_000))
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer } == false)
+        #expect(editor.string == source)
+    }
+
+    @Test func draggingFromAComponentCancelsItsPendingPreview() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-viewer-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try image(at: folder.appendingPathComponent("photo.png"))
+        let source = "![A](photo.png)\n"
+        let (editor, window) = editor(source, folder: folder)
+        defer { window.close() }
+        let box = try #require(editor.componentBox(at: 0))
+        let view = editor.blockCanvas.view
+        let point = view.convert(NSPoint(x: box.drawnRect.midX, y: box.drawnRect.midY), to: nil)
+        let click = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let drag = try #require(NSEvent.mouseEvent(with: .leftMouseDragged, location: NSPoint(x: point.x + 4, y: point.y), modifierFlags: [], timestamp: 0.1, windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
+        let up = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: NSPoint(x: point.x + 4, y: point.y), modifierFlags: [], timestamp: 0.11, windowNumber: window.windowNumber, context: nil, eventNumber: 2, clickCount: 1, pressure: 0))
+
+        view.mouseDown(with: click)
+        view.mouseDragged(with: drag)
+        view.mouseUp(with: up)
+        try await Task.sleep(nanoseconds: UInt64((NSEvent.doubleClickInterval + 0.05) * 1_000_000_000))
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer } == false)
+        #expect(editor.string == source)
+    }
+
+    @Test func holdingAComponentPastTheDoubleClickIntervalDoesNotOpenTheViewer() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-viewer-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try image(at: folder.appendingPathComponent("photo.png"))
+        let (editor, window) = editor("![A](photo.png)\n", folder: folder)
+        defer { window.close() }
+        let box = try #require(editor.componentBox(at: 0))
+        let view = editor.blockCanvas.view
+        let point = view.convert(NSPoint(x: box.drawnRect.midX, y: box.drawnRect.midY), to: nil)
+        let down = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let drag = try #require(NSEvent.mouseEvent(with: .leftMouseDragged, location: NSPoint(x: point.x + 4, y: point.y), modifierFlags: [], timestamp: NSEvent.doubleClickInterval + 0.01, windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
+        let up = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: NSPoint(x: point.x + 4, y: point.y), modifierFlags: [], timestamp: NSEvent.doubleClickInterval + 0.02, windowNumber: window.windowNumber, context: nil, eventNumber: 2, clickCount: 1, pressure: 0))
+
+        view.mouseDown(with: down)
+        try await Task.sleep(nanoseconds: UInt64((NSEvent.doubleClickInterval + 0.05) * 1_000_000_000))
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer } == false)
+        view.mouseDragged(with: drag)
+        view.mouseUp(with: up)
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer } == false)
+    }
+
+    @Test func readonlyComponentClicksPreviewWithoutEnteringSource() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-viewer-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try image(at: folder.appendingPathComponent("photo.png"))
+        let source = "![A](photo.png)\n"
+        let (editor, window) = editor(source, folder: folder, isEditable: false)
+        defer { window.close() }
+        let box = try #require(editor.componentBox(at: 0))
+        let view = editor.blockCanvas.view
+        let point = view.convert(NSPoint(x: box.drawnRect.midX, y: box.drawnRect.midY), to: nil)
+        let first = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let firstUp = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: point, modifierFlags: [], timestamp: 0.01, windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 0))
+        let second = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point, modifierFlags: [], timestamp: 0.1, windowNumber: window.windowNumber, context: nil, eventNumber: 2, clickCount: 2, pressure: 1))
+        let secondUp = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: point, modifierFlags: [], timestamp: 0.11, windowNumber: window.windowNumber, context: nil, eventNumber: 3, clickCount: 2, pressure: 0))
+
+        view.mouseDown(with: first)
+        view.mouseUp(with: firstUp)
+        try await Task.sleep(nanoseconds: UInt64((NSEvent.doubleClickInterval + 0.05) * 1_000_000_000))
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer })
+        editor.scrollView.subviews.compactMap { $0 as? ComponentViewer }.last?.dismiss()
+
+        view.mouseDown(with: first)
+        view.mouseUp(with: firstUp)
+        view.mouseDown(with: second)
+        view.mouseUp(with: secondUp)
+        #expect(editor.scrollView.subviews.contains { $0 is ComponentViewer })
+        #expect(editor.string == source)
+    }
+
+    @Test func viewerStaysInsideTheReadingViewportBesideASidebar() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-viewer-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try image(at: folder.appendingPathComponent("photo.png"))
+        let (editor, window) = editor("![A](photo.png)\n", folder: folder)
+        let root = NSView(frame: NSRect(x: 0, y: 0, width: 900, height: 700))
+        window.contentView = root
+        editor.scrollView.translatesAutoresizingMaskIntoConstraints = false
+        root.addSubview(editor.scrollView)
+        let width = editor.scrollView.widthAnchor.constraint(equalToConstant: 620)
+        let height = editor.scrollView.heightAnchor.constraint(equalToConstant: 650)
+        NSLayoutConstraint.activate([
+            editor.scrollView.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 280),
+            editor.scrollView.topAnchor.constraint(equalTo: root.topAnchor), width, height,
+        ])
+        root.layoutSubtreeIfNeeded()
+        editor.layoutAll()
+        let box = try #require(editor.componentBox(at: 0) as? ImageBox)
+        #expect(editor.openComponentViewer(box))
+        let viewer = try #require(editor.scrollView.subviews.compactMap { $0 as? ComponentViewer }.first)
+        #expect(root.convert(viewer.bounds, from: viewer) == editor.scrollView.frame)
+        width.constant = 420
+        height.constant = 550
+        root.layoutSubtreeIfNeeded()
+        #expect(viewer.frame == editor.scrollView.bounds)
+        #expect(viewer.subviews.filter { $0 !== viewer.closeButton }.allSatisfy { $0.frame == viewer.bounds })
+        #expect(root.subviews.contains { $0 is ComponentViewer } == false)
+        window.close()
+    }
+
+    @Test(arguments: [false, true]) func closeButtonDismissesImagesAndDiagramsWithoutEditingSource(diagram: Bool) throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-viewer-\(UUID())")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try image(at: folder.appendingPathComponent("photo.png"))
+        let source = diagram ? "```mermaid\nflowchart TD\n  A --> B\n```\n" : "![A](photo.png)\n"
+        let (editor, window) = editor(source, folder: folder)
+        defer { window.close() }
+        let box = try #require(editor.componentBox(at: 0))
+        #expect(editor.openComponentViewer(box))
+        let viewer = try #require(editor.scrollView.subviews.compactMap { $0 as? ComponentViewer }.last)
+        viewer.layoutSubtreeIfNeeded()
+        #expect(abs(viewer.closeButton.frame.maxX - (viewer.bounds.maxX - 12)) <= 0.5)
+        #expect(viewer.closeButton.frame.maxY < viewer.viewportRect.minY)
+        #expect(viewer.hitTest(NSPoint(x: viewer.closeButton.frame.midX, y: viewer.closeButton.frame.midY)) === viewer.closeButton)
+        viewer.closeButton.performClick(nil)
+        #expect(viewer.superview == nil)
+        #expect(window.firstResponder === editor.focusView)
+        #expect(editor.string == source)
     }
 
     @Test func viewerReturnsFocusToTheCanvasForEscapeAndSourceEditing() throws {
@@ -381,7 +563,7 @@ import ZephyrCore
         #expect(editor.openSelectedComponentViewer())
         let viewer = try #require(window.contentView?.subviews.compactMap { $0 as? ComponentViewer }.last)
         #expect(viewer.backdrop.blendingMode == .withinWindow && viewer.backdrop.state == .active)
-        #expect(viewer.backdrop.alphaValue == 0.78 && viewer.contentAlpha == 1)
+        #expect(viewer.backdrop.alphaValue == 1 && viewer.contentAlpha == 1)
         #expect(viewer.viewportRect.width < viewer.bounds.width && viewer.viewportRect.height < viewer.bounds.height)
         let target = NSPoint(x: viewer.viewportRect.midX, y: viewer.viewportRect.midY)
         viewer.zoom(to: 2, anchoredAt: target)

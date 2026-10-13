@@ -170,33 +170,52 @@ public enum DiagramLayout {
             rank[v] = succ[v].map { rank[$0] }.min()! - 1
         }
 
-        // Vertices: the nodes, then one virtual point per rank crossed by a long edge.
+        // Vertices: the nodes, then one virtual point per rank crossed by a long edge. A long edge's
+        // label is the virtual point in its middle rank, as large as the label: it takes its place
+        // in the rank like a node, so neighbouring lines pass beside it instead of under it.
+        let chipX = em * 6 / 14
+        let chipY = em * 3 / 14
         var cross = sizes.map { horizontal ? $0.height : $0.width }
         var main = sizes.map { horizontal ? $0.width : $0.height }
         var vRank = rank
         var chains: [[Int]] = []
+        var labelVertex = [Int?](repeating: nil, count: edges.count)
         for (k, e) in edges.enumerated() {
             if e.0 == e.1 {
                 chains.append([e.0])
                 continue
             }
-            let (lo, hi) = back.contains(k) ? (e.1, e.0) : e
+            if back.contains(k) {
+                // Return edges stay outside the layered graph instead of adding virtual vertices
+                // and pulling the forward spine sideways.
+                chains.append([e.0, e.1])
+                continue
+            }
+            let (lo, hi) = e
             var chain = [lo]
+            let middle = (vRank[lo] + vRank[hi]) / 2
+            let label = c.edges[k].label.flatMap { $0.isEmpty ? nil : measure($0) }
             for r in stride(from: vRank[lo] + 1, to: vRank[hi], by: 1) {
-                cross.append(em * 0.6)
-                main.append(0)
+                if let size = label, r == middle {
+                    cross.append(horizontal ? size.height + chipY * 2 : size.width + chipX * 2)
+                    main.append(horizontal ? size.width + chipX * 2 : size.height + chipY * 2)
+                    labelVertex[k] = cross.count - 1
+                } else {
+                    cross.append(em * 0.6)
+                    main.append(0)
+                }
                 vRank.append(r)
                 chain.append(cross.count - 1)
             }
             chain.append(hi)
-            chains.append(back.contains(k) ? chain.reversed() : chain)
+            chains.append(chain)
         }
         let count = cross.count
         let ranks = (vRank.max() ?? 0) + 1
         var layers = [[Int]](repeating: [], count: ranks)
         for v in 0..<count { layers[vRank[v]].append(v) }
         var above = [[Int]](repeating: [], count: count), below = [[Int]](repeating: [], count: count)
-        for chain in chains where chain.count > 1 {
+        for (k, chain) in chains.enumerated() where chain.count > 1 && !back.contains(k) {
             for (a, b) in zip(chain, chain.dropFirst()) {
                 let (top, bottom) = vRank[a] < vRank[b] ? (a, b) : (b, a)
                 below[top].append(bottom)
@@ -221,7 +240,11 @@ public enum DiagramLayout {
 
         // Cross positions: packed, then pulled toward neighbours while keeping order and gaps.
         let gap = em * 2.3 * st.spacing
-        func separation(_ a: Int, _ b: Int) -> Double { (cross[a] + cross[b]) / 2 + (a < n && b < n ? gap : gap * 0.4) }
+        let labelVertices = Set(labelVertex.compactMap { $0 })
+        func separation(_ a: Int, _ b: Int) -> Double {
+            let solid = (a < n || labelVertices.contains(a)) && (b < n || labelVertices.contains(b))
+            return (cross[a] + cross[b]) / 2 + (solid ? gap : gap * 0.4)
+        }
         var x = [Double](repeating: 0, count: count)
         for layer in layers {
             var cursor: Double = 0
@@ -247,31 +270,238 @@ public enum DiagramLayout {
             }
         }
 
-        // Main positions: each rank as deep as its deepest node, gaps wide enough for labels.
+        let margin = em * 0.75
+        let minCross = (0..<count).map { x[$0] - cross[$0] / 2 }.min() ?? 0
+        for v in 0..<count { x[v] += margin - minCross }
+        var totalCross = ((0..<count).map { x[$0] + cross[$0] / 2 }.max() ?? 0) + margin
+
+        // Ports: several links leaving or entering one side of a box spread along it.
+        var ports: [[Int: Double]] = Array(repeating: [:], count: chains.count)
+        for v in 0..<n where ![.diamond, .circle].contains(c.nodes[v].shape) {
+            for sideBelow in [true, false] {
+                var ends: [(chain: Int, toward: Double, start: Bool)] = []
+                for (k, chain) in chains.enumerated() where chain.count > 1 && !back.contains(k) {
+                    if chain[0] == v, (vRank[chain[1]] > vRank[v]) == sideBelow { ends.append((k, x[chain[1]], true)) }
+                    if chain.last == v, (vRank[chain[chain.count - 2]] > vRank[v]) == sideBelow { ends.append((k, x[chain[chain.count - 2]], false)) }
+                }
+                guard ends.count > 1 else { continue }
+                ends.sort { $0.toward < $1.toward }
+                let step = min(cross[v] * 0.6 / Double(ends.count - 1), em * 1.2)
+                for (i, end) in ends.enumerated() {
+                    ports[end.chain][end.start ? 0 : 1] = (Double(i) - Double(ends.count - 1) / 2) * step
+                }
+            }
+        }
+
+        // Main positions: each rank as deep as its deepest node. Labels sharing a rank gap
+        // occupy rows whose conservative cross-axis intervals do not overlap.
         var rankDepth = [Double](repeating: 0, count: ranks)
         for v in 0..<count { rankDepth[vRank[v]] = max(rankDepth[vRank[v]], main[v]) }
         var rankGap = [Double](repeating: em * 3.4 * st.spacing, count: ranks)
         var labelSizes = [DiagramSize?](repeating: nil, count: edges.count)
+        var labelOffsets = [Double?](repeating: nil, count: edges.count)
+        var labelRanks = [Int?](repeating: nil, count: edges.count)
+        var labelRows = [Int?](repeating: nil, count: edges.count)
+        var rowIntervals = [[[ (lower: Double, upper: Double) ]]](repeating: [], count: ranks)
+        var rowDepths = [[Double]](repeating: [], count: ranks)
+        let rowPadding = em * 0.4
         for (k, edge) in c.edges.enumerated() {
             guard let label = edge.label, !label.isEmpty else { continue }
             let size = measure(label)
             labelSizes[k] = size
             let chain = chains[k]
-            guard chain.count > 1 else { continue }
+            guard chain.count > 1 && !back.contains(k) && labelVertex[k] == nil else { continue }
             let r = min(vRank[chain[0]], vRank[chain[1]])
-            rankGap[r] = max(rankGap[r], (horizontal ? size.width : size.height) + em * 1.6)
+            labelRanks[k] = r
+            let start = x[chain[0]] + (ports[k][0] ?? 0)
+            let end = x[chain[1]] + (chain.count == 2 ? (ports[k][1] ?? 0) : 0)
+            let crossSize = horizontal ? size.height + chipY * 2 : size.width + chipX * 2
+            let interval = (lower: min(start, end) - crossSize / 2, upper: max(start, end) + crossSize / 2)
+            var row = 0
+            while row < rowIntervals[r].count && rowIntervals[r][row].contains(where: { !(interval.upper <= $0.lower || $0.upper <= interval.lower) }) { row += 1 }
+            if row == rowIntervals[r].count {
+                rowIntervals[r].append([])
+                rowDepths[r].append(0)
+            }
+            rowIntervals[r][row].append(interval)
+            rowDepths[r][row] = max(rowDepths[r][row], horizontal ? size.width + chipX * 2 : size.height + chipY * 2)
+            labelRows[k] = row
         }
-        let margin = em * 0.75
+        for r in 0..<ranks where !rowDepths[r].isEmpty {
+            let usedDepth = rowDepths[r].reduce(0, +) + rowPadding * Double(rowDepths[r].count + 1)
+            rankGap[r] = max(rankGap[r], usedDepth)
+            var offset = (rankGap[r] - usedDepth) / 2 + rowPadding
+            for (row, depth) in rowDepths[r].enumerated() {
+                for k in 0..<edges.count where labelRanks[k] == .some(r) && labelRows[k] == .some(row) {
+                    labelOffsets[k] = offset + depth / 2
+                }
+                offset += depth + rowPadding
+            }
+        }
+        // Back edges loop on the side that keeps their run shortest, just outside what lies between
+        // their ranks (nodes, long edges' points, labels), not around the whole chart. Shorter
+        // returns take the inner lanes; each lane is as deep as its label.
+        let lane = em * 1.2
+        var returnSide = [Double](repeating: 1, count: chains.count)
+        var returnTracks = [Double?](repeating: nil, count: chains.count)
+        var returnDepth = [Double](repeating: 0, count: chains.count)
+        var taken: [(side: Double, lo: Int, hi: Int, outer: Double)] = []
+        func span(_ k: Int) -> (lo: Int, hi: Int) {
+            let a = vRank[chains[k][0]], b = vRank[chains[k][1]]
+            return (min(a, b), max(a, b))
+        }
+        for k in edges.indices.filter({ back.contains($0) }).sorted(by: { (span($0).hi - span($0).lo, $0) < (span($1).hi - span($1).lo, $1) }) {
+            let (lo, hi) = span(k)
+            let a = chains[k][0], b = chains[k][1]
+            let depth = max(labelSizes[k].map { horizontal ? $0.height + chipY * 2 : $0.width + chipX * 2 } ?? 0, lane)
+            returnDepth[k] = depth
+            var best: (side: Double, track: Double, cost: Double)?
+            for side in [-1.0, 1.0] {
+                var edge = side > 0 ? -Double.infinity : Double.infinity
+                func reach(_ value: Double) { edge = side > 0 ? max(edge, value) : min(edge, value) }
+                for v in 0..<count where vRank[v] >= lo && vRank[v] <= hi { reach(x[v] + side * cross[v] / 2) }
+                for r in lo..<hi { for row in rowIntervals[r] { for interval in row { reach(side > 0 ? interval.upper : interval.lower) } } }
+                for other in taken where other.side == side && other.lo <= hi && lo <= other.hi { reach(other.outer) }
+                let track = edge + side * (lane + depth / 2)
+                let cost = abs(track - x[a]) + abs(track - x[b])
+                if best == nil || cost < best!.cost - 0.5 { best = (side, track, cost) }
+            }
+            returnSide[k] = best!.side
+            returnTracks[k] = best!.track
+            taken.append((best!.side, lo, hi, best!.track + best!.side * depth / 2))
+        }
+        // Returns on the leading side move the chart over to make room.
+        let leadingReturns = edges.indices.compactMap { k in returnTracks[k].flatMap { returnSide[k] < 0 ? $0 - returnDepth[k] / 2 : nil } }
+        if let low = leadingReturns.min(), low < margin {
+            let shift = margin - low
+            for v in 0..<count { x[v] += shift }
+            for k in edges.indices { returnTracks[k] = returnTracks[k].map { $0 + shift } }
+            totalCross += shift
+        }
+        let returnReach = edges.indices.compactMap { k in returnTracks[k].flatMap { returnSide[k] > 0 ? $0 + returnDepth[k] / 2 : nil } }.max() ?? 0
+
         var y = [Double](repeating: 0, count: ranks)
-        var cursor = margin
-        for r in 0..<ranks {
-            y[r] = cursor + rankDepth[r] / 2
-            cursor += rankDepth[r] + rankGap[r]
+        func placeRanks() -> Double {
+            var cursor = margin
+            for r in 0..<ranks {
+                y[r] = cursor + rankDepth[r] / 2
+                cursor += rankDepth[r] + rankGap[r]
+            }
+            return cursor - rankGap[ranks - 1] + margin
         }
-        let totalMain = cursor - rankGap[ranks - 1] + margin
-        let minCross = (0..<count).map { x[$0] - cross[$0] / 2 }.min() ?? 0
-        for v in 0..<count { x[v] += margin - minCross }
-        let totalCross = ((0..<count).map { x[$0] + cross[$0] / 2 }.max() ?? 0) + margin
+        _ = placeRanks()
+
+        // A forward link's points on the main and cross axes: out of the first box, through the
+        // virtual points, into the last; and where it crosses a main-axis position.
+        func points(_ k: Int) -> [(m: Double, c: Double)] {
+            let chain = chains[k]
+            return chain.enumerated().map { i, v in
+                let r = vRank[v]
+                guard i == 0 || i == chain.count - 1 else { return (y[r], x[v]) }
+                let other = i == 0 ? chain[1] : chain[chain.count - 2]
+                let toward: Double = vRank[other] > r ? 1 : -1
+                return (y[r] + toward * main[v] / 2, x[v] + (ports[k][i == 0 ? 0 : 1] ?? 0))
+            }
+        }
+        // Curved links are one smooth curve through their points: at each virtual point the slope
+        // follows its neighbours (the harmonic mean of the two runs, flat where they turn back, so
+        // the curve never swings past a point toward a box); out of and into boxes it runs along
+        // the main axis. Each run is a cubic whose main coordinate is linear in t.
+        func slopes(_ pts: [(m: Double, c: Double)]) -> [Double] {
+            pts.indices.map { i in
+                guard i > 0, i < pts.count - 1 else { return 0 }
+                let a = (pts[i].c - pts[i - 1].c) / (pts[i].m - pts[i - 1].m), b = (pts[i + 1].c - pts[i].c) / (pts[i + 1].m - pts[i].m)
+                return a * b <= 0 ? 0 : 2 * a * b / (a + b)
+            }
+        }
+        func crossAt(_ pts: [(m: Double, c: Double)], _ i: Int, _ m: Double) -> Double {
+            let p = pts[i], q = pts[i + 1]
+            switch st.lines {
+            case .straight:
+                return p.c + (q.c - p.c) * (m - p.m) / (q.m - p.m)
+            case .curved:
+                let s = slopes(pts), h = q.m - p.m
+                let t = min(max((m - p.m) / h, 0), 1), u = 1 - t
+                let c1 = p.c + s[i] * h / 3, c2 = q.c - s[i + 1] * h / 3
+                return u * u * u * p.c + 3 * u * u * t * c1 + 3 * u * t * t * c2 + t * t * t * q.c
+            case .angled:
+                let midpoint = (p.m + q.m) / 2
+                if abs(p.c - q.c) <= 0.5 { return p.c + (q.c - p.c) * (m - p.m) / (q.m - p.m) }
+                if abs(m - midpoint) < 0.0001 { return (p.c + q.c) / 2 }
+                return (m - p.m) / (q.m - p.m) < 0.5 ? p.c : q.c
+            }
+        }
+
+        // A label's place across its link's first run: on an angled link whose turn its band
+        // holds, the middle of the turn, so it covers its own line there and not a neighbour's.
+        func labelCross(_ k: Int, _ center: Double) -> Double {
+            let size = labelSizes[k]!, pk = points(k)
+            let depth = horizontal ? size.width + chipX * 2 : size.height + chipY * 2
+            if st.lines == .angled, abs((pk[0].m + pk[1].m) / 2 - center) <= depth / 2 { return (pk[0].c + pk[1].c) / 2 }
+            return crossAt(pk, 0, center)
+        }
+
+        // Rows of labels in a rank gap move to where the other links are furthest from them (lines
+        // fanning out of one box are close at the box and spread toward the next rank), deepening
+        // the gap by up to 3 em when no position clears them.
+        let forward = chains.indices.filter { chains[$0].count > 1 && !back.contains($0) }
+        for r in 0..<ranks where !rowDepths[r].isEmpty {
+            let block = edges.indices.filter { labelRanks[$0] == r }
+            let crossing = forward.filter { k in chains[k].contains { vRank[$0] == r } && chains[k].contains { vRank[$0] == r + 1 } }
+            let usedDepth = rowDepths[r].reduce(0, +) + rowPadding * Double(rowDepths[r].count + 1)
+            let original = rankGap[r]
+            // Each row's centre in the gap, the rows stacked in `order` around the gap's middle.
+            func offsets(_ order: [Int]) -> [Int: Double] {
+                var result: [Int: Double] = [:], offset = (rankGap[r] - usedDepth) / 2 + rowPadding
+                for row in order {
+                    result[row] = offset + rowDepths[r][row] / 2
+                    offset += rowDepths[r][row] + rowPadding
+                }
+                return result
+            }
+            func clearance() -> Double {
+                var worst = Double.infinity
+                for k in block {
+                    let size = labelSizes[k]!
+                    let (half, depth) = horizontal ? (size.height / 2 + chipY, size.width + chipX * 2) : (size.width / 2 + chipX, size.height + chipY * 2)
+                    let center = y[r] + rankDepth[r] / 2 + labelOffsets[k]!
+                    let c = labelCross(k, center)
+                    for j in crossing where j != k {
+                        let pj = points(j)
+                        guard let i = pj.indices.dropLast().first(where: { vRank[chains[j][$0]] == r }) else { continue }
+                        // The cross range the line takes within the label's band (an angled
+                        // line's run between ranks spans its whole turn), against the label's.
+                        let (p, q) = (pj[i], pj[i + 1]), low = center - depth / 2, high = center + depth / 2
+                        var reach = [low, center, high].map { crossAt(pj, i, $0) }
+                        if st.lines == .angled, (low...high).contains((p.m + q.m) / 2) { reach += [p.c, q.c] }
+                        worst = min(worst, max(reach.min()! - (c + half), (c - half) - reach.max()!))
+                    }
+                }
+                return worst
+            }
+            var best: (score: Double, gap: Double, offsets: [Int: Double])?
+            let rows = Array(rowDepths[r].indices)
+            for extra in stride(from: 0.0, through: em * 3, by: em * 0.5) {
+                rankGap[r] = original + extra
+                _ = placeRanks()
+                let slack = rankGap[r] - usedDepth
+                for order in rows.count > 1 ? [rows, rows.reversed()] : [rows] {
+                    let centred = offsets(order)
+                    for step in 0...12 {
+                        let shift = slack * (Double(step) / 12 - 0.5)
+                        for k in block { labelOffsets[k] = centred[labelRows[k]!]! + shift }
+                        // Clear by a little more than a line's width; past that, prefer centred,
+                        // shallow and in the first order.
+                        let score = min(clearance(), em * 0.5) - abs(shift) * 0.01 - extra * 0.02 - (order == rows ? 0 : 0.001)
+                        if best == nil || score > best!.score + 0.0001 { best = (score, rankGap[r], centred.mapValues { $0 + shift }) }
+                    }
+                }
+            }
+            rankGap[r] = best!.gap
+            for k in block { labelOffsets[k] = best!.offsets[labelRows[k]!]! }
+            _ = placeRanks()
+        }
+        let totalMain = placeRanks()
         // Self loops reach past their node on the cross side.
         var loopReach: Double = 0
         for (k, chain) in chains.enumerated() where chain.count == 1 {
@@ -288,20 +518,19 @@ public enum DiagramLayout {
             }
         }
 
-        // Ports: several links leaving or entering one side of a box spread along it.
-        var ports: [[Int: Double]] = Array(repeating: [:], count: chains.count)
-        for v in 0..<n where ![.diamond, .circle].contains(c.nodes[v].shape) {
-            for sideBelow in [true, false] {
-                var ends: [(chain: Int, toward: Double, start: Bool)] = []
-                for (k, chain) in chains.enumerated() where chain.count > 1 {
-                    if chain[0] == v, (vRank[chain[1]] > vRank[v]) == sideBelow { ends.append((k, x[chain[1]], true)) }
-                    if chain.last == v, (vRank[chain[chain.count - 2]] > vRank[v]) == sideBelow { ends.append((k, x[chain[chain.count - 2]], false)) }
+        // Several returns leaving or entering one side of a box spread along it.
+        var returnPorts: [[Int: Double]] = Array(repeating: [:], count: chains.count)
+        for v in 0..<n where [.rectangle, .rounded, .subroutine, .flag].contains(c.nodes[v].shape) {
+            for side in [-1.0, 1.0] {
+                var ends: [(chain: Int, start: Bool)] = []
+                for (k, chain) in chains.enumerated() where back.contains(k) && returnSide[k] == side {
+                    if chain[0] == v { ends.append((k, true)) }
+                    if chain[1] == v { ends.append((k, false)) }
                 }
                 guard ends.count > 1 else { continue }
-                ends.sort { $0.toward < $1.toward }
-                let step = min(cross[v] * 0.6 / Double(ends.count - 1), em * 1.2)
+                let step = min(main[v] * 0.6 / Double(ends.count - 1), em * 1.2)
                 for (i, end) in ends.enumerated() {
-                    ports[end.chain][end.start ? 0 : 1] = (Double(i) - Double(ends.count - 1) / 2) * step
+                    returnPorts[end.chain][end.start ? 0 : 1] = (Double(i) - Double(ends.count - 1) / 2) * step
                 }
             }
         }
@@ -323,26 +552,83 @@ public enum DiagramLayout {
                 }
                 continue
             }
-            // Points on the main and cross axes: out of the first box, through the virtual points, into the last.
-            var points: [(m: Double, c: Double)] = []
-            for (i, v) in chain.enumerated() {
-                let r = vRank[v]
-                if i == 0 || i == chain.count - 1 {
-                    let other = i == 0 ? chain[1] : chain[chain.count - 2]
-                    let toward: Double = vRank[other] > r ? 1 : -1
-                    points.append((y[r] + toward * main[v] / 2, x[v] + (ports[k][i == 0 ? 0 : 1] ?? 0)))
-                } else {
-                    points.append((y[r], x[v]))
+            if back.contains(k) {
+                let source = chain[0], target = chain[1], side = returnSide[k]
+                var p = (m: y[vRank[source]] + (returnPorts[k][0] ?? 0), c: x[source] + side * cross[source] / 2)
+                var q = (m: y[vRank[target]] + (returnPorts[k][1] ?? 0), c: x[target] + side * cross[target] / 2)
+                let track = returnTracks[k]!
+                var segments: [DiagramScene.Segment] = []
+                switch st.lines {
+                case .straight, .angled:
+                    segments = [.move(place(p.m, p.c)), .line(place(p.m, track)), .line(place(q.m, track)), .line(place(q.m, q.c))]
+                case .curved:
+                    // One flowing curve: out of the source, through the middle of the track, into
+                    // the target, as two cubics meeting on the track along the main axis, with no
+                    // straight run and no corner. A box between an end and the track in its own
+                    // rank is not crossed: that end uses the face toward the other end instead of
+                    // its side. Where the curve would cut a box on the way, it keeps to the track
+                    // longer, step by step.
+                    let dir = q.m >= p.m ? 1.0 : -1.0
+                    func blocked(_ v: Int) -> Bool {
+                        (0..<n).contains { w in
+                            w != v && vRank[w] == vRank[v] && (x[w] - x[v]) * side > 0 && ((x[w] - side * cross[w] / 2) - track) * side < 0
+                        }
+                    }
+                    // Directions the curve leaves the source and enters the target along.
+                    var out = (m: 0.0, c: side), into = (m: 0.0, c: side)
+                    if blocked(source) {
+                        p = (m: y[vRank[source]] + dir * main[source] / 2, c: x[source] + side * cross[source] * 0.3)
+                        out = (m: dir, c: 0)
+                    }
+                    if blocked(target) {
+                        q = (m: y[vRank[target]] - dir * main[target] / 2, c: x[target] + side * cross[target] * 0.3)
+                        into = (m: -dir, c: 0)
+                    }
+                    let middle = (m: (p.m + q.m) / 2, c: track)
+                    let half = abs(middle.m - p.m)
+                    let lead = (out.c != 0 ? abs(track - p.c) : half * 0.5), tail = (into.c != 0 ? abs(track - q.c) : half * 0.5)
+                    func path(_ hold: Double) -> [DiagramScene.Segment] {
+                        [.move(place(p.m, p.c)),
+                         .curve(place(p.m + out.m * lead, p.c + out.c * lead), place(middle.m - dir * half * hold, track), place(middle.m, track)),
+                         .curve(place(middle.m + dir * half * hold, track), place(q.m + into.m * tail, q.c + into.c * tail), place(q.m, q.c))]
+                    }
+                    // Boxes other than the two ends, a little larger, in main/cross terms.
+                    let pad = em * 0.3
+                    let boxes = (0..<n).filter { $0 != source && $0 != target }.map { v in
+                        (m: y[vRank[v]] - main[v] / 2 - pad, mm: y[vRank[v]] + main[v] / 2 + pad, c: x[v] - cross[v] / 2 - pad, cc: x[v] + cross[v] / 2 + pad)
+                    }
+                    func cuts(_ hold: Double) -> Bool {
+                        let a = (p.m, p.c), b = (p.m + out.m * lead, p.c + out.c * lead), c = (middle.m - dir * half * hold, track), d = (middle.m, track)
+                        let e = (middle.m + dir * half * hold, track), f = (q.m + into.m * tail, q.c + into.c * tail), g = (q.m, q.c)
+                        for (s0, s1, s2, s3) in [(a, b, c, d), (d, e, f, g)] {
+                            for i in 1..<24 {
+                                let t = Double(i) / 24, u = 1 - t
+                                let m = u * u * u * s0.0 + 3 * u * u * t * s1.0 + 3 * u * t * t * s2.0 + t * t * t * s3.0
+                                let cr = u * u * u * s0.1 + 3 * u * u * t * s1.1 + 3 * u * t * t * s2.1 + t * t * t * s3.1
+                                if boxes.contains(where: { m > $0.m && m < $0.mm && cr > $0.c && cr < $0.cc }) { return true }
+                            }
+                        }
+                        return false
+                    }
+                    let hold = stride(from: 0.55, through: 0.95, by: 0.1).first { !cuts($0) } ?? 0.95
+                    segments = path(hold)
                 }
+                items.append(.path(segments, dashed: edge.stroke == .dotted, thick: edge.stroke == .thick, head: edge.arrow ? .filled : nil, tail: edge.arrowBack ? .filled : nil))
+                if let size = labelSizes[k] {
+                    let center = place((p.m + q.m) / 2, track)
+                    labels.append(.text(DiagramRect(x: center.x - size.width / 2, y: center.y - size.height / 2, width: size.width, height: size.height), edge.label!, boxed: true))
+                }
+                continue
             }
+            let points = points(k), slope = slopes(points)
             var segments: [DiagramScene.Segment] = [.move(place(points[0].m, points[0].c))]
-            for (p, q) in zip(points, points.dropFirst()) {
+            for (i, (p, q)) in zip(points, points.dropFirst()).enumerated() {
                 switch st.lines {
                 case .straight:
                     segments.append(.line(place(q.m, q.c)))
                 case .curved:
-                    let half = (q.m - p.m) / 2
-                    segments.append(.curve(place(p.m + half, p.c), place(q.m - half, q.c), place(q.m, q.c)))
+                    let h = q.m - p.m
+                    segments.append(.curve(place(p.m + h / 3, p.c + slope[i] * h / 3), place(q.m - h / 3, q.c - slope[i + 1] * h / 3), place(q.m, q.c)))
                 case .angled:
                     let mid = (p.m + q.m) / 2
                     if abs(p.c - q.c) > 0.5 {
@@ -353,8 +639,14 @@ public enum DiagramLayout {
                 }
             }
             items.append(.path(segments, dashed: edge.stroke == .dotted, thick: edge.stroke == .thick, head: edge.arrow ? .filled : nil, tail: edge.arrowBack ? .filled : nil))
-            if let size = labelSizes[k] {
-                let center = place((points[0].m + points[1].m) / 2, (points[0].c + points[1].c) / 2)
+            if let size = labelSizes[k], let v = labelVertex[k] {
+                let center = place(y[vRank[v]], x[v])
+                labels.append(.text(DiagramRect(x: center.x - size.width / 2, y: center.y - size.height / 2, width: size.width, height: size.height), edge.label!, boxed: true))
+            } else if let size = labelSizes[k] {
+                let r = labelRanks[k]!
+                let labelMain = y[r] + rankDepth[r] / 2 + labelOffsets[k]!
+                let cross = labelCross(k, labelMain)
+                let center = place(labelMain, cross)
                 labels.append(.text(DiagramRect(x: center.x - size.width / 2, y: center.y - size.height / 2, width: size.width, height: size.height), edge.label!, boxed: true))
             }
         }
@@ -362,7 +654,7 @@ public enum DiagramLayout {
             let center = place(y[vRank[v]], x[v])
             items.append(.node(DiagramRect(x: center.x - sizes[v].width / 2, y: center.y - sizes[v].height / 2, width: sizes[v].width, height: sizes[v].height), c.nodes[v].shape, c.nodes[v].label))
         }
-        let crossExtent = max(totalCross, loopReach + margin)
+        let crossExtent = max(totalCross, loopReach + margin, returnReach + margin)
         var size = horizontal ? DiagramSize(width: totalMain, height: crossExtent) : DiagramSize(width: crossExtent, height: totalMain)
         // A label may reach past the nodes (a tall one on a left-to-right edge): the scene grows,
         // and moves over, to hold it with its chip.

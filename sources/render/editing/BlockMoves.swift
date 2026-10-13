@@ -158,12 +158,6 @@ extension MarkdownEditor {
         return menu
     }
 
-    /// Select the block's text (the right-click menu acts on it); a component is covered whole.
-    func selectText(in block: MarkdownBlock) {
-        if let box = componentBox(at: block.range.location), box.isBlock, let range = source(of: box) { selection = range; return }
-        selection = visibleText(of: block) ?? Self.withoutTerminator(block.range, in: source)
-    }
-
     /// Move the block at the caret past its previous or next sibling; the caret moves with it.
     public func moveBlock(up: Bool) {
         let sel = selection
@@ -199,8 +193,6 @@ extension MarkdownEditor {
         return blockCanvas.lineBox(at: last).maxY
     }
 
-    /// Right-click in the text (design §8): on the selection, its formats; elsewhere the block
-    /// under the pointer is selected and the menu acts on it. Ask AI sees the selection.
     /// The right-click menu. On a handle, the block's menu. On text, as in any Mac text: a click
     /// outside the selection selects the word there; then Look Up, the edit commands, the formats
     /// and the assistant (a link adds Open and Copy). Block actions stay on the handle.
@@ -243,7 +235,9 @@ extension MarkdownEditor {
         menu.addItem(.separator())
         add(String(localized: "Bold"), #selector(BlockCanvasView.toggleBoldface(_:)), "b", symbol: "bold")
         add(String(localized: "Italic"), #selector(BlockCanvasView.toggleItalics(_:)), "i", symbol: "italic")
+        add(String(localized: "Underline"), #selector(BlockCanvasView.toggleUnderlined(_:)), "u", symbol: "underline")
         add(String(localized: "Strikethrough"), #selector(BlockCanvasView.toggleStrikethrough(_:)), "x", [.command, .shift], symbol: "strikethrough")
+        add(String(localized: "Highlight"), #selector(BlockCanvasView.toggleHighlight(_:)), "h", [.command, .shift], symbol: "highlighter")
         add(String(localized: "Inline Code"), #selector(BlockCanvasView.toggleInlineCode(_:)), "`", .control, symbol: "chevron.left.forwardslash.chevron.right")
         add(String(localized: "Link"), #selector(BlockCanvasView.insertMarkdownLink(_:)), "k", symbol: "link")
         menu.addItem(.separator())
@@ -356,19 +350,19 @@ final class BlockHandleOverlay {
         }
     }
 
-    /// A quiet strip with a plus; firmer under the pointer.
+    /// Nothing until the pointer is on the strip itself; then a quiet gray strip with a plus.
     private func drawAdder(_ rect: NSRect) {
-        let hot = view.window.map { rect.contains(view.convert($0.mouseLocationOutsideOfEventStream, from: nil)) } ?? false
-        (hot ? Tokens.hover : Tokens.hover.withAlphaComponent(0.55)).setFill()
+        guard view.window.map({ rect.contains(view.convert($0.mouseLocationOutsideOfEventStream, from: nil)) }) == true else { return }
+        Tokens.hover.withAlphaComponent(0.55).setFill()
         NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).fill()
-        (hot ? Tokens.ink2 : Tokens.ink3).setFill()
+        Tokens.ink2.setFill()
         let c = NSPoint(x: rect.midX, y: rect.midY)
         NSRect(x: c.x - 4, y: c.y - 0.75, width: 8, height: 1.5).fill()
         NSRect(x: c.x - 0.75, y: c.y - 4, width: 1.5, height: 8).fill()
     }
 
     func setAdders(_ new: TableAdders?) {
-        guard new?.row != adders?.row || new?.column != adders?.column else { return }
+        guard new?.table !== adders?.table || new?.row != adders?.row || new?.column != adders?.column else { return }
         for rect in [adders?.row, adders?.column, new?.row, new?.column].compactMap({ $0 }).filter({ !$0.isEmpty }) { view.setNeedsDisplay(rect.insetBy(dx: -1, dy: -1)) }
         adders = new
     }

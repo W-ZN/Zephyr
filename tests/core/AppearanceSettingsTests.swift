@@ -79,7 +79,9 @@ import Testing
     }
 
     @Test func builtInsKeepChangesAsOverrides() throws {
-        var state = AppearanceState(active: "anthology")
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-built-in-overrides-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        var state = AppearanceState(active: "anthology", themesFolder: folder.path)
         #expect(state.settings().string("palette") == "anthology")
         #expect(state.settings().string("font.body").hasPrefix("Newsreader"), "open-source first")
         #expect(!state.isModified("anthology"))
@@ -97,8 +99,11 @@ import Testing
         state.active = "anthology"
         #expect(state.settings().string("table.lines") == "rows" && !state.isModified("anthology"))
         #expect(throws: AppearanceSettings.SettingError.self) { try state.restore("Mine") }
-        #expect(AppearanceState(active: "Zephyr").settings().string("code.style") == "card", "Zephyr is built in")
-        #expect(AppearanceState.parse(json: Data(#"{"active":"Zephyr"}"#.utf8)).active == "Zephyr", "as written, for the migration to follow")
+        #expect(AppearanceState(active: "Zephyr", themesFolder: folder.path).settings().string("code.style") == "card", "Zephyr is built in")
+        var parsed = AppearanceState.parse(json: Data(#"{"active":"Zephyr"}"#.utf8))
+        parsed.themesFolder = folder.path
+        #expect(parsed.active == "Zephyr", "as written, for the migration to follow")
+        #expect(parsed.settings().string("code.style") == "card")
     }
 
     @Test func customThemesAreFilesInAFolder() throws {
@@ -125,6 +130,112 @@ import Testing
         #expect(ThemeLibrary.names(in: folder) == ["Essay", "Zephyr Custom"])
         #expect(ThemeLibrary.suggestedName(from: "zephyr", in: folder) == "Zephyr Custom 2")
         #expect(ThemeLibrary.suggestedName(from: "Essay", in: folder) == "Essay Custom")
+    }
+
+    @Test func builtInThemeFilesSnapshotLegacySettingsWithoutOverwritingEdits() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-built-ins-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        var state = AppearanceState(themesFolder: folder.path, adjustments: [
+            "zephyr": ["zoom": .number(1.2)],
+            "anthology": ["text.size": .number(19)],
+        ])
+        var custom = AppearanceSettings()
+        try custom.set("text.size", "17")
+        try ThemeLibrary.saveTheme(custom, as: "Mine", in: folder)
+        let customBefore = try Data(contentsOf: ThemeLibrary.file("Mine", in: folder))
+
+        try state.prepareThemeFiles()
+        #expect(ThemeLibrary.presets.allSatisfy { FileManager.default.fileExists(atPath: ThemeLibrary.themeFile($0.id, in: folder).path) })
+        #expect(try ThemeLibrary.load("zephyr", in: folder).number("zoom") == 1.2)
+        #expect(try ThemeLibrary.load("anthology", in: folder).number("text.size") == 19)
+        #expect(try ThemeLibrary.load("readme", in: folder).number("text.size") == 16, "defaults are captured too")
+        #expect(try Data(contentsOf: ThemeLibrary.file("Mine", in: folder)) == customBefore, "custom files stay at the root and are untouched")
+
+        var edited = try ThemeLibrary.load("zephyr", in: folder)
+        try edited.set("text.size", "18")
+        try ThemeLibrary.saveTheme(edited, as: "zephyr", in: folder)
+        let builtIn = ThemeLibrary.themeFile("zephyr", in: folder)
+        let beforeRepeat = try Data(contentsOf: builtIn)
+        try state.prepareThemeFiles()
+        #expect(try Data(contentsOf: builtIn) == beforeRepeat, "preparation only creates missing snapshots")
+
+        state.adjustments["zephyr"] = ["text.size": .number(22)]
+        #expect(state.settings().number("text.size") == 18, "the editable built-in file wins over stale legacy adjustments")
+        _ = try state.change { try $0.set("zoom", "1.1") }
+        #expect(state.adjustments["zephyr"]?["text.size"] == .number(18), "a later change synchronizes compatibility adjustments from the file")
+    }
+
+    @Test func builtInFilesFromAnEarlierVersionTakeLaterShippedValues() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-shipped-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        // Files as 0.1.1 wrote them: every key, tables at the column width, no revision.
+        for preset in ThemeLibrary.presets {
+            var old = AppearanceSettings(overrides: preset.keys)
+            try old.set("table.width", value: .text(preset.id == "readme" ? "window" : "column"))
+            if preset.id == "zephyr" { try old.set("text.size", "18") }
+            try ThemeLibrary.saveTheme(old, as: preset.id, in: folder)
+        }
+        var state = AppearanceState(themesFolder: folder.path)
+        try state.prepareThemeFiles()
+        #expect(try ThemeLibrary.load("zephyr", in: folder).string("table.width") == "fit")
+        #expect(try ThemeLibrary.load("zephyr", in: folder).number("text.size") == 18, "other edits stay")
+        #expect(try ThemeLibrary.load("readme", in: folder).string("table.width") == "window", "a value the reader chose stays")
+
+        var chosen = try ThemeLibrary.load("anthology", in: folder)
+        try chosen.set("table.width", value: .text("column"))
+        try ThemeLibrary.saveTheme(chosen, as: "anthology", in: folder)
+        try state.prepareThemeFiles()
+        #expect(try ThemeLibrary.load("anthology", in: folder).string("table.width") == "column", "a change applies once")
+    }
+
+    @Test func malformedBuiltInFileIsNotOverwrittenByAnUpdate() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-invalid-built-in-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        var state = AppearanceState(themesFolder: folder.path)
+        try state.prepareThemeFiles()
+        let path = ThemeLibrary.themeFile("zephyr", in: folder)
+        let invalid = Data("{ invalid".utf8)
+        try invalid.write(to: path, options: .atomic)
+
+        #expect(throws: AppearanceSettings.SettingError.self) { _ = try state.change { try $0.set("text.size", "17") } }
+        #expect(try Data(contentsOf: path) == invalid)
+        #expect(throws: AppearanceSettings.SettingError.self) { _ = try state.loadedSettings() }
+    }
+
+    @Test func cliFolderKeepsBuiltInFilesAndMigratesDestinationLegacyThemes() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-folder-transfer-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let source = root.appendingPathComponent("Source")
+        let destination = root.appendingPathComponent("Destination")
+        let url = root.appendingPathComponent("appearance.json")
+        try AppearanceState(themesFolder: source.path).save(to: url)
+
+        _ = try AppearanceCommands.run(["config", "set", "text.size", "17"], url: url)
+        var edited = try ThemeLibrary.load("zephyr", in: source)
+        try edited.set("text.size", "19")
+        try ThemeLibrary.saveTheme(edited, as: "zephyr", in: source)
+        var legacy = AppearanceSettings()
+        try legacy.set("h2.size", "1.6")
+        try ThemeLibrary.save(legacy, as: "Zephyr", in: destination)
+
+        _ = try AppearanceCommands.run(["theme", "folder", destination.path], url: url)
+        #expect(try ThemeLibrary.load("zephyr", in: destination).number("text.size") == 19)
+        #expect(ThemeLibrary.names(in: destination) == ["Zephyr Custom"], "the destination's old root-level theme remains accessible")
+    }
+
+    @Test func cliRefusesMalformedBuiltInFilesWhenReadingOrCopying() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-cli-invalid-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let themes = dir.appendingPathComponent("Themes")
+        let url = dir.appendingPathComponent("appearance.json")
+        try AppearanceState(themesFolder: themes.path).save(to: url)
+        _ = try AppearanceCommands.run(["config", "list"], url: url)
+        let path = ThemeLibrary.themeFile("zephyr", in: themes)
+        try Data("{ invalid".utf8).write(to: path, options: .atomic)
+
+        #expect(throws: AppearanceSettings.SettingError.self) { _ = try AppearanceCommands.run(["config", "get", "text.size"], url: url) }
+        #expect(throws: AppearanceSettings.SettingError.self) { _ = try AppearanceCommands.run(["theme", "new", "Copy", "--from", "zephyr"], url: url) }
+        #expect(!ThemeLibrary.names(in: themes).contains("Copy"))
     }
 
     @Test func commandsAndToolsEditTheFilesTheAppWatches() throws {

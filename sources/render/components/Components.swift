@@ -240,7 +240,18 @@ final class TableBox: ComponentBox {
         var cells: [[NSAttributedString]]
     }
     private var layout: Layout?
+    /// Widths chosen by dragging a divider. They belong to this rendered component only: Markdown
+    /// has no column-width syntax, so source stays untouched and a fresh document starts natural.
+    private var resizedColumns: [CGFloat]?
+    private var highlightedDivider: Int?
     private var remoteRequests: Set<URL> = []
+    /// The visible table stays at its content height. A scrolling table reserves this small gutter
+    /// for a mouse-accessible horizontal thumb, which appears while the pointer is over the table.
+    private let horizontalScrollGutter: CGFloat = 14
+    private var contentRect = NSRect.zero
+    private(set) var horizontalScrollTrack = NSRect.zero
+    private(set) var horizontalScrollThumb = NSRect.zero
+    private var horizontalScrollHovered = false
     /// Cell padding from the theme (table.padding), a little less above and below than beside.
     var padX: CGFloat { context?.typography.tablePadding ?? 12 }
     var padY: CGFloat { round(padX * 0.55) }
@@ -283,7 +294,8 @@ final class TableBox: ComponentBox {
     private func makeLayout(_ space: BlockSpace) -> Layout {
         let dark = NSAppearance.currentDrawing().isDark
         guard let typography = context?.typography else { return Layout(key: "", columns: [], rows: [], cells: []) }
-        let key = "\(space.column)|\(space.wide)|\(widthMode)|\(dark)|\(typography.tableFont.fontName)|\(typography.tableFont.pointSize)|\(padX)|\(typography.tableHeaderBold)|\(context?.loadsRemoteImages == true)"
+        let resizedKey = resizedColumns?.map { String(format: "%.3f", $0) }.joined(separator: ",") ?? ""
+        let key = "\(space.column)|\(space.wide)|\(widthMode)|\(dark)|\(typography.tableFont.fontName)|\(typography.tableFont.pointSize)|\(padX)|\(typography.tableHeaderBold)|\(context?.loadsRemoteImages == true)|\(resizedKey)"
         if let l = layout, l.key == key { return l }
         let n = columnCount
         var cells: [[NSAttributedString]] = []
@@ -318,6 +330,9 @@ final class TableBox: ComponentBox {
         } else if total < target, total > 0 {
             columns = most.map { ($0 * target / total).rounded(.down) }
         }
+        if let resizedColumns, resizedColumns.count == n {
+            columns = resizedColumns
+        }
         let rows = cells.map { row in
             row.enumerated().map { c, cell in
                 ceil(cell.boundingRect(with: CGSize(width: columns[c] - padX * 2, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin, .usesFontLeading]).height) + padY * 2
@@ -326,6 +341,12 @@ final class TableBox: ComponentBox {
         let result = Layout(key: key, columns: columns, rows: rows, cells: cells)
         layout = result
         return result
+    }
+
+    /// Leave enough room for a short word and the cell's horizontal padding. Natural layout still
+    /// protects unbreakable words; this lower bound only applies after a reader takes a divider.
+    private func minimumColumnWidth(_ typography: Typography) -> CGFloat {
+        max(48, ceil(typography.tableFont.pointSize * 3) + padX * 2)
     }
 
     /// The widest run the text cannot break inside: a word, or (in Chinese and Japanese) one
@@ -355,11 +376,36 @@ final class TableBox: ComponentBox {
     }
 
     override func height(in space: BlockSpace) -> CGFloat {
-        makeLayout(space).rows.reduce(0, +)
+        let l = makeLayout(space)
+        return l.rows.reduce(0, +) + (hasHorizontalOverflow(l, in: space) ? horizontalScrollGutter : 0)
     }
 
     /// Where the table's content starts: the visible box less how far it has scrolled.
-    private var contentX: CGFloat { drawnRect.minX - scrollX }
+    private var contentX: CGFloat { contentRect.minX - scrollX }
+
+    private func visibleWidth(for space: BlockSpace) -> CGFloat {
+        widthMode == .window ? space.wide : space.column
+    }
+
+    private func hasHorizontalOverflow(_ layout: Layout, in space: BlockSpace) -> Bool {
+        layout.columns.reduce(0, +) > visibleWidth(for: space) + 0.5
+    }
+
+    func setHorizontalScrollHovered(_ hovered: Bool) {
+        guard horizontalScrollHovered != hovered else { return }
+        horizontalScrollHovered = hovered
+        context?.componentNeedsDisplay(self)
+    }
+
+    var isHorizontalScrollHandleVisible: Bool {
+        horizontalScrollHovered && !horizontalScrollThumb.isEmpty
+    }
+
+    func dragHorizontalScroll(from start: NSPoint, initialScrollX: CGFloat, to point: NSPoint) {
+        let thumbTravel = horizontalScrollTrack.width - horizontalScrollThumb.width
+        guard scrollWidth > 0, thumbTravel > 0 else { return }
+        scrollX = min(max(initialScrollX + (point.x - start.x) * scrollWidth / thumbTravel, 0), scrollWidth)
+    }
 
     /// The theme's table style (design §8.1): lines between rows, a grid or none; a shaded, bold or
     /// plain header; optional stripes; only the grid has an outer outline (the lines between rows
@@ -368,11 +414,22 @@ final class TableBox: ComponentBox {
     override func draw(in blockFrame: BlockFrame, context ctx: CGContext) {
         guard let typography = context?.typography else { return }
         let l = makeLayout(blockFrame.space)
-        let room = widthMode == .window ? blockFrame.wide.width : blockFrame.column.width
+        let room = visibleWidth(for: blockFrame.space)
         let tableWidth = l.columns.reduce(0, +), visible = min(tableWidth, room)
-        scrollWidth = tableWidth - visible
+        scrollWidth = max(tableWidth - visible, 0)
         let box = NSRect(x: blockFrame.originX(width: visible, alignment: alignment), y: blockFrame.column.minY, width: visible, height: l.rows.reduce(0, +))
-        drawnRect = box
+        contentRect = box
+        let overflows = scrollWidth > 0
+        horizontalScrollTrack = overflows ? NSRect(x: box.minX + 8, y: box.maxY + 5, width: max(box.width - 16, 0), height: 5) : .zero
+        if horizontalScrollTrack.width > 0 {
+            let thumbWidth = min(horizontalScrollTrack.width, max(28, horizontalScrollTrack.width * visible / tableWidth))
+            let travel = horizontalScrollTrack.width - thumbWidth
+            let fraction = scrollWidth > 0 ? scrollX / scrollWidth : 0
+            horizontalScrollThumb = NSRect(x: horizontalScrollTrack.minX + travel * fraction, y: horizontalScrollTrack.minY, width: thumbWidth, height: horizontalScrollTrack.height)
+        } else {
+            horizontalScrollThumb = .zero
+        }
+        drawnRect = overflows ? box.union(NSRect(x: box.minX, y: box.maxY, width: box.width, height: horizontalScrollGutter)) : box
         let frame = NSRect(x: box.minX - scrollX, y: box.minY, width: tableWidth, height: box.height)
         let hair = 1 / (NSScreen.main?.backingScaleFactor ?? 2)
         let lines = typography.tableLines
@@ -421,6 +478,11 @@ final class TableBox: ComponentBox {
                 NSRect(x: x - hair, y: frame.minY, width: hair, height: frame.height).fill(using: .sourceOver)
             }
         }
+        if let divider = highlightedDivider, l.columns.indices.contains(divider + 1) {
+            let x = frame.minX + l.columns[..<(divider + 1)].reduce(0, +)
+            Palette.color(.accent).withAlphaComponent(0.55).setFill()
+            NSRect(x: x - 1, y: frame.minY, width: 2, height: frame.height).fill(using: .sourceOver)
+        }
         y = frame.minY
         for (r, h) in l.rows.enumerated() {
             var x = frame.minX
@@ -439,14 +501,20 @@ final class TableBox: ComponentBox {
             outline.lineWidth = hair
             outline.stroke()
         }
+        if horizontalScrollHovered, !horizontalScrollTrack.isEmpty {
+            Palette.faint.withAlphaComponent(0.45).setFill()
+            NSBezierPath(roundedRect: horizontalScrollTrack, xRadius: horizontalScrollTrack.height / 2, yRadius: horizontalScrollTrack.height / 2).fill()
+            Palette.color(.accent).withAlphaComponent(0.78).setFill()
+            NSBezierPath(roundedRect: horizontalScrollThumb, xRadius: horizontalScrollThumb.height / 2, yRadius: horizontalScrollThumb.height / 2).fill()
+        }
     }
 
     var rowCount: Int { 1 + model.rows.count }
 
     /// The cell under `point`, from the last drawn frame (view coordinates). Row 0 is the header.
     func cell(at point: NSPoint) -> (row: Int, column: Int)? {
-        guard let l = layout, drawnRect.contains(point) else { return nil }
-        var y = drawnRect.minY, row = l.rows.count - 1
+        guard let l = layout, contentRect.contains(point) else { return nil }
+        var y = contentRect.minY, row = l.rows.count - 1
         for (r, h) in l.rows.enumerated() {
             if point.y < y + h { row = r; break }
             y += h
@@ -461,13 +529,66 @@ final class TableBox: ComponentBox {
 
     func cellRect(row: Int, column: Int) -> NSRect? {
         guard let l = layout, l.rows.indices.contains(row), l.columns.indices.contains(column) else { return nil }
-        return NSRect(x: contentX + l.columns[..<column].reduce(0, +), y: drawnRect.minY + l.rows[..<row].reduce(0, +), width: l.columns[column], height: l.rows[row])
+        return NSRect(x: contentX + l.columns[..<column].reduce(0, +), y: contentRect.minY + l.rows[..<row].reduce(0, +), width: l.columns[column], height: l.rows[row])
+    }
+
+    /// The interior divider nearest a point, in the last drawn frame. A divider is deliberately a
+    /// little wider than the hairline so it remains practical on a trackpad.
+    func columnDivider(at point: NSPoint) -> Int? {
+        guard let l = layout, l.columns.count > 1,
+              point.y >= contentRect.minY, point.y <= contentRect.maxY else { return nil }
+        var x = contentX
+        for (column, width) in l.columns.dropLast().enumerated() {
+            x += width
+            if abs(point.x - x) <= 4 { return column }
+        }
+        return nil
+    }
+
+    /// The current widths are the drag baseline. Keeping the pair's total fixed lets a narrow
+    /// column wrap while its neighbour gives up exactly the corresponding width.
+    func columnWidths() -> [CGFloat]? { layout?.columns }
+
+    /// Apply one drag from its original widths. The caller keeps that baseline for the gesture so
+    /// a series of mouse-moved events cannot accumulate rounding drift.
+    func resizeColumns(divider: Int, from widths: [CGFloat], by delta: CGFloat) {
+        guard let typography = context?.typography,
+              widths.indices.contains(divider), widths.indices.contains(divider + 1) else { return }
+        let floor = min(minimumColumnWidth(typography), (widths[divider] + widths[divider + 1]) / 2)
+        let amount = min(max(delta, floor - widths[divider]), widths[divider + 1] - floor)
+        var resized = widths
+        resized[divider] += amount
+        resized[divider + 1] -= amount
+        resizedColumns = resized
+        highlightedDivider = divider
+        layout = nil
+        context?.componentNeedsLayout(self)
+    }
+
+    /// A named table-width mode is an explicit return to automatic sizing.
+    func resetColumnWidths() {
+        guard resizedColumns != nil else { return }
+        resizedColumns = nil
+        layout = nil
+    }
+
+    func highlightColumnDivider(_ divider: Int?) {
+        guard highlightedDivider != divider else { return }
+        highlightedDivider = divider
+        context?.componentNeedsDisplay(self)
+    }
+
+    /// Preserve a visual resize through source edits that leave the table's columns intact.
+    func copyColumnWidths(from table: TableBox) {
+        guard table.columnCount == columnCount else { return }
+        resizedColumns = table.resizedColumns
+        layout = nil
     }
 
     /// Scrolls sideways so the cell is in view (one being typed in, or reached with Tab).
     func scrollToCell(row: Int, column: Int) {
         guard scrollWidth > 0, let rect = cellRect(row: row, column: column) else { return }
-        if rect.minX < drawnRect.minX { scrollX -= drawnRect.minX - rect.minX } else if rect.maxX > drawnRect.maxX { scrollX += min(rect.maxX - drawnRect.maxX, rect.minX - drawnRect.minX) }
+        if rect.minX < contentRect.minX { scrollX -= contentRect.minX - rect.minX } else if rect.maxX > contentRect.maxX { scrollX += min(rect.maxX - contentRect.maxX, rect.minX - contentRect.minX) }
         scrollX = min(max(scrollX, 0), scrollWidth)
     }
 

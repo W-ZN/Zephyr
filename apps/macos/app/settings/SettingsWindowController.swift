@@ -1,4 +1,5 @@
 import AppKit
+import Sparkle
 import ZephyrCore
 import ZephyrRender
 
@@ -49,16 +50,6 @@ final class SettingsWindowController: NSWindowController, NSMenuItemValidation {
         switch alignment {
         case .center: String(localized: "Centered")
         case .left: String(localized: "Left")
-        }
-    }
-
-    /// A family as people know it: the macOS presets by their real names.
-    static func displayFamily(_ family: String) -> String {
-        switch family {
-        case "system": "SF Pro"
-        case "serif": "New York"
-        case "mono": "SF Mono"
-        default: family
         }
     }
 
@@ -288,6 +279,102 @@ final class SettingsNavItem: NSView {
 
 // MARK: - Page layout
 
+/// A full-width section heading whose chevron has a fixed slot, so it never crowds the title.
+private final class DisclosureButton: NSButton {
+    private let titleLabel: NSTextField
+    private let chevron = CAShapeLayer()
+    private var handler: (() -> Void)?
+
+    init(title: String, expanded: Bool, handler: @escaping () -> Void) {
+        titleLabel = flatLabel(title, size: 14, weight: .semibold)
+        self.handler = handler
+        super.init(frame: .zero)
+        self.title = title
+        isBordered = false
+        setButtonType(.momentaryChange)
+        target = self
+        action = #selector(press)
+        setAccessibilityLabel(title)
+        titleLabel.setAccessibilityElement(false)
+        wantsLayer = true
+        chevron.fillColor = nil
+        chevron.lineWidth = 1.8
+        chevron.lineCap = .round
+        chevron.lineJoin = .round
+        effectiveAppearance.performAsCurrentDrawingAppearance { chevron.strokeColor = Tokens.ink3.cgColor }
+        layer?.addSublayer(chevron)
+        addSubview(titleLabel)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 28),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -8),
+            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ])
+        setExpanded(expanded, animated: false)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override var intrinsicContentSize: NSSize { NSSize(width: NSView.noIntrinsicMetric, height: 28) }
+    override var acceptsFirstResponder: Bool { FocusRing.isKeyboard && super.acceptsFirstResponder }
+    override func hitTest(_ point: NSPoint) -> NSView? { super.hitTest(point) == nil ? nil : self }
+
+    override func draw(_ dirtyRect: NSRect) {
+        // The label and chevron are sublayers; suppress NSButton's duplicate title drawing.
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        effectiveAppearance.performAsCurrentDrawingAppearance { chevron.strokeColor = Tokens.ink3.cgColor }
+    }
+
+    override func layout() {
+        super.layout()
+        chevron.frame = NSRect(x: 8, y: bounds.midY - 6, width: 12, height: 12)
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 4, y: 2))
+        path.addLine(to: CGPoint(x: 8, y: 6))
+        path.addLine(to: CGPoint(x: 4, y: 10))
+        chevron.path = path
+    }
+
+    func setExpanded(_ expanded: Bool, animated: Bool) {
+        // Settings views use AppKit's non-flipped coordinates: clockwise turns the right arrow down.
+        let angle: CGFloat = expanded ? -.pi / 2 : 0
+        let from = (chevron.presentation()?.value(forKeyPath: "transform.rotation.z") as? NSNumber)?.doubleValue ?? angle
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        chevron.transform = CATransform3DMakeRotation(angle, 0, 0, 1)
+        CATransaction.commit()
+        chevron.removeAnimation(forKey: "disclosureRotation")
+        guard animated else { return }
+        let animation = CABasicAnimation(keyPath: "transform.rotation.z")
+        animation.fromValue = from
+        animation.toValue = angle
+        animation.duration = 0.18
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        chevron.add(animation, forKey: "disclosureRotation")
+    }
+
+    @objc private func press() { handler?() }
+}
+
+/// Keeps expensive family enumeration out of disclosure expansion. The system menu asks for its
+/// installed-family items only when that particular picker opens.
+private final class LazyFontMenuLoader: NSObject, NSMenuDelegate {
+    static var associationKey: UInt8 = 0
+    private var didLoad = false
+    private let load: () -> Void
+
+    init(load: @escaping () -> Void) { self.load = load }
+
+    func menuWillOpen(_ menu: NSMenu) {
+        guard !didLoad else { return }
+        didLoad = true
+        load()
+    }
+}
+
 /// A settings page: a title and a short description, then sections of rows separated by
 /// hairlines, in a scroll view so long sections stay usable on small screens. Controls made by
 /// the `…Control` builders are bound to one appearance key each: they write it on change and
@@ -445,21 +532,31 @@ class SettingsPage: NSViewController {
 
     /// Build a group's controls only when first opened; collapsing keeps edits and focus order.
     func addDisclosure(_ title: String, expanded: Bool, onToggle: @escaping (Bool) -> Void, content: @escaping () -> Void) {
-        let body = NSStackView()
-        body.orientation = .vertical
-        body.alignment = .leading
-        body.spacing = 0
+        let body = NSView()
+        body.wantsLayer = true
+        body.layer?.masksToBounds = true
+        let contents = NSStackView()
+        contents.orientation = .vertical
+        contents.alignment = .leading
+        contents.spacing = 0
+        contents.translatesAutoresizingMaskIntoConstraints = false
+        body.addSubview(contents)
+        let bodyHeight = body.heightAnchor.constraint(equalToConstant: 0)
+        bodyHeight.isActive = true
+        let naturalHeight = contents.bottomAnchor.constraint(equalTo: body.bottomAnchor)
+        NSLayoutConstraint.activate([
+            contents.leadingAnchor.constraint(equalTo: body.leadingAnchor),
+            contents.trailingAnchor.constraint(equalTo: body.trailingAnchor),
+            contents.topAnchor.constraint(equalTo: body.topAnchor, constant: 4),
+        ])
         body.isHidden = !expanded
         var toggle: (() -> Void)?
-        let button = FlatButton(title: title, symbol: expanded ? "chevron.down" : "chevron.right", style: .heading) { toggle?() }
-        button.alignment = .left
-        button.titleFont = Tokens.font(14, .semibold)
-        button.setAccessibilityLabel(title)
+        let button = DisclosureButton(title: title, expanded: expanded) { toggle?() }
         button.setAccessibilityExpanded(expanded)
         let group = NSStackView(views: [button, body])
         group.orientation = .vertical
         group.alignment = .leading
-        group.spacing = 4
+        group.spacing = 0
         group.edgeInsets = NSEdgeInsets(top: 16, left: 0, bottom: 12, right: 0)
         for child in [button, body] { child.widthAnchor.constraint(equalTo: group.widthAnchor).isActive = true }
         let rule = SurfaceView(fill: Tokens.line, border: nil, radius: 0)
@@ -469,27 +566,79 @@ class SettingsPage: NSViewController {
         rows.addArrangedSubview(group)
         group.widthAnchor.constraint(equalTo: rows.widthAnchor).isActive = true
         var built = false
-        let populate = { [weak self, weak body] in
-            guard let self, let body, !built else { return }
+        let populate = { [weak self] in
+            guard let self, !built else { return }
             built = true
             let previous = self.groupRows, rule = self.ruleBeforeNextRow
-            self.groupRows = body
+            self.groupRows = contents
             self.ruleBeforeNextRow = false
             content()
             self.groupRows = previous
             self.ruleBeforeNextRow = rule
         }
+        var isExpanded = expanded
+        var generation = 0
         toggle = { [weak self, weak body, weak button] in
             guard let self, let body, let button else { return }
-            let open = body.isHidden
-            if open { populate() }
-            body.isHidden = !open
-            button.symbolName = open ? "chevron.down" : "chevron.right"
+            let open = !isExpanded
+            isExpanded = open
+            if open {
+                populate()
+                body.isHidden = false
+                self.view.layoutSubtreeIfNeeded()
+            }
+            // Natural height follows later content changes. A fixed height exists only while the
+            // masked body is moving, so a resize or a binding that hides a row cannot leave a gap.
+            let currentHeight = body.frame.height
+            naturalHeight.isActive = false
+            bodyHeight.isActive = true
+            bodyHeight.constant = currentHeight
+            self.view.layoutSubtreeIfNeeded()
+            let height = open ? ceil(contents.fittingSize.height) + 4 : 0
+            let animate = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion && self.view.window?.occlusionState.contains(.visible) == true
+            generation += 1
+            let currentGeneration = generation
+            button.setExpanded(open, animated: animate)
             button.setAccessibilityExpanded(open)
             onToggle(open)
-            self.view.layoutSubtreeIfNeeded()
+            guard animate else {
+                bodyHeight.constant = height
+                self.view.layoutSubtreeIfNeeded()
+                if open {
+                    bodyHeight.isActive = false
+                    naturalHeight.isActive = true
+                    self.view.layoutSubtreeIfNeeded()
+                } else {
+                    body.isHidden = true
+                }
+                return
+            }
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.18
+                context.allowsImplicitAnimation = true
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                bodyHeight.animator().constant = height
+                self.view.layoutSubtreeIfNeeded()
+            }, completionHandler: { [weak body] in
+                guard generation == currentGeneration, let body else { return }
+                if open {
+                    bodyHeight.isActive = false
+                    naturalHeight.isActive = true
+                    self.view.layoutSubtreeIfNeeded()
+                } else {
+                    body.isHidden = true
+                }
+            })
         }
-        if expanded { populate() }
+        if expanded {
+            populate()
+            body.isHidden = false
+            view.layoutSubtreeIfNeeded()
+            bodyHeight.constant = ceil(contents.fittingSize.height) + 4
+            view.layoutSubtreeIfNeeded()
+            bodyHeight.isActive = false
+            naturalHeight.isActive = true
+        }
         ruleBeforeNextRow = false
     }
 
@@ -565,15 +714,15 @@ class SettingsPage: NSViewController {
         return toggle
     }
 
-    /// A pop-up of the font presets and the installed families for a font key.
-    func fontControl(_ key: String, presets: [(value: String, title: String)], families: [String] = NSFontManager.shared.availableFontFamilies, resolved: (() -> String)? = nil) -> FlatPopUpButton {
+    /// A font picker whose large installed-family menu is assembled only when someone opens it.
+    /// A current non-preset value remains visible before then, without enumerating fonts.
+    func lazyFontControl(_ key: String, presets: [(value: String, title: String)], families: @escaping () -> [String], resolved: (() -> String)? = nil,
+                         extraItems: (([String]) -> [(title: String, toolTip: String?)])? = nil) -> FlatPopUpButton {
         let popup = FlatPopUpButton()
         let search = ClosureMenuItem(title: String(localized: "Search Fonts…", table: "Fonts")) { [weak self, weak popup] in
             guard let self, let popup else { return }
             let value = self.store.settings.string(key)
-            let shown = resolved?() ?? AppearanceSettings.families(value).first(where: { families.contains($0) }) ?? value
-            // Opening search is not a font choice; cancellation keeps the original menu selection.
-            if let item = popup.itemArray.first(where: { $0.representedObject as? String == value }) ?? popup.itemArray.first(where: { $0.representedObject as? String == shown }) ?? popup.itemArray.first(where: { $0.representedObject is String }) { popup.select(item) }
+            let shown = resolved?() ?? AppearanceSettings.families(value).first ?? value
             let scope: FontCatalog.Scope = key == "font.cjk" ? .chinese : key == "font.code" ? .monospaced : .all
             FontChooser.present(from: popup, scope: scope, selected: shown) { [weak self, weak popup] family in
                 if popup?.itemArray.contains(where: { $0.representedObject as? String == family }) == false {
@@ -585,12 +734,28 @@ class SettingsPage: NSViewController {
         }
         popup.menu?.addItem(search)
         popup.menu?.addItem(.separator())
-        for p in presets { popup.addItem(withTitle: p.title); popup.lastItem?.representedObject = p.value }
+        for preset in presets { popup.addItem(withTitle: preset.title); popup.lastItem?.representedObject = preset.value }
         popup.menu?.addItem(.separator())
-        for family in families where !family.hasPrefix(".") {
-            popup.addItem(withTitle: FontCatalog.displayName(for: family))
-            popup.lastItem?.representedObject = family
+
+        let loadFamilies = { [weak popup] in
+            guard let popup else { return }
+            let installed = families().filter { !$0.hasPrefix(".") }
+            for family in installed where !popup.itemArray.contains(where: { $0.representedObject as? String == family }) {
+                popup.addItem(withTitle: FontCatalog.displayName(for: family))
+                popup.lastItem?.representedObject = family
+            }
+            let extras = extraItems?(installed) ?? []
+            if !extras.isEmpty { popup.menu?.addItem(.separator()) }
+            for extra in extras {
+                popup.addItem(withTitle: extra.title)
+                popup.lastItem?.isEnabled = false
+                popup.lastItem?.toolTip = extra.toolTip
+            }
         }
+        let loader = LazyFontMenuLoader(load: loadFamilies)
+        popup.menu?.delegate = loader
+        objc_setAssociatedObject(popup, &LazyFontMenuLoader.associationKey, loader, .OBJC_ASSOCIATION_RETAIN)
+
         let action = ClosureTarget { [weak self, weak popup] in
             guard let value = popup?.selectedItem?.representedObject as? String else { return }
             self?.store.set(key, value)
@@ -601,11 +766,14 @@ class SettingsPage: NSViewController {
         popup.widthAnchor.constraint(equalToConstant: 220).isActive = true
         bind { [weak self, weak popup] in
             guard let self, let popup else { return }
-            // A list ("Newsreader, Charter, serif") shows the family in use.
             let value = self.store.settings.string(key)
-            let shown = resolved?() ?? AppearanceSettings.families(value).first(where: { families.contains($0) }) ?? value
+            let shown = resolved?() ?? AppearanceSettings.families(value).first ?? value
             if let item = popup.itemArray.first(where: { $0.representedObject as? String == value }) ?? popup.itemArray.first(where: { $0.representedObject as? String == shown }) ?? popup.itemArray.first(where: { $0.representedObject is String }) {
                 popup.select(item)
+            } else if !shown.isEmpty {
+                popup.addItem(withTitle: FontCatalog.displayName(for: shown))
+                popup.lastItem?.representedObject = shown
+                if let item = popup.lastItem { popup.select(item) }
             }
             popup.needsDisplay = true
         }
@@ -667,6 +835,10 @@ final class PreviewBox: SurfaceView {
 final class GeneralSettingsPane: SettingsPage {
     override var rowPadding: CGFloat { 8 }
     override var sectionSpacing: CGFloat { 20 }
+    private var updateObservations: [NSKeyValueObservation] = []
+    private weak var automaticChecksToggle: FlatToggle?
+    private weak var automaticDownloadsToggle: FlatToggle?
+    private weak var checkForUpdatesButton: FlatButton?
     /// The language of menus and windows: the system's, or one Zephyr is translated into.
     static let languages: [(code: String?, title: String)] = [(nil, String(localized: "Same as System")), ("en", "English"), ("zh-Hans", "简体中文")]
 
@@ -690,11 +862,18 @@ final class GeneralSettingsPane: SettingsPage {
                    d.set(!on, forKey: Preferences.aiButtonHidden)
                    DocumentWindowController.applyAIButton()
                })
-        addRow(String(localized: "Quick switcher"), String(localized: "With the sidebar hidden, a window's open documents show as dots on its left edge; point at them to switch or close."),
+        addRow(String(localized: "Quick switcher"), String(localized: "With the sidebar hidden, open documents show as dots on the left edge."),
                control: FlatToggle(isOn: d.bool(forKey: Preferences.quickSwitcher)) { on in
                    d.set(on, forKey: Preferences.quickSwitcher)
                    DocumentWindowController.applyQuickSwitcher()
                })
+        let sidebarStyle = SegmentedPicker(items: [String(localized: "Names"), String(localized: "Icons Only")])
+        sidebarStyle.selectedIndex = d.bool(forKey: Preferences.sidebarIconsOnly) ? 1 : 0
+        sidebarStyle.onChange = { i in
+            d.set(i == 1, forKey: Preferences.sidebarIconsOnly)
+            NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
+        }
+        addRow(String(localized: "Sidebar"), String(localized: "Drag its edge to change the width."), control: sidebarStyle)
 
         addSection(String(localized: "Outline"))
         let place = SegmentedPicker(items: [String(localized: "Beside the Text"), String(localized: "In the Top Bar")])
@@ -731,7 +910,7 @@ final class GeneralSettingsPane: SettingsPage {
         defaultButton.action = #selector(ClosureTarget.run)
         objc_setAssociatedObject(defaultButton, &ClosureTarget.key, defaultAction, .OBJC_ASSOCIATION_RETAIN)
         addRow(String(localized: "Default Markdown editor"), nil, detailLabel: defaultStatus, control: defaultButton)
-        let previewStatus = flatLabel(String(localized: "Finder's Space-bar preview uses the Zephyr Quick Look extension."), size: 12, color: Tokens.ink2, wraps: true)
+        let previewStatus = flatLabel(String(localized: "Press Space on a Markdown file in Finder."), size: 12, color: Tokens.ink2, wraps: true)
         let previewButton = FlatButton(title: String(localized: "Enable Preview"), style: .secondary)
         let previewAction = ClosureTarget { [weak previewButton, weak previewStatus] in
             previewButton?.isEnabled = false
@@ -752,12 +931,12 @@ final class GeneralSettingsPane: SettingsPage {
                    d.set(on, forKey: Preferences.frontMatterCollapsed)
                    NotificationCenter.default.post(name: Preferences.frontMatterDidChange, object: nil)
                })
-        addRow(String(localized: "Remote images"), String(localized: "Show images from the web, such as a README's badges. Off, click an image to show a document's."),
+        addRow(String(localized: "Remote images"), String(localized: "Such as a README's badges."),
                control: FlatToggle(isOn: d.bool(forKey: Preferences.remoteImages)) { on in
                    d.set(on, forKey: Preferences.remoteImages)
                    NotificationCenter.default.post(name: Preferences.remoteImagesDidChange, object: nil)
                })
-        addRow(String(localized: "Link previews"), String(localized: "Pause over a link to preview Markdown, PDF or a web page."),
+        addRow(String(localized: "Link previews"), String(localized: "Pause the pointer over a link."),
                control: FlatToggle(isOn: d.bool(forKey: Preferences.linkPreviews)) { on in d.set(on, forKey: Preferences.linkPreviews) })
         let delay = FlatPopUpButton()
         for seconds in [0.5, 0.8, 1.5, 2.0] {
@@ -772,6 +951,30 @@ final class GeneralSettingsPane: SettingsPage {
         delay.action = #selector(ClosureTarget.run)
         objc_setAssociatedObject(delay, &ClosureTarget.key, delayTarget, .OBJC_ASSOCIATION_RETAIN)
         addRow(String(localized: "Preview delay"), nil, control: delay)
+
+        if let updater = (NSApp.delegate as? AppDelegate)?.updater {
+            addSection(String(localized: "Updates"))
+            let downloads = FlatToggle { [weak self] on in
+                updater.controller.updater.automaticallyDownloadsUpdates = on
+                self?.syncUpdateControls()
+            }
+            let checks = FlatToggle { [weak self] on in
+                if !on { updater.controller.updater.automaticallyDownloadsUpdates = false }
+                updater.controller.updater.automaticallyChecksForUpdates = on
+                self?.syncUpdateControls()
+            }
+            let checkNow = FlatButton(title: String(localized: "Check for Updates…"), style: .secondary) {
+                updater.controller.checkForUpdates(nil)
+            }
+            automaticChecksToggle = checks
+            automaticDownloadsToggle = downloads
+            checkForUpdatesButton = checkNow
+            observeUpdates(updater)
+            addRow(String(localized: "Check automatically"), nil, control: checks)
+            addRow(String(localized: "Install automatically"), String(localized: "Installs after you quit Zephyr."), control: downloads)
+            let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+            addRow(String(localized: "Version \(version)"), nil, control: checkNow)
+        }
 
         addSection(String(localized: "App"))
         let language = FlatPopUpButton()
@@ -794,6 +997,24 @@ final class GeneralSettingsPane: SettingsPage {
         addRow(String(localized: "Language"), String(localized: "Applies after a restart."), control: languageControls)
         addRow(String(localized: "Quit with the last window"), nil,
                control: FlatToggle(isOn: d.bool(forKey: Preferences.quitWithLastWindow)) { on in d.set(on, forKey: Preferences.quitWithLastWindow) })
+    }
+
+    private func observeUpdates(_ appUpdater: AppUpdater) {
+        let updater = appUpdater.controller.updater
+        updateObservations = [
+            updater.observe(\.automaticallyChecksForUpdates, options: [.initial]) { [weak self] _, _ in self?.syncUpdateControls() },
+            updater.observe(\.automaticallyDownloadsUpdates, options: [.initial]) { [weak self] _, _ in self?.syncUpdateControls() },
+            updater.observe(\.allowsAutomaticUpdates, options: [.initial]) { [weak self] _, _ in self?.syncUpdateControls() },
+            updater.observe(\.canCheckForUpdates, options: [.initial]) { [weak self] _, _ in self?.syncUpdateControls() },
+        ]
+    }
+
+    private func syncUpdateControls() {
+        guard let updater = (NSApp.delegate as? AppDelegate)?.updater?.controller.updater else { return }
+        automaticChecksToggle?.isOn = updater.automaticallyChecksForUpdates
+        automaticDownloadsToggle?.isOn = updater.automaticallyDownloadsUpdates
+        automaticDownloadsToggle?.isEnabled = updater.allowsAutomaticUpdates
+        checkForUpdatesButton?.isEnabled = updater.canCheckForUpdates
     }
 
     /// Quits (documents are saved or reviewed as usual) and opens Zephyr again once it has gone;

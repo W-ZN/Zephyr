@@ -3,9 +3,9 @@ import Foundation
 /// Themes (design §8, §21.7): each one is a complete look, every key of `AppearanceSettings`.
 /// Four built-in themes ship with Zephyr: its own design, and three that imitate well-known
 /// reading styles under names of their own. Any setting of a built-in can change; the changes are
-/// kept as overrides on top of its shipped values, so Restore Defaults always brings it back.
-/// Custom themes are JSON files in a folder of the user's choice, so they can be kept, copied and
-/// shared like any file. Typefaces are chosen as lists: an open-source family first, a macOS
+/// saved as complete JSON snapshots alongside custom themes, so Restore Defaults always brings it
+/// back. Custom themes are JSON files in a folder of the user's choice, so they can be kept, copied
+/// and shared like any file. Typefaces are chosen as lists: an open-source family first, a macOS
 /// family last, so a theme never depends on a commercial font.
 public enum ThemeLibrary {
     public struct Preset: Sendable {
@@ -33,7 +33,7 @@ public enum ThemeLibrary {
             "text.size": .number(16), "text.lineHeight": .number(1.65), "text.width": .number(56),
             "paragraph.spacing": .number(1), "list.indent": .number(1.6), "list.spacing": .number(0.25),
             "headings.lineHeight": .number(1.3), "code.size": .number(0.875), "code.lineHeight": .number(1.55), "code.style": .text("card"),
-            "table.width": .text("column"), "table.align": .text("left"), "table.lines": .text("rows"),
+            "table.width": .text("fit"), "table.align": .text("left"), "table.lines": .text("rows"),
             "table.textSize": .number(0.875), "table.padding": .number(0.75),
             "diagram.colors": .text("neutral"), "diagram.style": .text("filled"),
         ], levels("size", [1.875, 1.5, 1.25, 1.0625, 1, 0.875]), levels("weight", [600, 600, 600, 600, 600, 500]),
@@ -103,7 +103,7 @@ public enum ThemeLibrary {
     public static func migrate(in folder: URL) -> [String: String] {
         var moved: [String: String] = [:]
         for name in names(in: folder) where presets.contains(where: { $0.id.caseInsensitiveCompare(name) == .orderedSame || $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-            guard let settings = try? load(name, in: folder) else { continue }
+            guard let settings = try? loadTheme(at: file(name, in: folder), named: name) else { continue }
             guard !settings.overrides.isEmpty else {
                 try? delete(name, in: folder)
                 continue
@@ -127,6 +127,30 @@ public enum ThemeLibrary {
         folder.appendingPathComponent(name).appendingPathExtension("json")
     }
 
+    /// The subfolder for the four editable built-in snapshots. `file` deliberately remains the
+    /// root-level custom-theme path: migration must still find old custom files named "Zephyr".
+    public static func builtInFolder(in folder: URL) -> URL {
+        folder.appendingPathComponent("Built-in", isDirectory: true)
+    }
+
+    /// Changes to the shipped built-in values, oldest first. Built-in files are complete snapshots,
+    /// so a value an earlier version shipped would otherwise stay after an update; each change moves
+    /// a key that still holds its old shipped value, and leaves a value the reader chose.
+    public static let shippedChanges: [(key: String, from: AppearanceSettings.Value, to: AppearanceSettings.Value)] = [
+        ("table.width", .text("column"), .text("fit")),   // 0.1.2: small tables keep their natural width
+    ]
+
+    /// How many of `shippedChanges` the built-in files in `folder` already include.
+    static func revisionFile(in folder: URL) -> URL {
+        builtInFolder(in: folder).appendingPathComponent(".revision")
+    }
+
+    /// The persistent file for any theme. Built-in IDs live apart from root-level custom files.
+    public static func themeFile(_ name: String, in folder: URL) -> URL {
+        guard let preset = preset(name) else { return file(name, in: folder) }
+        return builtInFolder(in: folder).appendingPathComponent(preset.id).appendingPathExtension("json")
+    }
+
     /// A usable name for a new custom theme, or why not.
     public static func check(name raw: String, in folder: URL, allowing current: String? = nil) throws -> String {
         let name = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -143,12 +167,46 @@ public enum ThemeLibrary {
     }
 
     public static func load(_ name: String, in folder: URL) throws -> AppearanceSettings {
-        AppearanceSettings.parse(json: try Data(contentsOf: file(name, in: folder))).settings
+        try loadTheme(at: themeFile(name, in: folder), named: name)
     }
 
+    private static func loadTheme(at path: URL, named name: String) throws -> AppearanceSettings {
+        let data = try Data(contentsOf: path)
+        let parsed = AppearanceSettings.parse(json: data)
+        guard parsed.problems.isEmpty else {
+            throw AppearanceSettings.SettingError("Could not read theme \(name): \(parsed.problems.joined(separator: "; "))")
+        }
+        guard let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            throw AppearanceSettings.SettingError("Could not read theme \(name): Not a JSON object.")
+        }
+        var values = parsed.settings.overrides
+        for (key, raw) in AppearanceSettings.migrated(object) {
+            guard let defaultValue = AppearanceSettings.spec(key)?.defaultValue,
+                  AppearanceSettings.value(json: raw) == defaultValue else { continue }
+            values[key] = nil
+        }
+        return AppearanceSettings(overrides: values)
+    }
+
+    /// Writes every effective value so a future change to global defaults cannot change a saved
+    /// theme. Values whose effective value is `auto` remain absent by definition.
+    public static func saveTheme(_ settings: AppearanceSettings, as name: String, in folder: URL) throws {
+        let path = themeFile(name, in: folder)
+        try writeSnapshot(settings, to: path)
+    }
+
+    private static func writeSnapshot(_ settings: AppearanceSettings, to path: URL) throws {
+        let values = Dictionary(uniqueKeysWithValues: AppearanceSettings.specs.compactMap { spec in
+            settings.value(spec.key).map { (spec.key, $0) }
+        })
+        try FileManager.default.createDirectory(at: path.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try AppearanceSettings(overrides: values).json().write(to: path, options: .atomic)
+    }
+
+    /// Compatibility spelling for root-level custom and legacy theme files. It intentionally does
+    /// not resolve a built-in name, so migration can still create and move an old "Zephyr.json".
     public static func save(_ settings: AppearanceSettings, as name: String, in folder: URL) throws {
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        try settings.json().write(to: file(name, in: folder), options: .atomic)
+        try writeSnapshot(settings, to: file(name, in: folder))
     }
 
     public static func rename(_ name: String, to newName: String, in folder: URL) throws {
@@ -191,17 +249,81 @@ public struct AppearanceState: Equatable, Sendable {
     }
 
     /// A built-in theme the reader changed.
-    public func isModified(_ id: String) -> Bool { !(adjustments[id.lowercased()] ?? [:]).isEmpty }
+    public func isModified(_ id: String) -> Bool { !currentOverrides(id).isEmpty }
 
-    /// The active theme's keys: a built-in with the reader's overrides, or a custom theme's file
-    /// (the defaults when the file is missing).
+    private func legacySettings(for preset: ThemeLibrary.Preset) -> AppearanceSettings {
+        var settings = AppearanceSettings(overrides: preset.keys)
+        for (key, value) in adjustments[preset.id] ?? [:] { try? settings.set(key, value: value) }
+        return settings
+    }
+
+    private func builtInSettings(_ preset: ThemeLibrary.Preset) throws -> AppearanceSettings {
+        let path = ThemeLibrary.themeFile(preset.id, in: folder)
+        return FileManager.default.fileExists(atPath: path.path) ? try ThemeLibrary.load(preset.id, in: folder) : legacySettings(for: preset)
+    }
+
+    /// The active theme read strictly from its file when it has one. Callers that watch theme files
+    /// use this to retain their last good appearance after a manual JSON edit goes wrong.
+    public func loadedSettings() throws -> AppearanceSettings {
+        if let preset = activePreset { return try builtInSettings(preset) }
+        let path = ThemeLibrary.themeFile(active, in: folder)
+        return FileManager.default.fileExists(atPath: path.path) ? try ThemeLibrary.load(active, in: folder) : AppearanceSettings()
+    }
+
+    /// The active theme's keys. This remains a pure, non-throwing convenience API for old callers;
+    /// an invalid manually edited file falls back to the last compatible state held in appearance.json.
     public func settings() -> AppearanceSettings {
-        if let preset = activePreset {
-            var s = AppearanceSettings(overrides: preset.keys)
-            for (key, value) in adjustments[preset.id] ?? [:] { try? s.set(key, value: value) }
-            return s
+        if let settings = try? loadedSettings() { return settings }
+        return activePreset.map { legacySettings(for: $0) } ?? AppearanceSettings()
+    }
+
+    /// Creates each missing built-in snapshot from the complete current effective settings. Existing
+    /// files are user data and are never rewritten here.
+    /// Files written by an earlier version first take the shipped changes since then; one that does
+    /// not read is left as it is.
+    public mutating func prepareThemeFiles() throws {
+        let revisionFile = ThemeLibrary.revisionFile(in: folder)
+        let revision = (try? String(contentsOf: revisionFile, encoding: .utf8)).flatMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) } ?? 0
+        let pending = ThemeLibrary.shippedChanges.dropFirst(revision)
+        for preset in ThemeLibrary.presets {
+            let path = ThemeLibrary.themeFile(preset.id, in: folder)
+            guard FileManager.default.fileExists(atPath: path.path) else {
+                try ThemeLibrary.saveTheme(legacySettings(for: preset), as: preset.id, in: folder)
+                continue
+            }
+            guard !pending.isEmpty, var settings = try? ThemeLibrary.load(preset.id, in: folder) else { continue }
+            let before = settings
+            for change in pending where settings.value(change.key) == change.from { try settings.set(change.key, value: change.to) }
+            if settings != before { try ThemeLibrary.saveTheme(settings, as: preset.id, in: folder) }
         }
-        return (try? ThemeLibrary.load(active, in: folder)) ?? AppearanceSettings()
+        if revision != ThemeLibrary.shippedChanges.count {
+            try String(ThemeLibrary.shippedChanges.count).write(to: revisionFile, atomically: true, encoding: .utf8)
+        }
+    }
+
+    /// Values of a built-in file relative to what ships with the app. A present file is authoritative
+    /// over legacy adjustments; malformed files are left untouched and fall back only for this
+    /// non-throwing status query.
+    public func currentOverrides(_ id: String) -> [String: AppearanceSettings.Value] {
+        guard let preset = ThemeLibrary.preset(id) else { return [:] }
+        let settings = (try? builtInSettings(preset)) ?? legacySettings(for: preset)
+        let shipped = AppearanceSettings(overrides: preset.keys)
+        return Dictionary(uniqueKeysWithValues: AppearanceSettings.specs.compactMap { spec in
+            guard let value = settings.value(spec.key), value != shipped.value(spec.key) else { return nil }
+            return (spec.key, value)
+        })
+    }
+
+    /// Replaces a built-in's overrides relative to its shipped values. When its prepared file exists,
+    /// the replacement is written as a complete snapshot; an invalid file is never overwritten.
+    public mutating func setOverrides(_ overrides: [String: AppearanceSettings.Value]?, for id: String) throws {
+        guard let preset = ThemeLibrary.preset(id) else { throw AppearanceSettings.SettingError("\(id) is not a built-in theme.") }
+        let path = ThemeLibrary.themeFile(preset.id, in: folder)
+        if FileManager.default.fileExists(atPath: path.path) { _ = try ThemeLibrary.load(preset.id, in: folder) }
+        var next = AppearanceSettings(overrides: preset.keys)
+        for (key, value) in overrides ?? [:] { try next.set(key, value: value) }
+        if FileManager.default.fileExists(atPath: path.path) { try ThemeLibrary.saveTheme(next, as: preset.id, in: folder) }
+        adjustments[preset.id] = overrides?.isEmpty == false ? overrides : nil
     }
 
     public func json() -> Data {
@@ -241,10 +363,10 @@ public struct AppearanceState: Equatable, Sendable {
 
     // MARK: Changing the active theme
 
-    /// Apply `change` to the active theme: a built-in keeps it as overrides of its own values, a
-    /// custom theme writes its file. Returns the theme's new settings.
+    /// Apply `change` to the active theme. A prepared built-in writes its complete snapshot and also
+    /// keeps legacy adjustments compatible; an unprepared built-in keeps the old in-memory behavior.
     public mutating func change(_ change: (inout AppearanceSettings) throws -> Void) throws -> AppearanceSettings {
-        var next = settings()
+        var next = try loadedSettings()
         let before = next
         try change(&next)
         if let preset = activePreset {
@@ -257,8 +379,14 @@ public struct AppearanceState: Equatable, Sendable {
                 adjusted[key] = value == original.value(key) ? nil : value
             }
             adjustments[preset.id] = adjusted.isEmpty ? nil : adjusted
+            let path = ThemeLibrary.themeFile(preset.id, in: folder)
+            if FileManager.default.fileExists(atPath: path.path) {
+                try ThemeLibrary.saveTheme(next, as: preset.id, in: folder)
+                let fileOverrides = currentOverrides(preset.id)
+                adjustments[preset.id] = fileOverrides.isEmpty ? nil : fileOverrides
+            }
         } else {
-            try ThemeLibrary.save(next, as: active, in: folder)
+            try ThemeLibrary.saveTheme(next, as: active, in: folder)
         }
         return next
     }
@@ -266,6 +394,11 @@ public struct AppearanceState: Equatable, Sendable {
     /// A built-in theme back to what it ships with.
     public mutating func restore(_ id: String) throws {
         guard let preset = ThemeLibrary.preset(id) else { throw AppearanceSettings.SettingError("\(id) is not a built-in theme; only built-ins have defaults to restore.") }
+        let path = ThemeLibrary.themeFile(preset.id, in: folder)
+        if FileManager.default.fileExists(atPath: path.path) {
+            _ = try ThemeLibrary.load(preset.id, in: folder)
+            try ThemeLibrary.saveTheme(AppearanceSettings(overrides: preset.keys), as: preset.id, in: folder)
+        }
         adjustments[preset.id] = nil
     }
 }

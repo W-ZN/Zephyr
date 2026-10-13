@@ -20,7 +20,7 @@ final class ExportSettingsPane: SettingsPage {
             guard let self else { return }
             self.update { $0.format = formats[index] }
         }
-        addRow(String(localized: "Format"), String(localized: "File → Export As starts with these choices and keeps changes made there."), control: format)
+        addRow(String(localized: "Format"), String(localized: "Where File → Export As starts."), control: format)
 
         let theme = FlatPopUpButton()
         for choice in ExportOptionsView.themeChoices(keeping: export.themeID) {
@@ -37,12 +37,12 @@ final class ExportSettingsPane: SettingsPage {
         theme.action = #selector(ClosureTarget.run)
         objc_setAssociatedObject(theme, &ClosureTarget.key, themeTarget, .OBJC_ASSOCIATION_RETAIN)
         theme.widthAnchor.constraint(equalToConstant: 220).isActive = true
-        addRow(String(localized: "Theme"), String(localized: "Use the selected reader theme, or keep one theme for exports."), control: theme)
+        addRow(String(localized: "Theme"), nil, control: theme)
 
         // What every visual format shares: the text and the room around it.
         addSection(String(localized: "Page"))
         let size = optionPopUp(ExportOptionsView.textSizes(keeping: export.textSize), selected: export.textSize) { [weak self] value in self?.update { $0.textSize = value } }
-        addRow(String(localized: "Text size"), String(localized: "For PDF, HTML and images; headings, code and tables keep their proportions."), control: size)
+        addRow(String(localized: "Text size"), String(localized: "Headings, code and tables keep their proportions."), control: size)
         let height = optionPopUp(ExportOptionsView.lineHeights(keeping: export.lineHeight), selected: export.lineHeight) { [weak self] value in self?.update { $0.lineHeight = value } }
         addRow(String(localized: "Line height"), nil, control: height)
         var margins: [CGFloat] = [0, 36, 54, 72]
@@ -53,7 +53,7 @@ final class ExportSettingsPane: SettingsPage {
             guard let self else { return }
             self.update { $0.margin = margins[index] }
         }
-        addRow(String(localized: "Margins"), String(localized: "On each side of PDF pages and exported images."), control: margin)
+        addRow(String(localized: "Margins"), nil, control: margin)
 
         addSection(String(localized: "PDF"))
         let papers = MarkdownExport.Settings.Paper.allCases

@@ -3,6 +3,7 @@ import ZephyrRender
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var launchMode: LaunchMode?
+    private(set) var updater: AppUpdater?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         Preferences.register()
@@ -13,11 +14,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // The theme's palette and light or dark are in place before the first window draws.
         _ = AppearanceStore.shared
         FocusRing.install()
-        NSApp.mainMenu = MainMenu.build(delegate: self)
+        if launchMode == nil {
+            let updater = AppUpdater()
+            self.updater = updater
+        }
+        NSApp.mainMenu = MainMenu.build(delegate: self, updater: updater)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        launchMode?.run()
+        if launchMode == nil {
+            updater?.start()
+        } else {
+            launchMode?.run()
+        }
     }
 
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {

@@ -7,7 +7,7 @@ import ZephyrCore
 @Suite struct WidescreenLayoutTests {
     @Test(arguments: ThemeLibrary.presets.map(\.id))
     func themesKeepOneColumnOnWideAndNarrowWindows(_ theme: String) throws {
-        let typography = Typography(AppearanceState(active: theme).settings())
+        let typography = Typography(AppearanceSettings(overrides: try #require(ThemeLibrary.preset(theme)).keys))
         #expect((896...960).contains(typography.readableWidth))
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-width-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -36,8 +36,9 @@ import ZephyrCore
             #expect(canvas.columnWidth <= width - BlockCanvas.minimumMargin * 2)
             let table = try #require(editor.componentBox(at: (text as NSString).range(of: "| Name").location) as? TableBox)
             let imageBox = try #require(editor.componentBox(at: (text as NSString).range(of: "![wide]").location) as? ImageBox)
-            #expect(abs(table.drawnRect.width - canvas.columnWidth) <= 1)
-            #expect(abs(table.drawnRect.minX - canvas.columnX) <= 1)
+            // A small table keeps its natural width (table.width = fit) inside the column.
+            #expect(table.drawnRect.minX >= canvas.columnX - 1)
+            #expect(table.drawnRect.maxX <= canvas.columnX + canvas.columnWidth + 1)
             #expect(imageBox.drawnRect.width <= canvas.columnWidth + 1)
             #expect(abs(imageBox.drawnRect.minX - canvas.columnX) <= 1)
         }

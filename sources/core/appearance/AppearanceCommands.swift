@@ -26,6 +26,7 @@ public enum AppearanceCommands {
     public static func run(_ arguments: [String], url: URL = AppearanceState.fileURL) throws -> String {
         var state = AppearanceState.load(from: url) ?? AppearanceState()
         state.migrate()
+        try state.prepareThemeFiles()
         let original = state
         let activeBefore = state.settings()
         var words = arguments
@@ -43,7 +44,7 @@ public enum AppearanceCommands {
         let output: String
         switch (group, command) {
         case ("config", "list"):
-            output = json ? listJSON(theme ?? state.active, state, prefix: rest.first ?? "") : list(theme ?? state.active, state, prefix: rest.first ?? "")
+            output = try (json ? listJSON(theme ?? state.active, state, prefix: rest.first ?? "") : list(theme ?? state.active, state, prefix: rest.first ?? ""))
         case ("config", "get"):
             guard let key = rest.first, rest.count == 1 else { throw Failure("usage: zephyr config get <key>") }
             output = try get(key, theme: theme ?? state.active, state)
@@ -103,10 +104,10 @@ public enum AppearanceCommands {
         throw Failure("No theme named \(name). Themes: \((ThemeLibrary.presets.map(\.id) + customs).joined(separator: ", ")).")
     }
 
-    static func settings(of theme: String, _ state: AppearanceState) -> AppearanceSettings {
+    static func settings(of theme: String, _ state: AppearanceState) throws -> AppearanceSettings {
         var probe = state
         probe.active = theme
-        return probe.settings()
+        return try probe.loadedSettings()
     }
 
     static func header(_ theme: String, _ state: AppearanceState) -> String {
@@ -115,15 +116,15 @@ public enum AppearanceCommands {
             let modified = state.isModified(preset.id) ? ", modified" : ""
             return "\(preset.name) (built-in\(active)\(modified)): \(preset.summary) Changes are kept as overrides; zephyr theme restore \(preset.id) brings back its defaults."
         }
-        return "\(theme) (custom theme\(active)): \(ThemeLibrary.file(theme, in: state.folder).path)"
+            return "\(theme) (custom theme\(active)): \(ThemeLibrary.themeFile(theme, in: state.folder).path)"
     }
 
-    static func list(_ theme: String, _ state: AppearanceState, prefix: String) -> String {
-        header(theme, state) + "\n" + settings(of: theme, state).describe(prefix: prefix)
+    static func list(_ theme: String, _ state: AppearanceState, prefix: String) throws -> String {
+        header(theme, state) + "\n" + (try settings(of: theme, state)).describe(prefix: prefix)
     }
 
-    static func listJSON(_ theme: String, _ state: AppearanceState, prefix: String) -> String {
-        let s = settings(of: theme, state)
+    static func listJSON(_ theme: String, _ state: AppearanceState, prefix: String) throws -> String {
+        let s = try settings(of: theme, state)
         var keys: [String: Any] = [:]
         for spec in AppearanceSettings.specs where spec.key.hasPrefix(prefix) {
             var entry: [String: Any] = ["kind": spec.kindName, "help": spec.help]
@@ -138,7 +139,7 @@ public enum AppearanceCommands {
 
     static func get(_ key: String, theme: String, _ state: AppearanceState) throws -> String {
         guard let spec = AppearanceSettings.spec(key) else { throw Failure(AppearanceSettings.unknown(key)) }
-        let s = settings(of: theme, state)
+        let s = try settings(of: theme, state)
         // Text values (the CSS) print in full; the rest as their describe line.
         if spec.kind == .text { return s.string(key) }
         return s.describe(spec)
@@ -222,7 +223,7 @@ public enum AppearanceCommands {
         guard !words.isEmpty else { throw Failure("usage: zephyr theme new <name> [--from <theme>]") }
         let name = try ThemeLibrary.check(name: words.joined(separator: " "), in: state.folder)
         let from = source ?? ThemeLibrary.defaultTheme
-        try ThemeLibrary.save(settings(of: from, state), as: name, in: state.folder)
+        try ThemeLibrary.saveTheme(settings(of: from, state), as: name, in: state.folder)
         state.active = name
         return "Created \(name) from \(display(from)) and made it active: \(ThemeLibrary.file(name, in: state.folder).path)"
     }
@@ -240,6 +241,12 @@ public enum AppearanceCommands {
 
     static func folder(_ argument: String?, _ state: inout AppearanceState) throws -> String {
         guard let argument else { return state.folder.path }
+        let source = state.folder
+        let snapshots = try ThemeLibrary.presets.compactMap { preset -> (String, AppearanceSettings)? in
+            let path = ThemeLibrary.themeFile(preset.id, in: source)
+            guard FileManager.default.fileExists(atPath: path.path) else { return nil }
+            return (preset.id, try ThemeLibrary.load(preset.id, in: source))
+        }
         if argument == "--default" {
             state.themesFolder = nil
         } else {
@@ -247,10 +254,16 @@ public enum AppearanceCommands {
             try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
             state.themesFolder = url.path
         }
+        let renamed = ThemeLibrary.migrate(in: state.folder)
+        if let name = renamed[state.active] { state.active = name }
+        for (id, settings) in snapshots where !FileManager.default.fileExists(atPath: ThemeLibrary.themeFile(id, in: state.folder).path) {
+            try ThemeLibrary.saveTheme(settings, as: id, in: state.folder)
+        }
         // A custom theme left behind in the old folder is not available here: the built-in takes over.
         if state.activePreset == nil, !ThemeLibrary.names(in: state.folder).contains(state.active) {
             state.active = ThemeLibrary.defaultTheme
         }
+        try state.prepareThemeFiles()
         return "Themes now live in \(state.folder.path)."
     }
 }
@@ -278,6 +291,7 @@ public enum AppearanceTools {
         do {
             var state = AppearanceState.load(from: url) ?? AppearanceState()
             state.migrate()
+            try state.prepareThemeFiles()
             let original = state
             let activeBefore = state.settings()
             var theme: String?
@@ -292,7 +306,7 @@ public enum AppearanceTools {
                     guard let p = raw as? String else { throw AppearanceCommands.Failure("prefix must be a string.") }
                     prefix = p
                 }
-                return (AppearanceCommands.list(theme ?? state.active, state, prefix: prefix) + "\n\n" + AppearanceCommands.themes(state), false)
+                return (try AppearanceCommands.list(theme ?? state.active, state, prefix: prefix) + "\n\n" + AppearanceCommands.themes(state), false)
             case "set_appearance":
                 var lines: [String] = []
                 if let raw = a["use"] {

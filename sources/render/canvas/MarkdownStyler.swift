@@ -52,9 +52,14 @@ final class MarkdownStyler {
 
     func style(_ a: ChunkAnalysis, at base: Int, in storage: NSMutableAttributedString) {
         let string = storage.string as NSString
-        let codeLines = Set(a.codeBlocks.flatMap { block -> [Int] in
-            a.lines.indices.filter { NSLocationInRange(a.lines[$0].range.location, block.range) }
-        })
+        // Lines and code blocks are both in document order: one walk marks the code lines.
+        var codeLines = Set<Int>()
+        var lineIndex = 0
+        for block in a.codeBlocks {
+            while lineIndex < a.lines.count, a.lines[lineIndex].range.location < block.range.location { lineIndex += 1 }
+            var j = lineIndex
+            while j < a.lines.count, NSLocationInRange(a.lines[j].range.location, block.range) { codeLines.insert(j); j += 1 }
+        }
         for (i, line) in a.lines.enumerated() {
             let r = NSRange(location: base + line.range.location, length: line.range.length)
             guard r.length > 0 || r.location < storage.length else { continue }
@@ -100,9 +105,17 @@ final class MarkdownStyler {
             box.lastKnownRange = r
             storage.addAttribute(.zComponent, value: box, range: r)
         }
-        for (i, line) in a.lines.enumerated() where !codeLines.contains(i) && !a.isPlain {
+        guard !a.isPlain else { return }
+        // Every marker is hidden text for spacing; sorted once, then each line starts its walk at the
+        // first marker that does not end before it.
+        let hidden = a.markers.map { shift($0.range, base) }.sorted { $0.location < $1.location }
+        var firstHidden = 0
+        for (i, line) in a.lines.enumerated() where !codeLines.contains(i) {
             switch line.kind {
-            case .paragraph, .heading: autospace(NSRange(location: base + line.range.location, length: line.range.length), markers: a.markers, base: base, storage: storage, string: string)
+            case .paragraph, .heading:
+                let r = NSRange(location: base + line.range.location, length: line.range.length)
+                while firstHidden < hidden.count, NSMaxRange(hidden[firstHidden]) <= r.location { firstHidden += 1 }
+                autospace(r, hidden: hidden, from: firstHidden, storage: storage, string: string)
             default: break
             }
         }
@@ -256,16 +269,9 @@ final class MarkdownStyler {
 
     /// Adds a quarter-em of kerning between CJK and Latin letters or digits (design §8:
     /// mixed CJK/Latin spacing is a core requirement). Text bytes are untouched.
-    private func autospace(_ line: NSRange, markers: [Marker], base: Int, storage: NSMutableAttributedString, string: NSString) {
+    private func autospace(_ line: NSRange, hidden: [NSRange], from first: Int, storage: NSMutableAttributedString, string: NSString) {
         guard line.length > 1 else { return }
-        let hidden = markers.compactMap { m -> NSRange? in
-            switch m.style {
-            case .hide, .structural, .bullet, .ordinal, .checkbox:
-                let r = shift(m.range, base)
-                return NSIntersectionRange(r, line).length > 0 ? r : nil
-            }
-        }.sorted { $0.location < $1.location }
-        var nextHidden = 0
+        var nextHidden = first
         var previous: (index: Int, width: Int, cjk: Bool, latin: Bool)?
         var cjkRun: Int?
         let unkernCJK = typography.disablesCJKKerning

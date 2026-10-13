@@ -72,8 +72,16 @@ public enum MarkdownExport {
 
         public static let textSizes: ClosedRange<CGFloat> = 11...28
         public static let lineHeights: ClosedRange<CGFloat> = 1.2...2.4
+        /// Body text for a printed page: the reading themes' 16–18 pt is screen size, large on A4
+        /// or Letter; 11 pt is the usual document size for both Latin and CJK text.
+        public static let defaultTextSize: CGFloat = 11
 
-        public init(format: Format = .pdf, themeID: String? = nil, paper: Paper = .letter, margin: CGFloat = 36, rasterWidth: CGFloat = 612, rasterScale: CGFloat = 2, textSize: CGFloat? = nil, lineHeight: CGFloat? = nil) {
+        /// Letter where it is the standard paper (the US and Canada), A4 elsewhere.
+        public static var regionalPaper: Paper {
+            ["US", "CA"].contains(Locale.current.region?.identifier ?? "") ? .letter : .a4
+        }
+
+        public init(format: Format = .pdf, themeID: String? = nil, paper: Paper = Settings.regionalPaper, margin: CGFloat = 36, rasterWidth: CGFloat = 612, rasterScale: CGFloat = 2, textSize: CGFloat? = Settings.defaultTextSize, lineHeight: CGFloat? = nil) {
             self.format = format
             self.themeID = themeID?.isEmpty == false ? themeID : nil
             self.paper = paper

@@ -15,6 +15,8 @@ struct WindowInteractionCheck {
         _ = CheckDocumentController()
         NSApp.setActivationPolicy(.accessory)
         Preferences.register()
+        // These checks start each window without the sidebar and show it themselves.
+        UserDefaults.standard.set(false, forKey: Preferences.sidebarVisible)
         UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
         let delegate = AppDelegate()
         let menu = MainMenu.build(delegate: delegate)
@@ -153,8 +155,12 @@ struct WindowInteractionCheck {
         try checkOpenDocuments()
         try checkOpeningFiles()
         try checkRestorableState()
+        checkSettingsDisclosure()
         checkSidebarRoom()
         checkExportOptions()
+        checkInterfaceFont()
+        checkExportPanelWidth()
+        if ProcessInfo.processInfo.environment["GALLERY"] != nil { try captureGallery() }
     }
 
     static func untitled(_ text: String) throws -> MarkdownDocument {
@@ -165,6 +171,52 @@ struct WindowInteractionCheck {
     }
 
     static func settle() { RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.2)) }
+
+    @MainActor static func checkSettingsDisclosure() {
+        let pane = ThemeSettingsPane()
+        let window = NSWindow(contentRect: NSRect(x: -20_000, y: 0, width: 660, height: 640), styleMask: [.titled, .resizable], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentViewController = pane
+        window.orderBack(nil)
+        defer { window.close() }
+        pane.view.layoutSubtreeIfNeeded()
+        func buttons(_ view: NSView) -> [NSButton] {
+            (view as? NSButton).map { [$0] } ?? view.subviews.flatMap(buttons)
+        }
+        let button = buttons(pane.view).first { $0.title == String(localized: "Fonts and colors") }!
+        let group = button.superview as! NSStackView
+        let body = group.arrangedSubviews.last!
+        let point = button.convert(NSPoint(x: button.bounds.midX, y: button.bounds.midY), to: button.superview)
+        precondition(button.hitTest(point) === button, "Disclosure header is not clickable in its real position")
+        let label = button.subviews.compactMap { $0 as? NSTextField }.first!
+        precondition(label.alignmentRect(forFrame: label.frame).minX >= 28, "Disclosure title crowds its 12 pt chevron slot")
+        func toggle() { _ = NSApp.sendAction(button.action!, to: button.target, from: button) }
+        let start = ProcessInfo.processInfo.systemUptime
+        toggle()
+        let elapsed = ProcessInfo.processInfo.systemUptime - start
+        precondition(!body.isHidden && body.frame.height > 200, "Disclosure did not reveal its controls")
+        precondition(button.isAccessibilityExpanded(), "Expanded disclosure lost its accessibility state")
+        toggle()
+        toggle()
+        settle()
+        precondition(!body.isHidden && button.isAccessibilityExpanded(), "Rapid reversal left the final disclosure closed")
+        for width: CGFloat in [520, 860] {
+            window.setContentSize(NSSize(width: width, height: 640))
+            pane.view.layoutSubtreeIfNeeded()
+            let contents = body.subviews.first!
+            precondition(abs(contents.frame.height + 4 - body.frame.height) <= 1, "Resizing clips the disclosure's controls or leaves stale space")
+        }
+        toggle()
+        settle()
+        precondition(body.isHidden && !button.isAccessibilityExpanded(), "Collapsed controls remained visible")
+        if let bitmap = group.bitmapImageRepForCachingDisplay(in: group.bounds) {
+            group.cacheDisplay(in: group.bounds, to: bitmap)
+            if let png = bitmap.representation(using: .png, properties: [:]) {
+                try? png.write(to: URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("settings-disclosure.png"))
+            }
+        }
+        print("Settings disclosure: real-position hit test, separated chevron, rapid reversal and resize passed; first Fonts action took \(Int(elapsed * 1000)) ms.")
+    }
 
     struct Missing: Error, CustomStringConvertible { let description: String }
     static func require<T>(_ value: T?, _ what: String) throws -> T {
@@ -237,7 +289,18 @@ struct WindowInteractionCheck {
         controller.closeDocument(nil)
         settle()
         precondition(controller.tabs.count == 1 && controller.panel == nil && controller.document === scratch, "Close on a page did not return to the untitled document")
-        print("Open documents: a page shows over an untitled document without taking a place, its row and Close return to it with its text, Back returns under a page, an emptied untitled document closes without asking.")
+
+        // An untitled document without text gives way: what opens beside it takes its place, and
+        // switching to another document closes it.
+        let empty = try untitled(""), emptier = try untitled("")
+        controller.openAlongside(empty)
+        precondition(controller.tabs.count == 2 && controller.document === empty, "The empty untitled document did not open beside the other")
+        controller.openAlongside(emptier)
+        precondition(controller.tabs.count == 2 && controller.document === emptier && !NSDocumentController.shared.documents.contains(empty), "A document opened beside an empty untitled one did not take its place")
+        controller.activate(controller.tabs.first { $0.document === scratch }!)
+        settle()
+        precondition(controller.tabs.count == 1 && controller.document === scratch && !NSDocumentController.shared.documents.contains(emptier), "Switching away from an empty untitled document left it open")
+        print("Open documents: a page shows over an untitled document without taking a place, its row and Close return to it with its text, Back returns under a page, an emptied untitled document closes without asking, and one left without text gives way.")
 
         // Out into a window of its own and back.
         let other = try untitled("Other.\n")
@@ -315,7 +378,7 @@ struct WindowInteractionCheck {
         print("Opening files: each file opened from the sidebar gets its own place, opening it again shows it, a followed link replaces the shown one and Back returns.")
 
         // The open documents' rail is on unless turned off: on the left edge while the sidebar is
-        // hidden, the column keeping clear of it on both sides; a row's close button closes it.
+        // hidden. Its resting edge is the reading area's left bound; a row's close button closes it.
         precondition(UserDefaults.standard.bool(forKey: Preferences.quickSwitcher), "The quick switcher is off by default")
         open(urls[3], alongside: true)
         let canvas = controller.canvasForSnapshot
@@ -323,16 +386,18 @@ struct WindowInteractionCheck {
         window.contentView?.layoutSubtreeIfNeeded()
         precondition(!canvas.isSidebarVisible && !rail.isHidden && rail.items.count == 4, "The open documents' rail does not show with several documents and the sidebar hidden")
         precondition(rail.items.map(\.title) == ["a", "b", "c", "d"] && rail.items.map(\.current) == [false, false, false, true], "The rail does not list the documents with the shown one: \(rail.items)")
-        let column = controller.editor!.column, width = controller.editor!.blockCanvas.view.bounds.width
-        precondition(column.x >= CanvasViewController.railMargin && width - column.x - column.width >= CanvasViewController.railMargin, "The column does not keep clear of the rail: \(column) in \(width)")
+        let reader = controller.editor!.blockCanvas
+        let column = controller.editor!.column, width = reader.view.bounds.width
+        precondition(abs(reader.leadingInset - CanvasViewController.railStrip) <= 1, "The reading area does not start after the rail strip: \(reader.leadingInset)")
+        precondition(abs(column.x + column.width / 2 - (reader.leadingInset + width - reader.trailingInset) / 2) <= 1, "The reader is not centered between the rail strips: \(column) in \(width)")
         rail.onClose?(3)
         wait("The rail's close button did not close its document") { names() == ["a.md", "b.md", "c.md"] }
         canvas.setSidebar(visible: true, animated: false)
         precondition(rail.isHidden, "The rail stays beside an open sidebar")
         canvas.setSidebar(visible: false, animated: false)
-        print("Open documents' rail: on by default on the left edge with the sidebar hidden, the column clear of it; a row's close button closes its document; hidden beside the sidebar.")
+        print("Open documents' rail: on by default on the left edge with the sidebar hidden, the reader centered between the two rail strips; a row's close button closes its document; hidden beside the sidebar.")
 
-        // Recent is where to start without a folder; the folder's tree replaces it, and the folder
+        // Recent is where to start without a folder; the folder's two entries replace it, and the folder
         // becomes the first recent folder, one click away on the Activity page.
         let defaults = UserDefaults.standard
         let saved = [Preferences.registeredRoots, Preferences.recentRoots].map { ($0, defaults.object(forKey: $0)) }
@@ -346,6 +411,46 @@ struct WindowInteractionCheck {
         precondition(Preferences.recentRootURLs.first?.path == folder.path, "The folder is not the first recent folder: \(Preferences.recentRootURLs)")
         let home = sidebar.list.titlesForSnapshot
         precondition(home.contains("Home") && !home.contains(SpacePanel.folderHome(folder).title), "Folder Home is not the folder section's first row: \(home)")
+        wait("The folder never finished scanning") { !sidebar.list.nodes.isEmpty }
+        // With names, the folder's files are listed right in the sidebar, with no Files step between.
+        precondition(!sidebar.list.titlesForSnapshot.contains("Files") && sidebar.list.rows.contains { row in
+            if case .file = row.kind { true } else { false }
+        }, "The full sidebar does not list the folder's files directly: \(sidebar.list.titlesForSnapshot)")
+        let oldStyle = defaults.object(forKey: Preferences.sidebarIconsOnly)
+        defer { defaults.set(oldStyle, forKey: Preferences.sidebarIconsOnly) }
+        defaults.set(true, forKey: Preferences.sidebarIconsOnly)
+        NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
+        canvas.setSidebar(visible: true, animated: false)
+        let sidebarFrame = sidebar.frame
+        let readingFrame = controller.editor!.scrollView.frame
+        func browser(in view: NSView) -> SidebarList? {
+            if let list = view as? SidebarList, list !== sidebar.list, list.showsFiles, list.rootName == folder.lastPathComponent, list.window?.isVisible == true { return list }
+            return view.subviews.lazy.compactMap(browser).first
+        }
+        for fromSearch in [false, true] {
+            if fromSearch { sidebar.show(.search) }
+            sidebar.show(.files)
+            var fileBrowser: SidebarList?
+            wait("Files did not show a temporary named browser") {
+                fileBrowser = NSApp.windows.compactMap { $0.contentView.flatMap(browser) }.first
+                return fileBrowser != nil
+            }
+            precondition(sidebar.isCompact && !sidebar.list.showsFiles && fileBrowser!.titlesForSnapshot.contains("a"), "Files replaced the pinned icon strip")
+            precondition(sidebar.frame == sidebarFrame && controller.editor!.scrollView.frame == readingFrame, "Opening Files moved the sidebar or reader")
+            let title = (fileBrowser!.accessibilityChildren() as? [NSAccessibilityElement])!.first!
+            precondition(title.accessibilityRole() == .staticText, "The temporary browser's folder name offers a Back it does not have")
+            let popoverWindow = fileBrowser!.window!
+            let escape = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: popoverWindow.windowNumber,
+                                          context: nil, characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53)!
+            // Through the event queue, as the run loop delivers keys (local monitors run there).
+            NSApp.postEvent(escape, atStart: false)
+            while let event = NSApp.nextEvent(matching: .any, until: Date(timeIntervalSinceNow: 0.1), inMode: .default, dequeue: true) { NSApp.sendEvent(event) }
+            wait("The file browser stayed open after Escape") { fileBrowser!.window?.isVisible != true }
+            window.contentView?.layoutSubtreeIfNeeded()
+            precondition(sidebar.tab == .places && sidebar.isCompact && !sidebar.list.showsFiles, "Closing Files changed the compact navigation")
+        }
+        defaults.set(oldStyle, forKey: Preferences.sidebarIconsOnly)
+        NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
         controller.closeScope(nil)
         controller.open(panel: .activity)
         func links(_ view: NSView) -> [LinkRow] { (view as? LinkRow).map { [$0] } ?? view.subviews.flatMap(links) }
@@ -425,9 +530,35 @@ struct WindowInteractionCheck {
         print("Restorable state lists the window's documents in order and brings them back: \(entries!.map { ($0 as NSString).lastPathComponent }).")
     }
 
-    /// An open sidebar beside the text where the window has room, over it (closing after a choice) where not.
+    /// The open sidebar beside the text at every width, never over it and never resizing the window:
+    /// a narrow window narrows it to its minimum, not to icons; its edge drags between the minimum
+    /// and the window's room; icons only come from Settings and keep the dragged width for names.
     @MainActor static func checkSidebarRoom() {
-        let document = try! untitled("# Room\n\nBody.\n")
+        let defaults = UserDefaults.standard
+        let oldWidth = defaults.object(forKey: Preferences.sidebarWidth)
+        let oldStyle = defaults.object(forKey: Preferences.sidebarIconsOnly)
+        let oldPreviews = defaults.object(forKey: Preferences.linkPreviews)
+        let oldDelay = defaults.object(forKey: Preferences.linkPreviewDelay)
+        let oldAIButton = defaults.object(forKey: Preferences.aiButtonHidden)
+        let oldOutline = defaults.object(forKey: "outlineBesideText")
+        defaults.set(280, forKey: Preferences.sidebarWidth)
+        defaults.set(false, forKey: Preferences.sidebarIconsOnly)
+        defaults.set(true, forKey: Preferences.linkPreviews)
+        defaults.set(0.2, forKey: Preferences.linkPreviewDelay)
+        defaults.removeObject(forKey: Preferences.aiButtonHidden)
+        Preferences.outlineBesideText = true
+        precondition(defaults.bool(forKey: Preferences.aiButtonHidden), "A fresh preference domain should hide the assistant entry")
+        NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
+        defer {
+            defaults.set(oldWidth, forKey: Preferences.sidebarWidth)
+            defaults.set(oldStyle, forKey: Preferences.sidebarIconsOnly)
+            defaults.set(oldPreviews, forKey: Preferences.linkPreviews)
+            defaults.set(oldDelay, forKey: Preferences.linkPreviewDelay)
+            defaults.set(oldAIButton, forKey: Preferences.aiButtonHidden)
+            defaults.set(oldOutline, forKey: "outlineBesideText")
+            NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
+        }
+        let document = try! untitled("# Room\n\nBody.\n\n## Boundary\n\nMore body.\n")
         let controller = DocumentWindowController(document: document)
         document.addWindowController(controller)
         let window = controller.window!
@@ -436,19 +567,133 @@ struct WindowInteractionCheck {
         window.orderBack(nil)
         defer { window.close() }
         let canvas = controller.canvasForSnapshot
-        for (width, room) in [(1200, true), (760, false)] as [(CGFloat, Bool)] {
+        precondition(!canvas.isAIOpen && canvas.aiLauncher.isHidden, "The assistant should start closed with its launcher hidden")
+        // The text area keeps a rail strip on each side whether or not a rail shows, so the
+        // reader is centered in it and stays put when the outline comes or goes.
+        @discardableResult func checkReaderCenter(_ label: String) -> (CGFloat, CGFloat) {
+            window.contentView?.layoutSubtreeIfNeeded()
+            let editor = controller.editor!
+            editor.layoutAll()
+            let area = canvas.view.convert(editor.scrollView.bounds, from: editor.scrollView)
+            let column = editor.column
+            let lo = canvas.view.convert(NSPoint(x: column.x, y: 0), from: editor.blockCanvas.view).x, hi = lo + column.width
+            // Without room for the strips, it centers in the viewport (a legacy scroller's gutter aside).
+            let viewport = canvas.view.convert(editor.scrollView.contentView.bounds, from: editor.scrollView.contentView)
+            let strips = area.width - 2 * CanvasViewController.railStrip >= CanvasViewController.columnBesideRail
+            if strips, canvas.isSidebarVisible {
+                // As far from the sidebar card's edge as from the outline ticks' reach.
+                let card = canvas.sidebar.frame.maxX - CanvasViewController.sidebarInset
+                let ticks = area.maxX - CanvasViewController.ticksReach
+                precondition(abs((lo - card) - (ticks - hi)) < 1, "\(label): \(lo - card) pt from the sidebar but \(ticks - hi) pt from the outline")
+            } else {
+                let bounds = strips ? area.insetBy(dx: CanvasViewController.railStrip, dy: 0) : viewport
+                precondition(abs((lo + hi) / 2 - bounds.midX) < 1, "\(label): reader \(lo)...\(hi) is not centered in \(bounds.minX)...\(bounds.maxX)")
+                if strips { precondition(min(lo - bounds.minX, bounds.maxX - hi) >= BlockCanvas.minimumMargin - 0.5, "\(label): reader \(lo)...\(hi) reaches into a rail strip") }
+            }
+            return (lo, hi)
+        }
+        window.setContentSize(NSSize(width: 1200, height: 700))
+        canvas.setOutline(controller.editor!.headings())
+        let withOutline = checkReaderCenter("outline shown with the sidebar hidden")
+        precondition(!canvas.outlineRail.isHidden, "The outline did not appear in a wide reader")
+        Preferences.outlineBesideText = false
+        canvas.updateRails()
+        precondition(checkReaderCenter("outline hidden with the sidebar hidden") == withOutline, "The reader moved when the outline was hidden")
+        precondition(canvas.outlineRail.isHidden, "The outline stayed visible after it was disabled")
+        Preferences.outlineBesideText = true
+        canvas.updateRails()
+        let inset = CanvasViewController.sidebarInset
+        for (width, card) in [(1900, 280), (1200, 280), (760, 280), (420, CanvasViewController.minimumSidebarWidth)] as [(CGFloat, CGFloat)] {
             window.setContentSize(NSSize(width: width, height: 700))
             window.contentView?.layoutSubtreeIfNeeded()
             canvas.setSidebar(visible: true, animated: false)
             window.contentView?.layoutSubtreeIfNeeded()
-            precondition(canvas.sidebarMakesRoom == room, "At \(width) pt the sidebar should \(room ? "" : "not ")make room")
-            let column = controller.editor!.column
-            if room { precondition(column.x >= CanvasViewController.sidebarWidth + 16, "The text is under the sidebar at \(width) pt: \(column)") }
+            precondition(canvas.sidebarMakesRoom && !canvas.sidebar.isCompact, "At \(width) pt the sidebar should keep its names beside the text")
+            precondition(abs(canvas.sidebar.frame.width - 2 * inset - card) < 0.5, "At \(width) pt the card is \(canvas.sidebar.frame.width - 2 * inset) pt, not \(card)")
+            let scroll = controller.editor!.scrollView
+            let readerRect = canvas.view.convert(scroll.bounds, from: scroll)
+            precondition(readerRect.minX >= canvas.sidebar.frame.maxX - 0.5 && readerRect.maxX <= canvas.view.bounds.maxX + 0.5, "The text reaches under the sidebar: \(readerRect)")
+            checkReaderCenter("sidebar visible at \(width) pt")
             controller.sidebarDidOpenItem()
-            precondition(canvas.isSidebarVisible == room, "At \(width) pt a choice should \(room ? "keep" : "close") the sidebar")
+            precondition(canvas.isSidebarVisible, "At \(width) pt a choice closed the sidebar")
+            let before = window.frame
+            controller.open(panel: .activity)
+            settle()
+            window.contentView?.layoutSubtreeIfNeeded()
+            precondition(window.frame == before, "Activity resized the window from \(before) to \(window.frame)")
+            let page = canvas.view.convert(canvas.shownPage!.bounds, from: canvas.shownPage!)
+            precondition(page.minX >= canvas.sidebar.frame.maxX - 0.5 && page.width <= readerRect.width + 1, "Activity reaches under the sidebar: \(page)")
+            controller.activate(controller.current)
             canvas.setSidebar(visible: false, animated: false)
         }
-        print("Sidebar: beside the text at 1200 pt and stays after a choice; over it at 760 pt and closes after a choice.")
+        window.setContentSize(NSSize(width: 1200, height: 700))
+        canvas.setSidebar(visible: true, animated: false)
+        window.contentView?.layoutSubtreeIfNeeded()
+        let before = window.frame
+        let handle = canvas.sidebar.subviews.compactMap { $0 as? SidebarResizeHandle }.first!
+        let dragPoint = canvas.sidebar.convert(NSPoint(x: 356, y: 120), to: nil)
+        let drag = NSEvent.mouseEvent(with: .leftMouseDragged, location: dragPoint, modifierFlags: [], timestamp: 0, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1)!
+        handle.mouseDragged(with: drag)
+        window.contentView?.layoutSubtreeIfNeeded()
+        precondition(abs(canvas.sidebar.frame.width - 356) < 1, "Sidebar edge did not resize to 340 + 16 pt")
+        precondition(defaults.double(forKey: Preferences.sidebarWidth) == 340, "The dragged width was not kept")
+        canvas.resizeSidebar(to: 10)
+        window.contentView?.layoutSubtreeIfNeeded()
+        precondition(canvas.sidebar.frame.width == CanvasViewController.minimumSidebarWidth + 2 * inset, "Expanded sidebar did not stop at its minimum")
+        canvas.resizeSidebar(to: 340)
+        // Icons only, from Settings; searching shows the names for the field, then the icons again.
+        defaults.set(true, forKey: Preferences.sidebarIconsOnly)
+        NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
+        window.contentView?.layoutSubtreeIfNeeded()
+        precondition(canvas.sidebar.isCompact && canvas.sidebar.frame.width == CanvasViewController.iconSidebarWidth + 2 * inset && handle.isHidden, "Icons only did not show the strip")
+        let excerpt = "# Unsaved preview\n\n**Rendered bold**, with a [local link](details.md).\n\n- First item\n- Second item\n\n| Name | Value |\n| --- | --- |\n| Test | 42 |"
+        controller.editor!.blockCanvas.replaceExternally(NSRange(location: 0, length: controller.editor!.length), with: excerpt)
+        canvas.sidebar.refresh()
+        settle()
+        let list = canvas.sidebar.list
+        let rowPoint = list.pointForSnapshot(document.displayName)!
+        let hoverPoint = list.convert(NSPoint(x: list.bounds.midX, y: rowPoint.y), to: nil)
+        let hover = NSEvent.mouseEvent(with: .mouseMoved, location: hoverPoint, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 0, pressure: 0)!
+        func hasExcerpt(_ view: NSView) -> Bool {
+            if let snippet = view as? MarkdownSnippet { return snippet.intrinsicContentSize.height > 80 && snippet.bounds.width > 200 }
+            return view.subviews.contains(where: hasExcerpt)
+        }
+        let responder = window.firstResponder
+        list.mouseMoved(with: hover)
+        precondition(!hasExcerpt(canvas.view), "Sidebar preview skipped the dwell interval")
+        let previewDeadline = Date(timeIntervalSinceNow: 5)
+        while !hasExcerpt(canvas.view), Date() < previewDeadline { RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05)) }
+        precondition(hasExcerpt(canvas.view), "Sidebar hover did not show the unsaved document text")
+        precondition(window.firstResponder === responder && controller.markdownDocument === document, "Sidebar preview stole focus or switched documents")
+        canvas.view.layoutSubtreeIfNeeded()
+        if let rep = canvas.view.bitmapImageRepForCachingDisplay(in: canvas.view.bounds) {
+            canvas.view.cacheDisplay(in: canvas.view.bounds, to: rep)
+            if let data = rep.representation(using: .png, properties: [:]) {
+                try? data.write(to: URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("sidebar-hover.png"))
+            }
+        }
+        list.mouseExited(with: hover)
+        precondition(!hasExcerpt(canvas.view), "Sidebar preview stayed after leaving its row")
+        print("Sidebar hover: waits for dwell, renders the unsaved Markdown opening without changing focus, and dismisses on exit.")
+        canvas.sidebar.show(.search)
+        window.contentView?.layoutSubtreeIfNeeded()
+        precondition(!canvas.sidebar.isCompact, "Searching kept the icons, with no room for the field")
+        canvas.sidebar.show(.places)
+        window.contentView?.layoutSubtreeIfNeeded()
+        precondition(canvas.sidebar.isCompact, "Leaving search did not return to the icons")
+        defaults.set(false, forKey: Preferences.sidebarIconsOnly)
+        NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
+        window.contentView?.layoutSubtreeIfNeeded()
+        precondition(!canvas.sidebar.isCompact && canvas.sidebar.frame.width == 356, "Restoring names lost the dragged width")
+        precondition(window.frame == before, "Changing the sidebar changed the window")
+        let days = SpaceStore.shared.activityHistory(days: 365)
+        let heatmap = ActivityHeatmap(days)
+        heatmap.setFrameSize(NSSize(width: 920, height: 132))
+        let wideCount = heatmap.visibleColumns.count
+        heatmap.setFrameSize(NSSize(width: 280, height: 132))
+        precondition(heatmap.visibleColumns.count < wideCount && heatmap.cellRect(at: 0) == nil)
+        precondition(heatmap.cellRect(at: 364) != nil && heatmap.cellRect(at: 364)!.maxX <= 280, "Newest day was clipped")
+        print("Sidebar: names beside the text at 1200/760/420 pt (220 pt at 420), drag kept and clamped at 220 pt, icons only from Settings keep the dragged width; Activity keeps the window and the heatmap the newest days.")
 
         // Its list scrolls with a thin knob on no track (Zephyr's own scroller), drawn here with the
         // knob held visible (an overlay scroller fades when idle).
@@ -476,6 +721,51 @@ struct WindowInteractionCheck {
         print("Sidebar scroller: Zephyr's thin scroller, \(ThinScroller.scrollerWidth(for: .regular, scrollerStyle: .overlay)) pt wide against the system's \(NSScroller.scrollerWidth(for: .regular, scrollerStyle: .overlay)) pt; knob \(Int(knob.height)) pt for a quarter of the list.")
     }
 
+    /// File → Export As: the options under the save panel keep the width the panel first gave
+    /// them while the theme (or anything else) changes, so they stay centered under it.
+    @MainActor static func checkExportPanelWidth() {
+        let options = ExportOptionsView(settings: MarkdownExport.Settings(format: .pdf))
+        let panel = NSSavePanel()
+        panel.accessoryView = options
+        panel.allowedContentTypes = [.pdf]
+        let host = NSWindow(contentRect: NSRect(x: -4000, y: 0, width: 900, height: 700), styleMask: [.titled], backing: .buffered, defer: false)
+        host.isReleasedWhenClosed = false
+        host.orderFront(nil)
+        panel.beginSheetModal(for: host) { _ in }
+        settle()
+        let width = options.frame.width
+        let theme = options.subviews.flatMap { $0.subviews }.compactMap { $0 as? NSPopUpButton }[1]
+        for i in theme.itemArray.indices where !theme.itemArray[i].isSeparatorItem {
+            theme.selectItem(at: i)
+            _ = theme.sendAction(theme.action, to: theme.target)
+            settle()
+            precondition(options.frame.width == width, "Choosing a theme changed the export options' width: \(options.frame.width) from \(width)")
+        }
+        host.endSheet(panel)
+        host.close()
+        print("Export panel: the options keep their \(Int(width)) pt width through every theme, centered under the panel.")
+    }
+
+    /// A theme's `font.interface` reaches views already on screen: labels and buttons change
+    /// family and keep size and weight; the code font stays.
+    @MainActor static func checkInterfaceFont() {
+        let host = NSView(frame: NSRect(x: 0, y: 0, width: 300, height: 100))
+        let label = flatLabel("Name", size: 12, weight: .semibold)
+        let button = FlatButton(title: "Open", style: .plain)
+        let code = flatLabel("x = 1")
+        code.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        [label, button, code].forEach(host.addSubview)
+        let old = Tokens.setInterfaceFont("Georgia")!
+        Tokens.restyleInterface(in: host, from: old)
+        precondition(label.font?.familyName == "Georgia" && label.font?.pointSize == 12 && NSFontManager.shared.traits(of: label.font!).contains(.boldFontMask), "A label did not take the interface font: \(String(describing: label.font))")
+        precondition(button.titleFont.familyName == "Georgia" && button.titleFont.pointSize == 13, "A button did not take the interface font: \(button.titleFont)")
+        precondition(code.font?.familyName != "Georgia", "The code font changed with the interface font")
+        let back = Tokens.setInterfaceFont("system")!
+        Tokens.restyleInterface(in: host, from: back)
+        precondition(label.font?.familyName == NSFont.systemFont(ofSize: 12).familyName, "The label did not return to the system font")
+        print("Interface font: labels and buttons on screen take the theme's typeface at their size and weight, and return; code keeps its font.")
+    }
+
     /// File → Export As's options follow the chosen format.
     @MainActor static func checkExportOptions() {
         let options = ExportOptionsView(settings: MarkdownExport.Settings(format: .pdf))
@@ -487,7 +777,7 @@ struct WindowInteractionCheck {
         precondition(shownRows() == [0, 1, 2, 3, 4, 5], "PDF shows format, theme, text size, line height, paper and margins: \(shownRows())")
         // Every choice starts at the settings' value (numbers included).
         let selected = popUps().map { $0.selectedItem?.representedObject.map { "\($0)" } ?? "" }
-        precondition(selected == ["pdf", "", "<null>", "<null>", "letter", "36", "612", "2"], "The options do not start from the settings: \(selected)")
+        precondition(selected == ["pdf", "", "11", "<null>", "letter", "36", "612", "2"], "The options do not start from the settings: \(selected)")
         var reported: MarkdownExport.Settings?
         options.onChange = { reported = $0 }
         let format = popUps()[0]
@@ -515,5 +805,74 @@ struct WindowInteractionCheck {
         }
         holder.close()
         print("Export options: PDF, PNG and plain text each show their own choices.")
+    }
+
+    /// GALLERY=1: renders the sidebar's states and two Settings pages to PNGs next to the check, for
+    /// a visual review. Nothing is asserted here.
+    @MainActor static func captureGallery() throws {
+        let out = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent().appendingPathComponent("gallery")
+        try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        func shoot(_ view: NSView, _ name: String) {
+            view.layoutSubtreeIfNeeded()
+            guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+            view.cacheDisplay(in: view.bounds, to: rep)
+            try? rep.representation(using: .png, properties: [:])?.write(to: out.appendingPathComponent(name + ".png"))
+        }
+        func settle(_ seconds: Double = 0.4) { RunLoop.current.run(until: Date(timeIntervalSinceNow: seconds)) }
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Field Notes")
+        try? FileManager.default.removeItem(at: folder)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        for path in ["Welcome.md", "Reading list.md", "Ideas.md", "Projects/Zephyr roadmap.md", "Projects/Engine notes.md", "Archive/2025 review.md"] {
+            let url = folder.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try "# \(url.deletingPathExtension().lastPathComponent)\n\nA paragraph of body text to read.\n\n| Item | Note |\n|---|---|\n| One | Short |\n".write(to: url, atomically: true, encoding: .utf8)
+        }
+        let document = try MarkdownDocument(contentsOf: folder.appendingPathComponent("Welcome.md"), ofType: "net.daringfireball.markdown")
+        NSDocumentController.shared.addDocument(document)
+        let controller = DocumentWindowController(document: document)
+        document.addWindowController(controller)
+        let window = controller.window!
+        window.isReleasedWhenClosed = false
+        window.setFrame(NSRect(x: -20_000, y: 0, width: 1200, height: 760), display: false)
+        window.orderBack(nil)
+        defer { window.close() }
+        let canvas = controller.canvasForSnapshot
+        let sidebar = canvas.sidebar
+        canvas.setSidebar(visible: true, animated: false)
+        controller.expandScope(to: folder, explicit: false)
+        let deadline = Date(timeIntervalSinceNow: 5)
+        while sidebar.list.nodes.isEmpty, Date() < deadline { settle(0.05) }
+        let defaults = UserDefaults.standard
+        let oldStyle = defaults.object(forKey: Preferences.sidebarIconsOnly)
+        defer { defaults.set(oldStyle, forKey: Preferences.sidebarIconsOnly) }
+        for (icons, name) in [(false, "names"), (true, "icons")] {
+            defaults.set(icons, forKey: Preferences.sidebarIconsOnly)
+            NotificationCenter.default.post(name: Preferences.sidebarDidChange, object: nil)
+            sidebar.show(.places)
+            settle()
+            shoot(window.contentView!, "sidebar-\(name)")
+            sidebar.show(.files)
+            settle()
+            shoot(window.contentView!, "files-\(name)")
+            sidebar.show(.places)
+            settle()
+        }
+        controller.open(panel: .activity)
+        for width: CGFloat in [1200, 760] {
+            window.setFrame(NSRect(x: -20_000, y: 0, width: width, height: 760), display: false)
+            settle()
+            shoot(window.contentView!, "activity-\(Int(width))")
+        }
+        for (pane, name) in [(GeneralSettingsPane(), "general"), (ThemeSettingsPane(), "theme")] as [(NSViewController, String)] {
+            let settings = NSWindow(contentRect: NSRect(x: -20_000, y: 0, width: 660, height: 1400), styleMask: [.titled], backing: .buffered, defer: false)
+            settings.isReleasedWhenClosed = false
+            settings.contentViewController = pane
+            settings.setContentSize(NSSize(width: 660, height: 1400))
+            settings.orderBack(nil)
+            settle()
+            shoot(settings.contentView!, "settings-\(name)")
+            settings.close()
+        }
+        print("Gallery written to \(out.path).")
     }
 }

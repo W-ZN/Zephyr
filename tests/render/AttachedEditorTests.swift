@@ -72,6 +72,69 @@ import Testing
         #expect(e.string == "| a |   | b |\n|---| --- |---|\n| 1 |   | 2 |\n|  |   |  |\n")
     }
 
+    @Test func menuDeletesRowsAndColumnsAfterCommittingACell() throws {
+        let original = "| a | b |\n|---|---|\n| 1 | 2 |\n"
+        let (e, window) = editor(original)
+
+        func choose(_ title: String, from box: TableBox, row: Int, column: Int) throws {
+            let rect = try #require(box.cellRect(row: row, column: column))
+            let menu = e.tableMenu(box, at: NSPoint(x: rect.midX, y: rect.midY))
+            let item = try #require(menu.items.first { $0.title == String(localized: String.LocalizationValue(title)) })
+            #expect(NSApp.sendAction(item.action!, to: item.target, from: item))
+        }
+
+        let first = table(e)
+        e.beginCellEdit(first, row: 1, column: 0)
+        try choose("Delete Row", from: first, row: 1, column: 0)
+        #expect(e.cellField == nil)
+        #expect(e.string == "| a | b |\n|---|---|\n")
+        window.undoManager?.undo()
+        #expect(e.string == original)
+        window.undoManager?.redo()
+        #expect(e.string == "| a | b |\n|---|---|\n")
+
+        window.undoManager?.undo()
+        draw(e)
+        let second = table(e)
+        e.beginCellEdit(second, row: 1, column: 1)
+        try choose("Delete Column", from: second, row: 1, column: 1)
+        #expect(e.cellField == nil)
+        #expect(e.string == "| a |\n|---|\n| 1 |\n")
+        window.undoManager?.undo()
+        #expect(e.string == original)
+        window.undoManager?.redo()
+        #expect(e.string == "| a |\n|---|\n| 1 |\n")
+    }
+
+    @Test func tableWidthModesClearDraggedColumnWidths() throws {
+        let (e, _) = editor("| left | right |\n|---|---|\n| alpha beta gamma delta epsilon zeta eta theta | short |\n")
+        let box = table(e)
+        let rect = try #require(box.cellRect(row: 1, column: 0))
+
+        func choose(_ title: String) throws {
+            let menu = e.tableMenu(box, at: NSPoint(x: rect.midX, y: rect.midY))
+            let layout = try #require(menu.items.first { $0.title == String(localized: "Table Layout") }?.submenu)
+            let item = try #require(layout.items.first { $0.title == String(localized: String.LocalizationValue(title)) })
+            #expect(NSApp.sendAction(item.action!, to: item.target, from: item))
+            draw(e)
+        }
+
+        try choose("Fit Content")
+        let fit = try #require(box.columnWidths())
+        box.resizeColumns(divider: 0, from: fit, by: -120)
+        draw(e)
+        #expect(box.columnWidths() != fit)
+
+        try choose("Fit Content")
+        #expect(box.columnWidths() == fit)
+
+        box.resizeColumns(divider: 0, from: fit, by: -120)
+        draw(e)
+        try choose("Window Width")
+        #expect(box.widthMode == .window)
+        #expect(try #require(box.columnWidths()).reduce(0, +) > fit.reduce(0, +))
+    }
+
     @Test func cellUndoRedoKeepsTheShiftedTableRenderedAfterAnExternalEdit() {
         let original = "| a |\n|---|\n| 1 |\n"
         let (e, window) = editor(original)
@@ -90,16 +153,19 @@ import Testing
         #expect(e.blockCanvas.focusedComponent?.location == tableLocation && rendersTable(e, at: tableLocation))
     }
 
-    @Test func addersAppearOnlyAtTheMatchingTableEdge() {
+    @Test func addersShowFromInsideTheTableOnly() {
         let (e, _) = editor("| a | b |\n|---|---|\n| 1 | 2 |\n")
         let rect = table(e).drawnRect
-        #expect(e.tableAdders(at: NSPoint(x: rect.midX, y: rect.midY)) == nil)
-        let bottom = e.tableAdders(at: NSPoint(x: rect.midX, y: rect.maxY + 4))
-        #expect(bottom?.row.isEmpty == false)
-        #expect(bottom?.column.isEmpty == true)
-        let right = e.tableAdders(at: NSPoint(x: rect.maxX + 4, y: rect.midY))
-        #expect(right?.row.isEmpty == true)
-        #expect(right?.column.isEmpty == false)
+        let inside = e.tableAdders(at: NSPoint(x: rect.midX, y: rect.midY))
+        #expect(inside?.row.isEmpty == false && inside?.column.isEmpty == false, "entering the table shows both strips")
+        // From outside, the edge shows nothing; after the table, the pointer keeps them on its way out.
+        #expect(e.tableAdders(at: NSPoint(x: rect.midX, y: rect.maxY + 8)) == nil)
+        #expect(e.tableAdders(at: NSPoint(x: rect.maxX + 8, y: rect.midY)) == nil)
+        let below = e.tableAdders(at: NSPoint(x: rect.midX, y: rect.maxY + 8), engaged: inside?.table)
+        #expect(below?.row.contains(NSPoint(x: rect.midX, y: rect.maxY + 8)) == true)
+        let beside = e.tableAdders(at: NSPoint(x: rect.maxX + 8, y: rect.midY), engaged: inside?.table)
+        #expect(beside?.column.contains(NSPoint(x: rect.maxX + 8, y: rect.midY)) == true)
+        #expect(e.tableAdders(at: NSPoint(x: rect.midX, y: rect.maxY + 40), engaged: inside?.table) == nil, "far below, they go")
     }
 
     @Test func adderUndoRedoKeepsTheRenderedCanvas() {

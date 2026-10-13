@@ -43,6 +43,7 @@ extension MarkdownEditor {
         fresh.widthOverride = box.widthOverride
         fresh.alignmentOverride = box.alignmentOverride
         fresh.scrollX = box.scrollX
+        fresh.copyColumnWidths(from: box)
         if let freshRange = source(of: fresh) {
             let selected: NSRange
             if NSMaxRange(kept) <= range.location {
@@ -60,7 +61,9 @@ extension MarkdownEditor {
 
     // MARK: Cells
 
-    func beginCellEdit(_ box: TableBox, row: Int, column: Int) {
+    /// `point` (in the canvas): a click, whose spot in the text takes the caret; without one the
+    /// caret goes to the end (moving between cells).
+    func beginCellEdit(_ box: TableBox, row: Int, column: Int, at point: NSPoint? = nil) {
         // Committing the open cell may rewrite a table, this one too: find this one again by place
         // (an edit before it moves it by the change in length).
         var box = box
@@ -93,7 +96,14 @@ extension MarkdownEditor {
         box.scrollToCell(row: row, column: column)
         followCell(field)
         surface.window?.makeFirstResponder(field)
-        (field.currentEditor() as? NSTextView)?.moveToEndOfDocument(nil)
+        guard let editor = field.currentEditor() as? NSTextView else { return }
+        if let point, !field.isHidden {
+            editor.layoutManager?.ensureLayout(for: editor.textContainer!)
+            let index = editor.characterIndexForInsertion(at: editor.convert(point, from: surface))
+            editor.setSelectedRange(NSRange(location: min(index, (editor.string as NSString).length), length: 0))
+        } else {
+            editor.moveToEndOfDocument(nil)
+        }
     }
 
     func endCellEdit(commit: Bool) {
@@ -181,21 +191,21 @@ extension MarkdownEditor {
 
     // MARK: Adding rows and columns
 
-    /// The "+" strips appear only when the pointer reaches the matching table edge. Their trigger
-    /// reaches a little into the table and through the strip, so the pointer can travel outside the
-    /// border to click without the guide disappearing in the gap.
-    func tableAdders(at point: NSPoint) -> TableAdders? {
+    /// The "+" strips under and beside the table the pointer is in: they show, quiet, from the
+    /// moment the pointer enters the table, and stay while it travels out onto them (`engaged`, the
+    /// table whose strips show now). Coming from outside shows nothing, so passing a table's edge
+    /// never flashes them.
+    func tableAdders(at point: NSPoint, engaged: TableBox? = nil) -> TableAdders? {
         guard isEditable else { return nil }
-        for probe in [point, NSPoint(x: point.x, y: point.y - 18), NSPoint(x: point.x - 18, y: point.y)] {
-            guard let table = blockCanvas.component(at: probe) as? TableBox else { continue }
+        func adders(_ table: TableBox) -> TableAdders {
             let r = table.drawnRect
-            let row = NSRect(x: r.minX, y: r.maxY + 3, width: r.width, height: 12)
-            let column = NSRect(x: r.maxX + 3, y: r.minY, width: 12, height: r.height)
-            let rowEdge = NSRect(x: r.minX, y: r.maxY - 6, width: r.width, height: 21)
-            let columnEdge = NSRect(x: r.maxX - 6, y: r.minY, width: 21, height: r.height)
-            let showsRow = rowEdge.contains(point), showsColumn = columnEdge.contains(point)
-            guard showsRow || showsColumn else { continue }
-            return TableAdders(table: table, row: showsRow ? row : .zero, column: showsColumn ? column : .zero)
+            return TableAdders(table: table, row: NSRect(x: r.minX, y: r.maxY + 3, width: r.width, height: 12),
+                               column: NSRect(x: r.maxX + 3, y: r.minY, width: 12, height: r.height))
+        }
+        if let table = blockCanvas.component(at: point) as? TableBox, table.drawnRect.contains(point) { return adders(table) }
+        if let engaged, engaged.drawnRect.width > 0 {
+            let r = engaged.drawnRect
+            if NSRect(x: r.minX, y: r.minY, width: r.width + 15, height: r.height + 15).contains(point) { return adders(engaged) }
         }
         return nil
     }
@@ -223,10 +233,15 @@ extension MarkdownEditor {
             return item
         }
         menu.autoenablesItems = false
-        if isEditable, let (row, column) = table.cell(at: point) {
-            let edit: (@escaping (String) -> String?) -> () -> Void = { [weak self, weak table] transform in {
-                guard let self, let table else { return }
-                self.editTable(table, transform)
+        if isEditable, let (row, column) = table.cell(at: point), let range = source(of: table) {
+            let edit: (@escaping (String) -> String?) -> () -> Void = { [weak self] transform in {
+                guard let self else { return }
+                let open = self.cellField?.table.flatMap { self.source(of: $0) }
+                let before = self.length
+                self.endCellEdit(commit: true)
+                let location = (open?.location ?? range.location) < range.location ? range.location + self.length - before : range.location
+                guard let fresh = self.componentBox(at: location) as? TableBox else { return }
+                self.editTable(fresh, transform)
             } }
             let nl = newline
             menu.addItem(item(String(localized: "Insert Row Above"), enabled: row > 0, edit { TableEdit.insertingRow($0, before: row, newline: nl) }))
@@ -255,9 +270,9 @@ extension MarkdownEditor {
         }
         let width = NSMenu()
         width.autoenablesItems = false
-        width.addItem(item(String(localized: "Fit Content"), checked: table.widthMode == .fit) { table.widthOverride = .fit; relayout() })
-        width.addItem(item(String(localized: "Column Width"), checked: table.widthMode == .column) { table.widthOverride = .column; relayout() })
-        width.addItem(item(String(localized: "Window Width"), checked: table.widthMode == .window) { table.widthOverride = .window; relayout() })
+        width.addItem(item(String(localized: "Fit Content"), checked: table.widthMode == .fit) { table.widthOverride = .fit; table.resetColumnWidths(); relayout() })
+        width.addItem(item(String(localized: "Column Width"), checked: table.widthMode == .column) { table.widthOverride = .column; table.resetColumnWidths(); relayout() })
+        width.addItem(item(String(localized: "Window Width"), checked: table.widthMode == .window) { table.widthOverride = .window; table.resetColumnWidths(); relayout() })
         width.addItem(.separator())
         width.addItem(item(String(localized: "Align Center"), checked: table.alignment == .center) { table.alignmentOverride = .center; relayout() })
         width.addItem(item(String(localized: "Align Left"), checked: table.alignment == .left) { table.alignmentOverride = .left; relayout() })

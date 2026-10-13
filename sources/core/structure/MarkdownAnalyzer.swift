@@ -647,6 +647,7 @@ private struct Builder {
         applyMath()
         structuralPrefixes()
         containerOnlyLinesAreBlank()
+        emptyQuoteLines()
         markers.sort { $0.range.location < $1.range.location }
         inlines.sort { $0.range.location < $1.range.location }
         components.sort { $0.range.location < $1.range.location }
@@ -690,6 +691,23 @@ private struct Builder {
     mutating func containerOnlyLinesAreBlank() {
         for l in 0..<lineCount where lines[l].kind == .paragraph && !lines[l].isListItemStart && !lines[l].startsBlock {
             if slice(l).allSatisfy({ $0 == 0x20 || $0 == 0x09 || $0 == 0x3E }) { lines[l].kind = .blank }
+        }
+    }
+
+    /// A line of only `>` that is no gap between two lines of its quote (a quote just begun with
+    /// `> `, or one that ends in an empty line while typing) is an empty line of the quote: it has
+    /// its height and its bar, and its markers hide like any quote line's.
+    mutating func emptyQuoteLines() {
+        for l in 0..<lineCount where lines[l].kind == .blank && lines[l].quoteDepth > 0 && slice(l).contains(0x3E) {
+            let depth = lines[l].quoteDepth
+            func content(_ i: Int) -> Bool { i >= 0 && i < lineCount && lines[i].kind != .blank && lines[i].quoteDepth >= depth }
+            guard !(content(l - 1) && content(l + 1)) else { continue }
+            lines[l].kind = .paragraph
+            // A quote begun here starts a block, with its space above.
+            lines[l].startsBlock = !content(l - 1)
+            let start = t.lineStarts[l], end = contentEnd(l)
+            guard end > start else { continue }
+            markers.append(Marker(range: NSRange(location: start, length: end - start), style: .structural, revealRange: NSRange(location: start, length: end - start)))
         }
     }
 

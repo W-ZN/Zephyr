@@ -91,7 +91,9 @@ final class ExportOptionsView: NSView {
 
     /// The theme's own size first, then common sizes (and a size set elsewhere, kept).
     static func textSizes(keeping value: CGFloat?) -> [(title: String, value: CGFloat?)] {
-        [(String(localized: "Same as theme"), nil)] + including(value, in: [11, 12, 13, 14, 15, 16, 18, 20, 24]).map { ("\(Int($0)) pt", $0) }
+        [(String(localized: "Same as theme"), nil)] + including(value, in: [11, 12, 13, 14, 15, 16, 18, 20, 24]).map { size in
+            (size == MarkdownExport.Settings.defaultTextSize ? String(localized: "\(Int(size)) pt (Default)") : "\(Int(size)) pt", size)
+        }
     }
 
     static func lineHeights(keeping value: CGFloat?) -> [(title: String, value: CGFloat?)] {
@@ -151,6 +153,9 @@ final class ExportOptionsView: NSView {
         grid.row(at: 4).isHidden = format != .pdf
         grid.row(at: 5).isHidden = format != .pdf && format != .png && format != .jpg
         for row in [6, 7] { grid.row(at: row).isHidden = format != .png && format != .jpg }
-        setFrameSize(fittingSize)
+        // The save panel keeps the width it first gave the options: a narrower fit would leave
+        // them off center under the panel, so the width only grows; the height follows the rows.
+        let fit = fittingSize
+        setFrameSize(NSSize(width: max(frame.width, fit.width), height: fit.height))
     }
 }

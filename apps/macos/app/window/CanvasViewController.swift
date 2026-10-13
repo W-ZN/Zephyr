@@ -1,21 +1,22 @@
 import AppKit
 import ZephyrRender
 
-/// Hosts the top bar, the canvas, the floating folder panel and the outline. The panel is a card
-/// over the canvas and never changes the window's size; where the window has room for a comfortable
-/// column beside it, the text moves clear of it, otherwise the card floats over the text and goes
-/// once something is chosen in it (design §7.4). The outline is a rail beside the text or a button
-/// in the top bar, as chosen in Settings (design §8).
+/// Hosts the top bar, the reading area, the sidebar and the outline. The open sidebar is a card
+/// beside the text, never over it and never changing the window's size: as wide as its edge was
+/// dragged, narrower only as far as a narrow window needs, never under its minimum; a strip of
+/// icons where Settings asks for one. The text, pages and previews keep to the room right of it
+/// (`textArea`). The outline is a rail beside the text or a button in the top bar, as chosen in
+/// Settings (design §8).
 final class CanvasViewController: NSViewController {
     weak var controller: DocumentWindowController?
     let topBar = TopBar()
     let sidebar = ScopeSidebarView()
     private let editorContainer = NSView()
-    /// The part of the canvas the text and pages use: all of it, or right of an open sidebar that
-    /// makes room (`sidebarMakesRoom`).
+    /// The part of the canvas the text and pages use: all of it, or right of the open sidebar.
     private let textArea = NSLayoutGuide()
     private var textLeading: NSLayoutConstraint!
     private var sidebarLeading: NSLayoutConstraint!
+    private var sidebarWidthConstraint: NSLayoutConstraint!
     /// The text starts under the top bar, or (minimal mode) right under the title bar.
     private var editorTopToBar: NSLayoutConstraint!
     private var editorTopToTitleBar: NSLayoutConstraint!
@@ -26,10 +27,9 @@ final class CanvasViewController: NSViewController {
     /// The chat outlives a collapse (conversation, draft, running request); a new document ends it.
     private(set) var isAIOpen = false
     private var banner: NSView?
-    private var clickMonitor: Any?
     private(set) var editor: MarkdownEditor?
     private(set) var isSidebarVisible = false
-    /// The open sidebar has the text beside it rather than under it.
+    /// The sidebar is open, with the text beside it.
     private(set) var sidebarMakesRoom = false
     private(set) var aiPanel: AIPanelController?
     let outlineRail = OutlineRail()
@@ -39,13 +39,28 @@ final class CanvasViewController: NSViewController {
     /// An app page (Today, Goals, Overview) shown over the document.
     private var page: NSView?
 
+    /// The card's width with names: 280 until its edge is dragged, from 220 to 400.
     static let sidebarWidth: CGFloat = 280
+    static let minimumSidebarWidth: CGFloat = 220
+    static let maximumSidebarWidth: CGFloat = 400
+    /// The card's width with icons only.
+    static let iconSidebarWidth: CGFloat = 52
     /// The margins belong to the panel, so dragging there cannot select text underneath.
     static let sidebarInset: CGFloat = 8
-    private var sidebarPanelWidth: CGFloat { Self.sidebarWidth + 2 * Self.sidebarInset }
-    /// The narrowest reading column the text keeps beside an open sidebar; a narrower window has the
-    /// card over the text instead.
-    static let columnBesideSidebar: CGFloat = 480
+    /// The room the text keeps beside a wider card: the card gives way, down to its minimum.
+    static let textBesideSidebar: CGFloat = 320
+    /// The dragged width, kept for every window (`Preferences.sidebarWidth`).
+    private var cardWidth = CanvasViewController.storedSidebarWidth
+    private static var storedSidebarWidth: CGFloat {
+        min(max(UserDefaults.standard.double(forKey: Preferences.sidebarWidth), minimumSidebarWidth), maximumSidebarWidth)
+    }
+    /// Files and search temporarily need names; the navigation returns to the chosen style.
+    private var compactSidebar: Bool { UserDefaults.standard.bool(forKey: Preferences.sidebarIconsOnly) && sidebar.tab == .places }
+    /// The widest card the window has room for beside the text, never under the minimum.
+    private var sidebarRoom: CGFloat { max(Self.minimumSidebarWidth, view.bounds.width - 2 * Self.sidebarInset - Self.textBesideSidebar) }
+    private var sidebarPanelWidth: CGFloat {
+        (compactSidebar ? Self.iconSidebarWidth : min(cardWidth, sidebarRoom)) + 2 * Self.sidebarInset
+    }
 
     override func loadView() {
         let root = CanvasRootView(frame: NSRect(x: 0, y: 0, width: 900, height: 1000))
@@ -57,6 +72,7 @@ final class CanvasViewController: NSViewController {
         root.addSubview(topBar)
         root.addSubview(sidebar)
         sidebarLeading = sidebar.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: -Self.sidebarWidth - 20)
+        sidebarWidthConstraint = sidebar.widthAnchor.constraint(equalToConstant: Self.sidebarWidth + 2 * Self.sidebarInset)
         // The bar fills the title bar area, so the traffic lights sit centered in it.
         let barHeight = topBar.bottomAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor)
         barHeight.priority = .defaultHigh
@@ -69,7 +85,7 @@ final class CanvasViewController: NSViewController {
             editorContainer.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             editorContainer.bottomAnchor.constraint(equalTo: root.bottomAnchor),
             sidebarLeading,
-            sidebar.widthAnchor.constraint(equalToConstant: sidebarPanelWidth),
+            sidebarWidthConstraint,
             sidebar.topAnchor.constraint(equalTo: topBar.bottomAnchor),
             sidebar.bottomAnchor.constraint(equalTo: root.bottomAnchor),
         ])
@@ -127,6 +143,10 @@ final class CanvasViewController: NSViewController {
             aiLauncher.widthAnchor.constraint(equalToConstant: AILauncher.side), aiLauncher.heightAnchor.constraint(equalToConstant: AILauncher.side),
         ])
         view = root
+        sidebar.onResize = { [weak self] width in self?.resizeSidebar(to: width) }
+        sidebar.onSearchModeChanged = { [weak self] in self?.makeRoomForSidebar(animated: false) }
+        NotificationCenter.default.addObserver(self, selector: #selector(sidebarPreferencesChanged), name: Preferences.sidebarDidChange, object: nil)
+        makeRoomForSidebar(animated: false)
     }
 
     /// Minimal mode leaves only the text (design §2 principle 7): the top bar and its space go,
@@ -156,16 +176,17 @@ final class CanvasViewController: NSViewController {
             updateAIButton()
             return
         }
-        editor.blockCanvas.leadingInset = textLeading.constant
+        editor.blockCanvas.leadingInset = 0
         // Laid out first as the previous text was, rails or not; `updateRails` settles it.
-        editor.blockCanvas.reservedMargin = outlineRail.isHidden && documentRail.isHidden ? 0 : Self.railMargin
+        editor.blockCanvas.reservedMargin = 0
+        editor.blockCanvas.trailingInset = 0
         let scroll = editor.scrollView
         scroll.isHidden = page != nil
         scroll.translatesAutoresizingMaskIntoConstraints = false
         editorContainer.addSubview(scroll, positioned: .below, relativeTo: nil)
         NSLayoutConstraint.activate([
-            scroll.leadingAnchor.constraint(equalTo: editorContainer.leadingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: editorContainer.trailingAnchor),
+            scroll.leadingAnchor.constraint(equalTo: textArea.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: textArea.trailingAnchor),
             scroll.topAnchor.constraint(equalTo: editorContainer.topAnchor),
             scroll.bottomAnchor.constraint(equalTo: editorContainer.bottomAnchor),
         ])
@@ -247,7 +268,7 @@ final class CanvasViewController: NSViewController {
         let preferredHeight = card.heightAnchor.constraint(equalToConstant: 620)
         preferredHeight.priority = .defaultHigh - 1
         aiConstraints = [preferredWidth, card.widthAnchor.constraint(lessThanOrEqualToConstant: 400),
-                         card.widthAnchor.constraint(lessThanOrEqualTo: editorContainer.widthAnchor, constant: -24)]
+                         card.widthAnchor.constraint(lessThanOrEqualTo: textArea.widthAnchor, constant: -24)]
         if aiShort {
             aiConstraints += [card.trailingAnchor.constraint(equalTo: editorContainer.trailingAnchor, constant: -12),
                               card.topAnchor.constraint(equalTo: editorContainer.topAnchor, constant: 12),
@@ -267,8 +288,8 @@ final class CanvasViewController: NSViewController {
             placeAIPanel()
             updateAIButton()
         }
-        // A resize across the line between room and none.
-        if isSidebarVisible, sidebarFits != sidebarMakesRoom { makeRoomForSidebar(animated: false) }
+        // A narrow window narrows the card, down to its minimum.
+        makeRoomForSidebar(animated: false)
         updateRails()
     }
 
@@ -359,7 +380,7 @@ final class CanvasViewController: NSViewController {
             stack.topAnchor.constraint(equalTo: card.topAnchor), stack.bottomAnchor.constraint(equalTo: card.bottomAnchor),
             card.centerXAnchor.constraint(equalTo: textArea.centerXAnchor),
             card.topAnchor.constraint(equalTo: topBar.bottomAnchor, constant: 8),
-            card.widthAnchor.constraint(lessThanOrEqualTo: editorContainer.widthAnchor, constant: -32),
+            card.widthAnchor.constraint(lessThanOrEqualTo: textArea.widthAnchor, constant: -32),
         ])
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         banner = card
@@ -380,7 +401,6 @@ final class CanvasViewController: NSViewController {
             guard let self else { return }
             if !self.isSidebarVisible { self.sidebar.isHidden = true }
         }
-        if visible { installClickMonitor() } else { removeClickMonitor() }
         guard animated, animates else {
             sidebarLeading.constant = visible ? 0 : -sidebarPanelWidth - 20
             sidebar.alphaValue = visible ? 1 : 0
@@ -411,24 +431,39 @@ final class CanvasViewController: NSViewController {
         updateRails()
     }
 
-    /// Whether the window holds the card and a comfortable column side by side.
-    private var sidebarFits: Bool {
-        editorContainer.bounds.width - sidebarPanelWidth - 2 * BlockCanvas.minimumMargin >= Self.columnBesideSidebar
+    /// Settings changed the sidebar (names or icons only).
+    @objc private func sidebarPreferencesChanged() {
+        cardWidth = Self.storedSidebarWidth
+        makeRoomForSidebar(animated: false)
+        updateRails()
     }
 
-    /// The text and pages move clear of an open sidebar where the window has room, sliding with the
-    /// card; the column keeps its width when it can and narrows only as far as it must.
+    /// The card's edge dragged to `width`: kept between the minimum and what the window has room for.
+    func resizeSidebar(to width: CGFloat) {
+        guard !compactSidebar else { return }
+        cardWidth = max(Self.minimumSidebarWidth, min(width, Self.maximumSidebarWidth, sidebarRoom))
+        UserDefaults.standard.set(cardWidth, forKey: Preferences.sidebarWidth)
+        makeRoomForSidebar(animated: false)
+    }
+
+    /// The text and pages move clear of the open sidebar, sliding with the card; the card's width
+    /// follows the window (`sidebarPanelWidth`), the window never follows the card.
     private func makeRoomForSidebar(animated: Bool) {
-        sidebarMakesRoom = isSidebarVisible && sidebarFits
-        let inset = sidebarMakesRoom ? sidebarPanelWidth : 0
+        sidebar.setCompact(compactSidebar)
+        let panelWidth = sidebarPanelWidth
+        if sidebarWidthConstraint.constant != panelWidth { sidebarWidthConstraint.constant = panelWidth }
+        sidebarMakesRoom = isSidebarVisible
+        let inset = sidebarMakesRoom ? panelWidth : 0
         guard textLeading.constant != inset else { return }
-        let before = editor?.column.x
+        let before = editor.map { view.convert(NSPoint(x: $0.column.x, y: 0), from: $0.scrollView).x }
         textLeading.constant = inset
         view.layoutSubtreeIfNeeded()
-        editor?.blockCanvas.leadingInset = inset
         guard animated, animates else { return }
         // Drawn in place at once, then carried over from where it was, so nothing lays out per frame.
-        if let editor, let before, page == nil { slide(editor.scrollView, from: before - editor.column.x) }
+        if let editor, let before, page == nil {
+            let after = view.convert(NSPoint(x: editor.column.x, y: 0), from: editor.scrollView).x
+            slide(editor.scrollView, from: before - after)
+        }
         if let page { slide(page, from: sidebarMakesRoom ? -sidebarPanelWidth : sidebarPanelWidth) }
     }
 
@@ -443,31 +478,8 @@ final class CanvasViewController: NSViewController {
         layer.add(slide, forKey: "zephyr.sidebarRoom")
     }
 
-    /// A choice made in a sidebar over the text (a page, a document, a match) is what the reader
-    /// wants to see: the card goes. Beside the text it stays, for the next one.
-    func sidebarDidOpenItem() {
-        if isSidebarVisible, !sidebarMakesRoom { setSidebar(visible: false) }
-    }
-
-    /// A sidebar over the text closes when the reader clicks back into the text; one beside the
-    /// text covers nothing and stays.
-    private func installClickMonitor() {
-        removeClickMonitor()
-        clickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
-            guard let self, self.isSidebarVisible, !self.sidebarMakesRoom, event.window === self.view.window else { return event }
-            let point = self.sidebar.convert(event.locationInWindow, from: nil)
-            if !self.sidebar.bounds.contains(point), self.editorContainer.convert(event.locationInWindow, from: nil).y < self.editorContainer.bounds.maxY {
-                let inEditor = self.editorContainer.hitTest(self.editorContainer.superview!.convert(event.locationInWindow, from: nil)) != nil
-                if inEditor { self.setSidebar(visible: false) }
-            }
-            return event
-        }
-    }
-
-    private func removeClickMonitor() {
-        if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
-        clickMonitor = nil
-    }
+    /// A choice made in the sidebar: it is beside the text, so it stays for the next one.
+    func sidebarDidOpenItem() {}
 
     override func cancelOperation(_ sender: Any?) {
         if !outlineCard.isHidden {
@@ -481,31 +493,65 @@ final class CanvasViewController: NSViewController {
 
     // MARK: Outline
 
-    /// A rail's room beside the text, kept on both sides so the column stays centered.
-    static let railMargin: CGFloat = 14 + OutlineRail.width + 12
+    /// The edge strip each side of the reading area keeps for a resting rail: the outline's ticks
+    /// on the right, the open documents' dots on the left, each 14 pt in from the edge with its
+    /// pointer zone. Both strips are kept whether or not a rail shows, so the text stays centered
+    /// in the reading area and does not move between documents with and without an outline.
+    static let railStrip: CGFloat = 44
+    /// How far from the trailing edge the outline's ticks reach at most: the rail's 14 pt inset,
+    /// the ticks' 10 pt and the longest tick's 16 pt.
+    static let ticksReach: CGFloat = 40
     /// The narrowest column the text keeps for the rails; below it the top bar stands in.
     static let columnBesideRail: CGFloat = 560
 
-    /// The two rails beside the text, each while the window keeps a comfortable column beside them
-    /// (the column gives up the same room on both sides for either): on the right the outline when
-    /// chosen (two headings or more, outside minimal mode), otherwise the top bar's button; on the
-    /// left the open documents while the sidebar is hidden (two or more, the quick switcher on),
-    /// otherwise a count beside the sidebar button.
+    /// The two rails beside the text: on the right the outline when chosen (two headings or more,
+    /// outside minimal mode), otherwise the top bar's button; on the left the open documents while
+    /// the sidebar is hidden (two or more, the quick switcher on), otherwise a count beside the
+    /// sidebar button. Where there is room for them, both rails' strips bound the reading area.
     func updateRails() {
-        let room = editorContainer.bounds.width - textLeading.constant - 2 * Self.railMargin >= Self.columnBesideRail
+        let readerWidth = editorContainer.bounds.width - textLeading.constant
         let outlineWanted = Preferences.outlineBesideText && outlineRail.headings.count >= 2 && !topBar.isHidden && page == nil
         let several = documentRail.items.count > 1 && !topBar.isHidden && !isSidebarVisible
         let documentsWanted = several && UserDefaults.standard.bool(forKey: Preferences.quickSwitcher) && page == nil
-        let outline = outlineWanted && room, documents = documentsWanted && room
-        editor?.blockCanvas.reservedMargin = outline || documents ? Self.railMargin : 0
+        let room = readerWidth - 2 * Self.railStrip >= Self.columnBesideRail
+        let outline = outlineWanted && room
+        let documents = documentsWanted && room
+        editor?.blockCanvas.reservedMargin = 0
         if outlineRail.isHidden == outline { outlineRail.isHidden = !outline }
         if documentRail.isHidden == documents {
             documentRail.isHidden = !documents
             if !documents { documentRail.dismiss() }
         }
+        updateReaderInsets(strips: room)
         let button = !outline && !outlineRail.headings.isEmpty && page == nil
         if topBar.outlineButton.isHidden == button { topBar.outlineButton.isHidden = !button }
         topBar.setOpenCount(several && !documents ? documentRail.items.count : nil)
+    }
+
+    /// The scroll view still spans the text area, including a persistent scroller gutter. The
+    /// canvas centers the reader between the two rail strips, measured against the content
+    /// viewport, so overlay and legacy scroller styles center it in the same visible area. Beside
+    /// an open sidebar, which the documents' rail never shares, the text centers between what is
+    /// seen: the card's edge and the ticks' reach, with the card's clearance on both sides, so it
+    /// is as far from the sidebar as from the outline.
+    private func updateReaderInsets(strips: Bool) {
+        guard let editor else { return }
+        // In the scroll view's own terms, so a window laid out for the first time (its scroll view
+        // not yet moved beside the sidebar) gets the same insets as later: the text area starts
+        // where the viewport does, and a legacy scroller's gutter already takes part of the right.
+        let scroll = editor.scrollView
+        let gutter = max(0, scroll.bounds.maxX - scroll.contentView.frame.maxX)
+        let leading: CGFloat, trailing: CGFloat
+        if strips, isSidebarVisible {
+            // The text area already starts the card's clearance past its edge; the same past the ticks.
+            (leading, trailing) = (0, Self.ticksReach + Self.sidebarInset)
+        } else if strips {
+            (leading, trailing) = (Self.railStrip, Self.railStrip)
+        } else {
+            (leading, trailing) = (0, 0)
+        }
+        editor.blockCanvas.leadingInset = leading
+        editor.blockCanvas.trailingInset = max(0, trailing - gutter)
     }
 
     /// The headings down to the levels chosen in Settings, counted from the document's top level.
@@ -584,9 +630,6 @@ final class CanvasViewController: NSViewController {
         }
     }
 
-    deinit {
-        if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
-    }
 }
 
 /// The canvas color behind everything, so no window material shows through (design §8.2).

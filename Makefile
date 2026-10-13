@@ -31,7 +31,7 @@ LSREGISTER := /System/Library/Frameworks/CoreServices.framework/Frameworks/Launc
 # The check scripts use only the standard library: any Python 3 works (make save-check PYTHON=...).
 PYTHON    ?= python3
 
-.PHONY: all test window-check save-check agent-check corpus bench project xcode build sign signing-init dmg run snapshot ql-register ql-unregister install clean
+.PHONY: all test window-check save-check agent-check corpus bench project xcode build sign signing-init dmg appcast run snapshot ql-register ql-unregister install clean
 
 all: build
 
@@ -95,6 +95,11 @@ signing-init:
 VERSION := $(shell awk -F'"' '/MARKETING_VERSION/ { print $$2; exit }' $(MACOS)/project.yml)
 dmg: build
 	ROOT=$(ROOT) $(MACOS)/scripts/make-dmg.sh "$(APP)" "$(DIST)/Zephyr-$(VERSION).dmg" "$(DERIVED)/SourcePackages/checkouts"
+
+# Requires the private Sparkle key in the login Keychain (account dev.zephyr.Zephyr).
+# Publish this signed feed alongside its versioned DMG; never edit it after signing.
+appcast: dmg
+	bash "$(MACOS)/scripts/make-appcast.sh" "$(DIST)/Zephyr-$(VERSION).dmg" "$(VERSION)"
 
 run:
 	mkdir -p $(SANDBOX_HOME)

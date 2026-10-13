@@ -45,7 +45,7 @@ struct SlashItem {
             SlashItem(title: String(localized: "Table"), keywords: ["table", "grid", "表格"], symbol: "tablecells", hint: "| |", kind: .lines(["| ‸ |  |", "| --- | --- |", "|  |  |"]), separated: true),
             SlashItem(title: String(localized: "Divider"), keywords: ["divider", "rule", "hr", "line", "separator", "分隔线", "分割线"], symbol: "minus", hint: "---", kind: .lines(["---", "‸"]), separated: true, allowedInList: false),
             SlashItem(title: String(localized: "Image…"), keywords: ["image", "picture", "photo", "img", "图片"], symbol: "photo", hint: "![]()", kind: .image),
-        ]
+        ] + formatting
     }
 
     /// Offered for a slash typed after text (after a space): what goes into the line, and under a
@@ -63,8 +63,17 @@ struct SlashItem {
             SlashItem(title: String(localized: "Link"), keywords: ["link", "url", "链接"], symbol: "link", hint: "[]()", kind: .inline("[‸]()")),
             SlashItem(title: String(localized: "Inline Code"), keywords: ["code", "inline", "代码"], symbol: "chevron.left.forwardslash.chevron.right", hint: "``", kind: .inline("`‸`")),
             SlashItem(title: String(localized: "Inline Formula"), keywords: ["math", "formula", "equation", "公式", "数学"], symbol: "function", hint: "$$", kind: .inline("$‸$")),
-        ]
+        ] + formatting
         return (inItem ? children : []) + inline
+    }
+
+    /// Text styles, offered after text and at the start of a line alike.
+    static var formatting: [SlashItem] {
+        [
+            SlashItem(title: String(localized: "Underline"), keywords: ["underline", "u", "下划线"], symbol: "underline", hint: "<u></u>", kind: .inline("<u>‸</u>")),
+            SlashItem(title: String(localized: "Strikethrough"), keywords: ["strikethrough", "strike", "delete", "删除线"], symbol: "strikethrough", hint: "~~", kind: .inline("~~‸~~")),
+            SlashItem(title: String(localized: "Highlight"), keywords: ["highlight", "mark", "高亮", "标记"], symbol: "highlighter", hint: "<mark>", kind: .inline("<mark>‸</mark>")),
+        ]
     }
 
     /// Languages offered after a code block's opening fence: id, name, other names it is typed as.
@@ -103,6 +112,11 @@ final class SlashMenu {
     let anchor: Int
     private(set) var items: [SlashItem] = []
     private(set) var selected = 0
+    /// Nothing is chosen until an arrow or the pointer picks a row (a suggestion, not a menu
+    /// asked for): Return then goes on to the text.
+    var waitsForChoice = false {
+        didSet { if waitsForChoice { selected = -1 } }
+    }
     private let panel: NSPanel
     private let list: SlashMenuView
     private let all: [SlashItem]
@@ -139,7 +153,8 @@ final class SlashMenu {
     func update(query: String) -> Bool {
         items = Array(all.compactMap { item in item.rank(query).map { (item, $0) } }.enumerated()
             .sorted { ($0.element.1, $0.offset) < ($1.element.1, $1.offset) }.map(\.element.0).prefix(limit))
-        selected = min(selected, max(0, items.count - 1))
+        selected = min(selected, items.count - 1)
+        if selected < 0, !waitsForChoice { selected = 0 }
         list.needsDisplay = true
         return !items.isEmpty
     }
@@ -165,7 +180,7 @@ final class SlashMenu {
 
     func move(_ delta: Int) {
         guard !items.isEmpty else { return }
-        selected = (selected + delta + items.count) % items.count
+        selected = selected < 0 ? (delta > 0 ? 0 : items.count - 1) : (selected + delta + items.count) % items.count
         list.needsDisplay = true
         announceSelection()
     }
@@ -176,9 +191,11 @@ final class SlashMenu {
         list.needsDisplay = true
     }
 
-    func chooseSelected() {
-        guard items.indices.contains(selected) else { return }
+    /// False when no row is chosen.
+    @discardableResult func chooseSelected() -> Bool {
+        guard items.indices.contains(selected) else { return false }
         choose?(items[selected])
+        return true
     }
 
     private func announceSelection() {
@@ -313,13 +330,18 @@ extension MarkdownEditor {
 
     /// Arrow keys, Return, Tab and Escape while a menu (blocks or languages) is open.
     func slashMenuHandles(_ selector: Selector) -> Bool {
-        guard let menu = slashMenu ?? languageMenu else { return false }
+        guard let menu = slashMenu ?? languageMenu ?? imageMenu else { return false }
         switch selector {
         case #selector(NSResponder.moveUp(_:)): menu.move(-1)
         case #selector(NSResponder.moveDown(_:)): menu.move(1)
-        case #selector(NSResponder.insertNewline(_:)), #selector(NSResponder.insertTab(_:)): menu.chooseSelected()
+        case #selector(NSResponder.insertNewline(_:)), #selector(NSResponder.insertTab(_:)):
+            // An image suggestion nobody picked from lets Return and Tab through.
+            if !menu.chooseSelected() {
+                closeImageMenu()
+                return false
+            }
         case #selector(NSResponder.cancelOperation(_:)), #selector(NSResponder.complete(_:)):
-            if slashMenu != nil { closeSlashMenu() } else {
+            if menu === imageMenu { closeImageMenu() } else if slashMenu != nil { closeSlashMenu() } else {
                 languageDismissed = source.lineRange(for: NSRange(location: menu.anchor, length: 0)).location
                 closeLanguageMenu()
             }
@@ -337,15 +359,9 @@ extension MarkdownEditor {
     func languageChoices(before location: Int) -> [String] {
         let ns = source
         var used: [String] = []
-        let above = ns.substring(to: location) as NSString
-        for line in above.components(separatedBy: CharacterSet.newlines).reversed() {
-            if let m = Self.fenceInfo.firstMatch(in: line, range: NSRange(location: 0, length: (line as NSString).length)) {
-                let id = (line as NSString).substring(with: m.range(at: 1)).lowercased()
-                if !id.isEmpty, !used.contains(id) { used.append(id) }
-            }
-        }
-        let below = ns.substring(from: location) as NSString
-        for line in below.components(separatedBy: CharacterSet.newlines) {
+        let above = ns.substring(to: location).components(separatedBy: CharacterSet.newlines)
+        let below = ns.substring(from: location).components(separatedBy: CharacterSet.newlines)
+        for line in above.reversed() + below {
             if let m = Self.fenceInfo.firstMatch(in: line, range: NSRange(location: 0, length: (line as NSString).length)) {
                 let id = (line as NSString).substring(with: m.range(at: 1)).lowercased()
                 if !id.isEmpty, !used.contains(id) { used.append(id) }
@@ -371,7 +387,9 @@ extension MarkdownEditor {
         let info = NSRange(location: content.location + m.range(at: 1).location, length: m.range(at: 1).length)
         if languageMenu?.anchor != info.location {
             closeLanguageMenu()
-            let menu = SlashMenu(anchor: info.location, items: languageChoices(before: line.location).map(SlashItem.language))
+            // No language first: Return right after the fence makes a plain block.
+            let none = SlashItem(title: String(localized: "No Language"), keywords: ["none", "plain", "无"], symbol: "chevron.left.forwardslash.chevron.right", hint: "```", kind: .language(""))
+            let menu = SlashMenu(anchor: info.location, items: [none] + languageChoices(before: line.location).map(SlashItem.language))
             menu.limit = 8
             menu.choose = { [weak self] item in
                 guard case let .language(id) = item.kind else { return }
@@ -398,15 +416,14 @@ extension MarkdownEditor {
         let content = Self.withoutTerminator(line, in: ns)
         let typed = NSRange(location: menu.anchor, length: NSMaxRange(content) - menu.anchor)
         let fence = ns.substring(with: NSRange(location: content.location, length: menu.anchor - content.location))
-        let closed = NSMaxRange(line) < ns.length && blockCanvas.place(NSMaxRange(line)).layout.content.code?.isFirst == false
-        if closed {
+        let prefix = String(fence.prefix { $0 == " " || $0 == "\t" || $0 == ">" })
+        let marks = fence.dropFirst(prefix.count)
+        if fenceIsClosed(after: line, marks: String(marks)) {
             replace(typed, with: id)
             let shift = (id as NSString).length - typed.length
             selection = NSRange(location: NSMaxRange(line) + shift, length: 0)
         } else {
-            // An open fence at the end of what was typed: the block gets its body and its close.
-            let prefix = String(fence.prefix { $0 == " " || $0 == "\t" || $0 == ">" })
-            let marks = fence.dropFirst(prefix.count)
+            // A fence left open: the block gets its body and its close.
             replace(typed, with: id + newline + prefix + newline + prefix + marks)
             selection = NSRange(location: typed.location + (id as NSString).length + (newline as NSString).length + (prefix as NSString).length, length: 0)
         }
@@ -470,7 +487,7 @@ extension MarkdownEditor {
 
     /// Links an existing image chosen by the user (design §9: new attachments go where the user
     /// says; Zephyr never copies files into the folder). Paths are relative to the document.
-    private func chooseImage(_ done: @escaping (String?) -> Void) {
+    func chooseImage(_ done: @escaping (String?) -> Void) {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image]
         panel.allowsMultipleSelection = false

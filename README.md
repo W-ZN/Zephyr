@@ -12,7 +12,7 @@
 
 **Zephyr** opens the Markdown files you already have, renders them as you read, and writes back only the bytes you change. It is a native AppKit app with its own Core Text block canvas: no Electron, no web view for the document, no library or index in your folders.
 
-> **Status: pre-alpha (v0.1.1).** The v1 feature set — reading, editing, the assistant with CLI/MCP access, customization — is implemented. Some performance targets and the full Quick Look matrix are still being verified.
+> **Status: pre-alpha (v0.1.2).** The v1 feature set — reading, editing, the assistant with CLI/MCP access, customization — is implemented. Some performance targets and the full Quick Look matrix are still being verified.
 
 <p align="center">
   <img src="docs/images/screenshot-light.png" alt="Zephyr in light mode with the sidebar open" width="49%">
@@ -23,7 +23,7 @@ The [user guide](docs/guide.md) describes each part in detail.
 
 ## Install
 
-1. Download **`Zephyr-0.1.1.dmg`** from the [latest release](https://github.com/W-ZN/Zephyr/releases/latest) and open it.
+1. Download **`Zephyr-0.1.2.dmg`** from the [latest release](https://github.com/W-ZN/Zephyr/releases/latest) and open it.
 2. Drag **Zephyr.app** onto **Applications**.
 3. **Sign it on your Mac (required).** Zephyr is not notarized by Apple: the project has no paid Apple Developer ID, so the release carries only an ad-hoc signature and macOS refuses to open the downloaded copy ("Apple could not verify…"). Open Terminal and run:
 
@@ -35,13 +35,15 @@ The [user guide](docs/guide.md) describes each part in detail.
    codesign --force --deep --preserve-metadata=entitlements,flags --sign - /Applications/Zephyr.app
    ```
 
-   The first command removes the "downloaded from the internet" mark. The second signs the app ad-hoc on your own Mac, keeping the entitlements of the Quick Look extension. Repeat both after installing a new version.
+   The first command removes the "downloaded from the internet" mark. The second signs the app ad-hoc on your own Mac, keeping its entitlements and those of its helpers. These steps apply to manual installations.
 
 4. Open Zephyr from Applications.
 
 **Requirements:** macOS 15 Sequoia or later, on Apple silicon or Intel (universal binary).
 
-To check the download, compare `shasum -a 256 Zephyr-0.1.1.dmg` with the `.sha256` file attached to the release. If you prefer not to run a downloaded binary at all, [build it from source](#build-from-source) — it takes one command.
+To check the download, compare `shasum -a 256 Zephyr-0.1.2.dmg` with the `.sha256` file attached to the release. If you prefer not to run a downloaded binary at all, [build it from source](#build-from-source) — it takes one command.
+
+**Updates:** version 0.1.2 introduces signed updates from GitHub Releases. Install it manually once when upgrading from 0.1.1. **Settings → General → Updates** provides a manual check, daily checks, and optional automatic installation after quitting. Automatic installation is off by default. Updates replace the app bundle and keep your preferences and editable theme files in `~/Library/Application Support/Zephyr/`.
 
 **Finder preview:** turn on Space-bar preview in **Zephyr → Settings → General → Documents**, where you can also make Zephyr the default Markdown editor.
 
@@ -76,7 +78,7 @@ zephyr propose --find "Monday" --replace "Friday" --summary "Move the date" --wa
 
 ## Privacy
 
-Zephyr has no account, telemetry or analytics. Network requests happen only when you use a feature that needs them: the assistant talks to the provider and endpoint you configure, with your own API key (stored encrypted by Zephyr in `~/Library/Application Support/Zephyr/`, readable only by you); link previews fetch the link you point at; an explicit page snapshot renders a URL in a nonpersistent web view; images a document links on the web (a README's badges, for example) load over HTTPS without cookies, unless you turn **Remote images** off in **Settings → General**. Static shields.io badges are drawn by Zephyr and need no request.
+Zephyr has no account, telemetry or analytics. Daily update checks contact GitHub Releases and can be disabled in Settings. Other network requests happen when a feature needs them: the assistant talks to the provider and endpoint you configure, with your own API key (stored encrypted by Zephyr in `~/Library/Application Support/Zephyr/`, readable only by you); link previews fetch the link you point at; an explicit page snapshot renders a URL in a nonpersistent web view; images a document links on the web (a README's badges, for example) load over HTTPS without cookies, unless you turn **Remote images** off in **Settings → General**. Static shields.io badges are drawn by Zephyr and need no request.
 
 ## Project layout
 
@@ -96,4 +98,4 @@ docs              user guide and README images
 
 ## License
 
-Zephyr is released under the [MIT License](LICENSE). It is built with [swift-markdown](https://github.com/swiftlang/swift-markdown) (Apache 2.0), [swift-cmark](https://github.com/swiftlang/swift-cmark) (BSD 2-Clause) and [SwaTex](https://github.com/PhraseHQ/SwaTex) (MIT, with the KaTeX fonts under the SIL Open Font License); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Zephyr is released under the [MIT License](LICENSE). It is built with [swift-markdown](https://github.com/swiftlang/swift-markdown) (Apache 2.0), [swift-cmark](https://github.com/swiftlang/swift-cmark) (BSD 2-Clause), [SwaTex](https://github.com/PhraseHQ/SwaTex) (MIT, with the KaTeX fonts under the SIL Open Font License), and [Sparkle](https://sparkle-project.org/) (MIT); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

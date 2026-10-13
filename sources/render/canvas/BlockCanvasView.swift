@@ -17,6 +17,15 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     /// A press inside the selection: it drags the selection once the pointer moves, else it is a click.
     var pendingDrag: (point: NSPoint, location: Int)?
     private var imageResize: (image: ImageBox, start: NSPoint, width: CGFloat, previewed: Bool)?
+    /// A viewable component pressed with the primary button. Its preview only starts when that
+    /// press finishes without becoming a drag, leaving the whole double-click interval available.
+    private var pendingComponentPreviewClick: (box: ComponentBox, point: NSPoint)?
+    /// A table divider drag is visual state only. The box holds the widths; this keeps the mouse
+    /// gesture's fixed baseline so repeated move events do not add rounding drift.
+    private var tableResize: (table: TableBox, divider: Int, start: NSPoint, widths: [CGFloat])?
+    private weak var dividerHover: TableBox?
+    private weak var tableScrollHover: TableBox?
+    private var tableScroll: (table: TableBox, start: NSPoint, scrollX: CGFloat)?
     /// The selection being dragged out of this view, until it is dropped.
     var dragged: NSRange?
     /// Where a drop would land.
@@ -86,6 +95,8 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     }
 
     public override func resignFirstResponder() -> Bool {
+        pendingComponentPreviewClick = nil
+        editor?.cancelPendingComponentPreview()
         editor?.closeSlashMenu()
         editor?.canvasDidResignFirstResponder()
         caret.displayMode = .hidden
@@ -131,6 +142,8 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
 
     /// Called by the canvas after it changed the selection.
     func selectionChanged() {
+        pendingComponentPreviewClick = nil
+        editor?.cancelPendingComponentPreview()
         let s = canvas.selection
         if !(min(anchor, head) == s.location && max(anchor, head) == NSMaxRange(s)) {
             anchor = s.location
@@ -140,6 +153,7 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         updateCaret()
         editor?.updateSlashMenu()
         editor?.updateLanguageMenu()
+        editor?.updateImageMenu()
         placeHandleAgain()
     }
 
@@ -181,8 +195,10 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     // MARK: - Mouse
 
     public override func mouseDown(with event: NSEvent) {
+        pendingComponentPreviewClick = nil
         editor?.closeSlashMenu()
         editor?.clearLinkPreview()
+        editor?.cancelPendingComponentPreview()
         let point = convert(event.locationInWindow, from: nil)
         // Control-click is the secondary click: the block's menu, on the handle as on the text.
         if event.modifierFlags.contains(.control), let menu = menu(for: event) {
@@ -198,9 +214,45 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
             return
         }
         if event.modifierFlags.intersection([.command, .shift, .option, .control]).isEmpty, let editor {
+            if let table = canvas.component(at: point) as? TableBox,
+               table.isHorizontalScrollHandleVisible, table.horizontalScrollThumb.contains(point) {
+                tableScroll = (table, point, table.scrollX)
+                return
+            }
+            if let table = canvas.component(at: point) as? TableBox,
+               let divider = table.columnDivider(at: point), let widths = table.columnWidths() {
+                // The cell field otherwise keeps an unsaved value over the table. Only a divider
+                // click commits it; ordinary canvas clicks retain their existing semantics.
+                if editor.cellField != nil {
+                    editor.endCellEdit(commit: true)
+                    displayIfNeeded()
+                    guard let current = canvas.component(at: point) as? TableBox,
+                          let currentDivider = current.columnDivider(at: point), let currentWidths = current.columnWidths() else { return }
+                    tableResize = (current, currentDivider, point, currentWidths)
+                } else {
+                    tableResize = (table, divider, point, widths)
+                }
+                return
+            }
             if let resize = editor.beginImageResize(at: point) {
                 imageResize = (resize.image, point, resize.width, false)
                 return
+            }
+            if let box = editor.viewerComponent(at: point), let range = editor.source(of: box) {
+                if event.clickCount >= 2 {
+                    if editor.isEditable { editor.enterComponentSource(box) }
+                    else { _ = editor.openComponentViewer(box) }
+                    return
+                }
+                if event.clickCount == 1 {
+                    window?.makeFirstResponder(self)
+                    anchor = range.location
+                    head = range.location
+                    canvas.select(NSRange(location: range.location, length: 0), focus: range)
+                    editor.updateComponentViewerHover(at: point)
+                    pendingComponentPreviewClick = (box, point)
+                    return
+                }
             }
         }
         if event.clickCount == 1, editor?.handleClick(at: point, event: event) == true { return }
@@ -249,6 +301,24 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     }
 
     public override func mouseDragged(with event: NSEvent) {
+        if let pending = pendingComponentPreviewClick {
+            let point = convert(event.locationInWindow, from: nil)
+            guard hypot(point.x - pending.point.x, point.y - pending.point.y) > 3 else { return }
+        }
+        pendingComponentPreviewClick = nil
+        editor?.cancelPendingComponentPreview()
+        if let scroll = tableScroll {
+            let point = convert(event.locationInWindow, from: nil)
+            scroll.table.dragHorizontalScroll(from: scroll.start, initialScrollX: scroll.scrollX, to: point)
+            setNeedsDisplay(scroll.table.drawnRect)
+            editor?.tableDidScroll(scroll.table)
+            return
+        }
+        if let resize = tableResize {
+            let point = convert(event.locationInWindow, from: nil)
+            resize.table.resizeColumns(divider: resize.divider, from: resize.widths, by: point.x - resize.start.x)
+            return
+        }
         if let resize = imageResize {
             let point = convert(event.locationInWindow, from: nil)
             let width = resize.width + point.x - resize.start.x
@@ -278,10 +348,24 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     }
 
     public override func mouseUp(with event: NSEvent) {
+        if tableScroll != nil {
+            tableScroll = nil
+            return
+        }
+        if tableResize != nil {
+            tableResize = nil
+            return
+        }
         if let resize = imageResize {
             imageResize = nil
             if resize.previewed { editor?.commitImageResize(resize.image, initialWidth: resize.width) }
             else { editor?.cancelImageResize(resize.image) }
+            return
+        }
+        if let pending = pendingComponentPreviewClick {
+            pendingComponentPreviewClick = nil
+            dragUnit = nil
+            editor?.previewComponentAfterDoubleClickInterval(pending.box)
             return
         }
         dragUnit = nil
@@ -324,9 +408,13 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
             editor?.updateImageResizeHover(at: nil)
             editor?.hideComponentViewButton()
             editor?.linkPreviewPointerExited()
+            updateTableDividerHighlight(at: nil, modifiers: event.modifierFlags)
+            updateTableScrollHover(at: nil)
             return
         }
         let point = convert(event.locationInWindow, from: nil)
+        updateTableScrollHover(at: point)
+        updateTableDividerHighlight(at: point, modifiers: event.modifierFlags)
         if handles.hits(point) {
             editor?.linkPreviewPointerExited()
             editor?.updateImageResizeHover(at: nil)
@@ -336,7 +424,7 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         }
         handles.set(editor?.blockHandle(at: point))
         handles.pointer(at: point, editor: editor)
-        handles.setAdders(editor?.tableAdders(at: point))
+        handles.setAdders(editor?.tableAdders(at: point, engaged: handles.adders?.table))
         handles.pointerMoved()
         if let adders = handles.adders, adders.row.contains(point) || adders.column.contains(point) {
             editor?.linkPreviewPointerExited()
@@ -361,9 +449,36 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     /// I-beam elsewhere.
     private func pointer(at point: NSPoint, modifiers: NSEvent.ModifierFlags) -> NSCursor {
         if handles.hits(point) { return .openHand }
+        if modifiers.intersection([.command, .shift, .option, .control]).isEmpty,
+           let table = canvas.component(at: point) as? TableBox,
+           table.isHorizontalScrollHandleVisible, table.horizontalScrollThumb.contains(point) { return .openHand }
+        if modifiers.intersection([.command, .shift, .option, .control]).isEmpty,
+           let table = canvas.component(at: point) as? TableBox, table.columnDivider(at: point) != nil { return .resizeLeftRight }
         if editor?.imageResize(at: point) != nil { return .resizeLeftRight }
         if let adders = handles.adders, adders.row.contains(point) || adders.column.contains(point) { return .pointingHand }
         return editor?.wantsPointingHand(at: point, modifiers: modifiers) == true ? .pointingHand : .iBeam
+    }
+
+    private func updateTableDividerHighlight(at point: NSPoint?, modifiers: NSEvent.ModifierFlags) {
+        let table: TableBox? = point.flatMap { point in
+            guard modifiers.intersection([.command, .shift, .option, .control]).isEmpty else { return nil }
+            return canvas.component(at: point) as? TableBox
+        }
+        let divider = point.flatMap { point in table?.columnDivider(at: point) }
+        if dividerHover !== table {
+            dividerHover?.highlightColumnDivider(nil)
+            dividerHover = table
+        }
+        table?.highlightColumnDivider(divider)
+    }
+
+    private func updateTableScrollHover(at point: NSPoint?) {
+        let table = point.flatMap { canvas.component(at: $0) as? TableBox }
+        if tableScrollHover !== table {
+            tableScrollHover?.setHorizontalScrollHovered(false)
+            tableScrollHover = table
+        }
+        table?.setHorizontalScrollHovered(true)
     }
 
     /// The canvas is the view under the pointer, not a panel, card, page or the outline laid over
@@ -383,9 +498,13 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         editor?.updateImageResizeHover(at: nil)
         editor?.hideComponentViewButton()
         editor?.linkPreviewPointerExited()
+        updateTableDividerHighlight(at: nil, modifiers: event.modifierFlags)
+        updateTableScrollHover(at: nil)
     }
 
     public override func scrollWheel(with event: NSEvent) {
+        pendingComponentPreviewClick = nil
+        editor?.cancelPendingComponentPreview()
         editor?.hideComponentViewButton()
         handles.set(nil)
         handles.setAdders(nil)
@@ -412,6 +531,8 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     }
 
     public override func keyDown(with event: NSEvent) {
+        pendingComponentPreviewClick = nil
+        editor?.cancelPendingComponentPreview()
         handles.set(nil)
         editor?.hideComponentViewButton()
         editor?.clearLinkPreview()
@@ -616,7 +737,7 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         if let component = focusedComponent { return removeComponent(component) }
         // Below the last component nothing is in the file yet: Backspace takes the component.
         if let below = canvas.belowComponent { return go(to: (below.location, false, below), extending: false) }
-        if canvas.selection.length == 0, editor?.deleteListMarkerBackward() == true || editor?.deleteBlockStartBackward() == true { return }
+        if canvas.selection.length == 0, editor?.deleteListMarkerBackward() == true || editor?.deleteBlockStartBackward() == true || editor?.deleteEmptyPair() == true { return }
         let i = canvas.selection.location
         deletion(NSRange(location: previousCharacter(i), length: i - previousCharacter(i)))
     }
@@ -717,6 +838,7 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         switch item.action {
         // Formats are text edits and work in plain text too; moving blocks needs the rendered structure.
         case #selector(toggleBoldface(_:)), #selector(toggleItalics(_:)), #selector(toggleStrikethrough(_:)), #selector(toggleInlineCode(_:)),
+             #selector(toggleUnderlined(_:)), #selector(toggleHighlight(_:)),
              #selector(insertMarkdownLink(_:)), #selector(applyHeading(_:)), #selector(toggleBulletList(_:)), #selector(toggleNumberedList(_:)),
              #selector(toggleTaskList(_:)), #selector(toggleBlockQuote(_:)), #selector(insertCodeBlock(_:)):
             return canvas.isEditable && editor != nil && focusedComponent == nil
@@ -740,6 +862,8 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     @objc public func toggleItalics(_ sender: Any?) { format { $0.toggleWrap("*") } }
     @objc public func toggleStrikethrough(_ sender: Any?) { format { $0.toggleWrap("~~") } }
     @objc public func toggleInlineCode(_ sender: Any?) { format { $0.toggleWrap("`") } }
+    @objc public func toggleUnderlined(_ sender: Any?) { format { $0.toggleWrap("<u>", close: "</u>") } }
+    @objc public func toggleHighlight(_ sender: Any?) { format { $0.toggleWrap("<mark>", close: "</mark>") } }
     @objc public func insertMarkdownLink(_ sender: Any?) { format { $0.insertLink() } }
     @objc public func applyHeading(_ sender: Any?) { format { $0.setHeading((sender as? NSMenuItem)?.tag ?? 0) } }
     @objc public func toggleBulletList(_ sender: Any?) { format { $0.toggleLinePrefix("bullet") } }
@@ -769,11 +893,15 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         guard canvas.isEditable, focusedComponent == nil || canvas.markedRange != nil else { return NSSound.beep() }
         if let marked = canvas.markedRange {
             canvas.commitMarked(text, in: marked)
+        } else if replacementRange.location == NSNotFound, editor?.typePaired(text) == true {
+            // `$` and `*` typed in pairs.
         } else {
             let target = replacementRange.location != NSNotFound ? replacementRange : canvas.selection
             canvas.type(text, replacing: target)
             // A slash at the start of an empty line opens the menu (design §8).
             if text == "/" || text == "、" { editor?.slashTyped(at: canvas.selection.location - 1) }
+            if text == "!" { editor?.bangTyped(at: canvas.selection.location - 1) }
+            if text == ">" { editor?.closeTagTyped() }
         }
         canvas.scrollToVisible(canvas.selection.location)
     }

@@ -862,3 +862,7 @@ private final class HeadingCell: NSTableCellView {
         label.textColor = marked ? Tokens.accent : depth <= 1 ? Tokens.ink : Tokens.ink2
     }
 }
+
+extension OutlineRail: InterfaceFontObserver {
+    func interfaceFontChanged() { buildRows() }
+}

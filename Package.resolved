@@ -1,6 +1,15 @@
 {
-  "originHash" : "bcaa6439781e7549fdbd894da677616d8c1e33c6fc60aad6c7a1263981b6bee2",
+  "originHash" : "c7325a84637c89a79c75be52ea8ba724f8ae687df77af16f70de084b0a6153a4",
   "pins" : [
+    {
+      "identity" : "sparkle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparkle-project/Sparkle",
+      "state" : {
+        "revision" : "eef1a539a373c1f1a320624b1130fc5de7b2e100",
+        "version" : "2.10.0"
+      }
+    },
     {
       "identity" : "swatex",
       "kind" : "remoteSourceControl",

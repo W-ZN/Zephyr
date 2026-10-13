@@ -16,6 +16,14 @@ enum Preferences {
     /// The open documents as a rail on the left edge while the sidebar is hidden (design §7.8);
     /// on unless turned off, so switching and closing stay one pointing away.
     static let quickSwitcher = "quickSwitcher"
+    /// The sidebar card's width with names, as its edge was last dragged.
+    static let sidebarWidth = "sidebarWidth"
+    /// New windows open with the sidebar, the folder's files in it, unless it was last put away
+    /// with its button (minimal mode hides it without changing this).
+    static let sidebarVisible = "sidebarVisible"
+    /// The sidebar as a strip of icons, chosen only in Settings (never by the window's width).
+    static let sidebarIconsOnly = "sidebarIconsOnly"
+    static let sidebarDidChange = Notification.Name("ZephyrSidebarDidChange")
     /// Quit once the last window closes, instead of staying open like most Mac document apps.
     static let quitWithLastWindow = "quitWithLastWindow"
     static let linkPreviews = "linkPreviews"
@@ -28,8 +36,11 @@ enum Preferences {
         UserDefaults.standard.register(defaults: [
             frontMatterCollapsed: false,
             minimalMode: false,
-            aiButtonHidden: false,
+            aiButtonHidden: true,
             quickSwitcher: true,
+            sidebarWidth: 280.0,
+            sidebarIconsOnly: false,
+            sidebarVisible: true,
             quitWithLastWindow: false,
             linkPreviews: true,
             linkPreviewDelay: 0.8,

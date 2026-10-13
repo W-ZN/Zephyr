@@ -49,6 +49,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     convenience init(document: MarkdownDocument?) {
         self.init(tab: DocumentTab(document: nil))
         if let document { attach(document, recordHistory: true) } else { present() }
+        if UserDefaults.standard.bool(forKey: Preferences.sidebarVisible), !UserDefaults.standard.bool(forKey: Preferences.minimalMode) {
+            if scopeRoot == nil, fileURL != nil { expandScope(to: nil, explicit: false) }
+            canvas.setSidebar(visible: true, animated: false)
+        }
     }
 
     /// A window for a tab that already exists (moved out of another window).
@@ -351,9 +355,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     /// `doc` joins the window's open documents, after the current one, and shows. A place showing
     /// only a page (a window without documents) takes it, so Back returns to the page.
     func openAlongside(_ doc: MarkdownDocument, select: NSRange? = nil, anchor: String? = nil) {
-        if current.document != nil { insertTab() }
-        doc.addWindowController(self)
-        attach(doc, recordHistory: true)
+        // An untitled document without text gives its place to what opens next.
+        if current.panel == nil, current.document?.isEmptyUntitled == true {
+            replace(with: doc, recordHistory: true)
+        } else {
+            if current.document != nil { insertTab() }
+            doc.addWindowController(self)
+            attach(doc, recordHistory: true)
+        }
         window?.makeKeyAndOrderFront(nil)
         if let select { self.select(select) }
         if let anchor { revealAnchor(anchor) }
@@ -377,10 +386,13 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     }
 
     /// A place comes forward showing its document: an Open row, ⌃⇥ and the switcher choose a
-    /// document, whatever page was over it.
-    func activate(_ tab: DocumentTab) {
+    /// document, whatever page was over it. An untitled document left without text closes
+    /// (`leaving`), except while closing documents brings each forward to ask about it.
+    func activate(_ tab: DocumentTab, leaving: Bool = true) {
         guard tabs.contains(where: { $0 === tab }) else { return }
         guard tab !== current else { return returnToDocument() }
+        let left = current
+        let empty = leaving && left.panel == nil && left.document?.isEmptyUntitled == true
         sendToBackground(current)
         current = tab
         if let doc = tab.document {
@@ -392,6 +404,11 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         }
         present()
         window?.invalidateRestorableState()
+        if empty {
+            remove(left)
+            left.discard()
+            left.document?.close()
+        }
     }
 
     /// The page over the current document is put away, as a step in its history.
@@ -435,7 +452,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     func close(_ tab: DocumentTab) {
         guard tab.document != nil else { window?.performClose(nil); return }
         // Its question (keep or delete an untitled document) shows over it.
-        if Self.asksBeforeClosing(tab) { activate(tab) }
+        if Self.asksBeforeClosing(tab) { activate(tab, leaving: false) }
         askToClose(tab.document) { [weak self] ok in
             guard ok, let self else { return }
             self.remove(tab)
@@ -447,11 +464,11 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     /// Every other document leaves, each asking what its own close would; a cancel stops there.
     func closeOthers(than tab: DocumentTab, then done: (() -> Void)? = nil) {
         guard let other = tabs.first(where: { $0 !== tab }) else {
-            activate(tab)
+            activate(tab, leaving: false)
             done?()
             return
         }
-        if Self.asksBeforeClosing(other) { activate(other) }
+        if Self.asksBeforeClosing(other) { activate(other, leaving: false) }
         askToClose(other.document) { [weak self] ok in
             guard ok, let self else { return }
             self.remove(other)
@@ -479,14 +496,14 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         guard let index = tabs.firstIndex(where: { $0 === tab }) else { return }
         if tab === current {
             if tabs.count > 1 {
-                activate(tabs[index + 1 < tabs.count ? index + 1 : index - 1])
+                activate(tabs[index + 1 < tabs.count ? index + 1 : index - 1], leaving: false)
             } else {
                 let page = DocumentTab(document: nil)
                 page.panel = .activity
                 page.history = [.panel(.activity)]
                 page.historyIndex = 0
                 tabs.append(page)
-                activate(page)
+                activate(page, leaving: false)
             }
         }
         tabs.removeAll { $0 === tab }
@@ -1166,6 +1183,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
     // MARK: - Commands
 
     @objc func toggleScopeSidebar(_ sender: Any?) {
+        UserDefaults.standard.set(!canvas.isSidebarVisible, forKey: Preferences.sidebarVisible)
         if canvas.isSidebarVisible {
             canvas.setSidebar(visible: false)
             window?.makeFirstResponder(editor?.focusView)

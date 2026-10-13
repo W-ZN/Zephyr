@@ -174,7 +174,7 @@ import ZephyrCore
         let (editor, window) = open(text)
         defer { window.close() }
         let block = try #require(editor.blocks(near: NSRange(location: 0, length: 0)).first)
-        editor.selectText(in: block)
+        editor.selection = try #require(editor.visibleText(of: block))
         #expect(editor.selectedRange == (text as NSString).range(of: "Owner"), "the text the heading shows, not its markers or line break")
         let rect = try #require(editor.blockCanvas.rects(for: editor.selectedRange).last)
         #expect(rect.maxX < editor.column.x + editor.column.width - 10, "highlight ends at the text, not the column edge")
@@ -207,6 +207,22 @@ import ZephyrCore
         #expect(e.string == "| a | b |\n|---|---|\n| 1 | x \\| y |\n\nafter\n")
     }
 
+    /// A click puts the caret where it lands in the cell's text, not at its end.
+    @Test func tableCellClickPlacesTheCaretAtThePoint() throws {
+        let (e, _) = open("| name | note |\n|---|---|\n| alpha beta gamma | x |\n\nafter\n")
+        let box = try #require(e.componentBox(at: 0) as? TableBox)
+        let rect = try #require(box.cellRect(row: 1, column: 0))
+        e.beginCellEdit(box, row: 1, column: 0, at: NSPoint(x: rect.minX + box.padX + 1, y: rect.midY))
+        let start = try #require(e.cellField?.currentEditor()?.selectedRange)
+        #expect(start.location == 0 && start.length == 0, "a click at the text's start: \(start)")
+        e.endCellEdit(commit: false)
+        e.beginCellEdit(box, row: 1, column: 0, at: NSPoint(x: rect.minX + box.padX + 40, y: rect.midY))
+        let middle = try #require(e.cellField?.currentEditor()?.selectedRange)
+        #expect(middle.location > 0 && middle.location < 16, "a click inside the text: \(middle)")
+        e.endCellEdit(commit: false)
+        #expect(e.string.hasPrefix("| name | note |"))
+    }
+
     /// Typing in a cell lays the table out as it grows; Return goes down a row, and the "+" strip
     /// adds a row ready for typing.
     @Test func tableCellsGrowAsTypedAndMoveDown() throws {
@@ -229,7 +245,7 @@ import ZephyrCore
         e.endCellEdit(commit: true)
         let table = try #require(e.componentBox(at: 0) as? TableBox)
         draw(e)
-        let adders = try #require(e.tableAdders(at: NSPoint(x: table.drawnRect.midX, y: table.drawnRect.maxY + 8)))
+        let adders = try #require(e.tableAdders(at: NSPoint(x: table.drawnRect.midX, y: table.drawnRect.maxY + 8), engaged: table))
         #expect(adders.row.contains(NSPoint(x: table.drawnRect.midX, y: table.drawnRect.maxY + 8)))
         e.addToTable(table, row: true)
         #expect(e.string.contains("| 3 | 4 |\n|  |  |\n"))
@@ -251,6 +267,103 @@ import ZephyrCore
         draw(e)
         let last = try #require(box.cellRect(row: 1, column: 11))
         #expect(last.maxX <= box.drawnRect.maxX + 0.5 && e.tableCell(at: NSPoint(x: last.midX, y: last.midY))?.column == 11)
+    }
+
+    @Test func wideTableThumbDragRevealsHiddenColumns() throws {
+        let row = (0..<12).map { "Column\($0)Name" }
+        let text = "| " + row.joined(separator: " | ") + " |\n|" + String(repeating: "---|", count: 12) + "\n| " + row.joined(separator: " | ") + " |\n"
+        let (e, window) = open(text)
+        let box = try #require(e.componentBox(at: 0) as? TableBox)
+        #expect(box.scrollWidth > 0)
+        #expect(!box.isHorizontalScrollHandleVisible)
+
+        box.setHorizontalScrollHovered(true)
+        let thumb = box.horizontalScrollThumb
+        #expect(box.isHorizontalScrollHandleVisible && !thumb.isEmpty)
+        let canvas = view(e)
+        let start = canvas.convert(NSPoint(x: thumb.midX, y: thumb.midY), to: nil)
+        let end = NSPoint(x: start.x + box.horizontalScrollTrack.width, y: start.y)
+        let down = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: start, modifierFlags: [], timestamp: 0,
+                                                    windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let drag = try #require(NSEvent.mouseEvent(with: .leftMouseDragged, location: end, modifierFlags: [], timestamp: 0,
+                                                    windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let up = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: end, modifierFlags: [], timestamp: 0,
+                                                  windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        canvas.mouseDown(with: down)
+        canvas.mouseDragged(with: drag)
+        canvas.mouseUp(with: up)
+
+        #expect(box.scrollX > box.scrollWidth * 0.95)
+        let last = try #require(box.cellRect(row: 1, column: 11))
+        #expect(last.maxX <= box.drawnRect.maxX + 0.5 && e.tableCell(at: NSPoint(x: last.midX, y: last.midY))?.column == 11)
+
+        box.setHorizontalScrollHovered(false)
+        #expect(!box.isHorizontalScrollHandleVisible)
+    }
+
+    @Test func tableDividerResizeReflowsWithoutChangingMarkdown() throws {
+        let text = "| left | right |\n|---|---|\n| alpha beta gamma delta epsilon zeta eta theta | short |\n"
+        let (e, _) = open(text)
+        let box = try #require(e.componentBox(at: 0) as? TableBox)
+        box.widthOverride = .column
+        draw(e)
+        let initial = try #require(box.columnWidths())
+        let initialHeight = box.height(in: .init(column: e.column.width, wide: e.column.width))
+        box.resizeColumns(divider: 0, from: initial, by: -500)
+        draw(e)
+        let resized = try #require(box.columnWidths())
+        #expect(resized[0] == initial[0] - 500)
+        #expect(resized[1] == initial[1] + 500)
+        #expect(abs(resized.reduce(0, +) - initial.reduce(0, +)) < 0.01)
+        #expect(box.height(in: .init(column: e.column.width, wide: e.column.width)) > initialHeight, "the narrowed cell wraps")
+        #expect(e.string == text, "resizing is view state, not a Markdown edit")
+
+        box.resizeColumns(divider: 0, from: initial, by: 0)
+        draw(e)
+        #expect(box.columnWidths() == initial, "returning a drag to its start restores the baseline")
+
+        box.resizeColumns(divider: 0, from: initial, by: -500)
+        draw(e)
+
+        let fresh = try #require(e.editTable(box) { TableEdit.setting($0, row: 1, column: 1, to: "changed") })
+        draw(e)
+        #expect(fresh.columnWidths() == resized, "a cell edit retains the visual widths")
+    }
+
+    @Test func draggingATableDividerChangesOnlyItsViewWidths() throws {
+        let text = "| left | right |\n|---|---|\n| alpha beta gamma delta epsilon zeta eta theta | short |\n"
+        let (e, window) = open(text)
+        let box = try #require(e.componentBox(at: 0) as? TableBox)
+        let initial = try #require(box.columnWidths())
+        let divider = try #require(box.cellRect(row: 0, column: 0)).maxX
+        let point = NSPoint(x: divider, y: box.drawnRect.midY)
+        let start = view(e).convert(point, to: nil)
+        let end = NSPoint(x: start.x - 120, y: start.y)
+        let down = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: start, modifierFlags: [], timestamp: 0,
+                                                    windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let drag = try #require(NSEvent.mouseEvent(with: .leftMouseDragged, location: end, modifierFlags: [], timestamp: 0,
+                                                    windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        let up = try #require(NSEvent.mouseEvent(with: .leftMouseUp, location: end, modifierFlags: [], timestamp: 0,
+                                                  windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1))
+        view(e).mouseDown(with: down)
+        view(e).mouseDragged(with: drag)
+        view(e).mouseUp(with: up)
+        draw(e)
+        let resized = try #require(box.columnWidths())
+        #expect(resized[0] == initial[0] - 120 && resized[1] == initial[1] + 120)
+        #expect(e.string == text)
+    }
+
+    @Test func narrowTableDividerDoesNotExpandItsColumnPair() throws {
+        let text = "| a | b |\n|---|---|\n| 1 | 2 |\n"
+        let (e, _) = open(text)
+        let box = try #require(e.componentBox(at: 0) as? TableBox)
+        let initial = try #require(box.columnWidths())
+        box.resizeColumns(divider: 0, from: initial, by: -1_000)
+        draw(e)
+        let resized = try #require(box.columnWidths())
+        #expect(resized.reduce(0, +) == initial.reduce(0, +), "a narrow pair keeps its original total")
+        #expect(e.string == text)
     }
 
     /// A table or formula wider than the reading column stays inside it, even with room beside it

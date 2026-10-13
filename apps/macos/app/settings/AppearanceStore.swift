@@ -3,8 +3,7 @@ import ZephyrCore
 import ZephyrRender
 
 /// The look of the running app (design §21.7). `appearance.json` says which theme is active and
-/// holds the reader's overrides of the built-in themes; a custom theme's keys are a file in the
-/// themes folder. The
+/// retains legacy overrides; every theme's keys live in a user-owned JSON file. The
 /// settings window changes them through `update`; `zephyr config`, MCP clients and agents may write
 /// the files directly, and the app picks the change up within a moment and offers to undo it, so
 /// no change of look is silent.
@@ -16,6 +15,7 @@ final class AppearanceStore {
     private(set) var state: AppearanceState
     /// The active theme's keys.
     private(set) var settings: AppearanceSettings
+    private(set) var fileError: String?
     private(set) var typography = Typography()
     /// What this process last wrote or read; anything else on disk came from outside.
     private var known: [URL: Data] = [:]
@@ -42,6 +42,7 @@ final class AppearanceStore {
         settings = AppearanceSettings()
         if !FileManager.default.fileExists(atPath: url.path) { state = Self.firstRun(state) }
         state.migrate()
+        do { try state.prepareThemeFiles() } catch { fileError = (error as? AppearanceSettings.SettingError)?.message ?? error.localizedDescription }
         let launchTheme = UserDefaults.standard.string(forKey: "ZephyrTheme")
         hasLaunchThemeOverride = launchTheme != nil
         if let theme = launchTheme { state.active = ThemeLibrary.preset(theme)?.id ?? theme }
@@ -54,9 +55,10 @@ final class AppearanceStore {
 
     // MARK: Changes from the app
 
-    /// Change the active theme's keys (a built-in keeps them as overrides).
+    /// Change the active theme's file, then apply the saved values.
     func update(_ change: (inout AppearanceSettings) throws -> Void) throws {
         var next = state
+        try next.prepareThemeFiles()
         let changed = try next.change(change)
         guard changed != settings || next != state else { return }
         state = next
@@ -88,18 +90,21 @@ final class AppearanceStore {
         let name = try ThemeLibrary.check(name: raw, in: folder)
         var probe = state
         probe.active = source ?? ThemeLibrary.defaultTheme
-        try ThemeLibrary.save(probe.settings(), as: name, in: folder)
+        try ThemeLibrary.save(probe.loadedSettings(), as: name, in: folder)
         use(name)
     }
 
     /// The active built-in theme's overrides, to restore them (Undo of Restore Defaults).
-    var overrides: [String: AppearanceSettings.Value]? { state.adjustments[state.active] }
+    var overrides: [String: AppearanceSettings.Value]? { state.currentOverrides(state.active) }
 
     /// Sets the active built-in theme's overrides: nil restores its defaults.
     func setOverrides(_ overrides: [String: AppearanceSettings.Value]?) {
-        guard isPreset, overrides != state.adjustments[state.active] else { return }
-        state.adjustments[state.active] = overrides?.isEmpty == true ? nil : overrides
-        saveState()
+        guard isPreset else { return }
+        do {
+            try state.prepareThemeFiles()
+            try state.setOverrides(overrides, for: state.active)
+        } catch { reportFileError(error); return }
+        record()
         loadActive()
         activate()
     }
@@ -127,8 +132,20 @@ final class AppearanceStore {
     /// Keep custom themes in `folder` (nil: Zephyr's own). A custom theme that is not there gives
     /// way to Zephyr's.
     func setFolder(_ folder: URL?) {
-        state.themesFolder = folder?.path
-        state.migrate()
+        var next = state
+        next.themesFolder = folder?.path
+        do {
+            // A new location inherits the user's existing built-in looks. Files already in the
+            // destination belong to that folder and are never replaced by a folder switch.
+            for preset in ThemeLibrary.presets where !FileManager.default.fileExists(atPath: ThemeLibrary.themeFile(preset.id, in: next.folder).path) {
+                var source = state
+                source.active = preset.id
+                try ThemeLibrary.saveTheme(source.loadedSettings(), as: preset.id, in: next.folder)
+            }
+            next.migrate()
+            try next.prepareThemeFiles()
+        } catch { reportFileError(error); return }
+        state = next
         if !isPreset, !customThemes.contains(state.active) { state.active = ThemeLibrary.defaultTheme }
         saveState()
         loadActive()
@@ -136,12 +153,26 @@ final class AppearanceStore {
         watch()
     }
 
-    private func loadActive() {
+    @discardableResult
+    private func loadActive() -> Bool {
         if let preset = state.activePreset { state.active = preset.id }
         if !isPreset, !customThemes.contains(state.active) { state.active = ThemeLibrary.defaultTheme }
-        settings = state.settings()
-        let file = ThemeLibrary.file(state.active, in: folder)
+        let file = ThemeLibrary.themeFile(state.active, in: folder)
         known[file] = try? Data(contentsOf: file)
+        do {
+            settings = try state.loadedSettings()
+            fileError = nil
+            return true
+        } catch {
+            reportFileError(error)
+            return false
+        }
+    }
+
+    private func reportFileError(_ error: Error) {
+        fileError = (error as? AppearanceSettings.SettingError)?.message ?? error.localizedDescription
+        NotificationCenter.default.post(name: Self.didChange, object: nil)
+        DocumentWindowController.front?.showBanner(String(localized: "The theme file could not be loaded. Your last valid appearance is still in use."), symbol: "paintbrush")
     }
 
     private func saveState() {
@@ -150,12 +181,12 @@ final class AppearanceStore {
         try? state.save(to: url)
     }
 
-    /// After `update`: the state file for a preset's adjustments, the theme file for a custom theme.
+    /// Remember our writes so the file watcher reports only external edits.
     private func record() {
-        if isPreset { saveState() } else {
-            let file = ThemeLibrary.file(state.active, in: folder)
-            known[file] = try? Data(contentsOf: file)
-        }
+        if isPreset { saveState() }
+        let file = ThemeLibrary.themeFile(state.active, in: folder)
+        known[file] = try? Data(contentsOf: file)
+        fileError = nil
     }
 
     // MARK: Changes from outside (zephyr config, agents, an editor)
@@ -164,7 +195,7 @@ final class AppearanceStore {
     private func watch() {
         watchers.forEach { $0.cancel() }
         watchers = []
-        for folder in Set([url.deletingLastPathComponent(), self.folder]) {
+        for folder in Set([url.deletingLastPathComponent(), self.folder, ThemeLibrary.builtInFolder(in: self.folder)]) {
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             let fd = open(folder.path, O_EVTONLY)
             guard fd >= 0 else { continue }
@@ -190,7 +221,7 @@ final class AppearanceStore {
 
     private func reloadFromDisk(banner: Bool = true) {
         let stateData = try? Data(contentsOf: url)
-        let file = ThemeLibrary.file(state.active, in: folder)
+        let file = ThemeLibrary.themeFile(state.active, in: folder)
         let themeData = try? Data(contentsOf: file)
         let namesChanged = customThemes != knownNames
         knownNames = customThemes
@@ -200,8 +231,13 @@ final class AppearanceStore {
         }
         let previous = (state, settings)
         known[url] = stateData
+        let oldFolder = folder
         if let stateData { state = AppearanceState.parse(json: stateData) }
-        loadActive()
+        if folder != oldFolder {
+            do { try state.prepareThemeFiles() } catch { reportFileError(error); return }
+            watch()
+        }
+        guard loadActive() else { return }
         guard state != previous.0 || settings != previous.1 else { return }
         activate()
         guard banner else { return }
@@ -210,7 +246,7 @@ final class AppearanceStore {
                 guard let self else { return }
                 self.state = previous.0
                 self.saveState()
-                if self.state.activePreset == nil { try? ThemeLibrary.save(previous.1, as: self.state.active, in: self.folder) }
+                try? ThemeLibrary.saveTheme(previous.1, as: self.state.active, in: self.folder)
                 self.loadActive()
                 self.activate()
                 DocumentWindowController.front?.showBanner(nil)
@@ -225,7 +261,7 @@ final class AppearanceStore {
     /// once and without the outside-change banner, since the assistant panel shows the change with
     /// its own Undo, which puts back every theme file and the state as they were.
     func perform(tool name: String, arguments: [String: Any]) -> (text: String, isError: Bool, undo: (() -> Void)?) {
-        let files = [url] + customThemes.map { ThemeLibrary.file($0, in: folder) }
+        let files = [url] + (customThemes + ThemeLibrary.presets.map(\.id)).map { ThemeLibrary.themeFile($0, in: folder) }
         let before = files.compactMap { file in (try? Data(contentsOf: file)).map { (file, $0) } }
         let result = AppearanceTools.run(name, arguments: arguments, url: url)
         guard name == "set_appearance", !result.isError else { return (result.text, result.isError, nil) }
@@ -259,6 +295,10 @@ final class AppearanceStore {
         }
         // Layer-backed surfaces cache their colors: every view draws again with the new palette.
         for window in NSApp.windows { window.contentView.map(Self.redraw) }
+        // The interface typeface, before the first window at launch; later, for every window open.
+        if let old = Tokens.setInterfaceFont(effective.string("font.interface")) {
+            for window in NSApp.windows { (window.contentView?.superview ?? window.contentView).map { Tokens.restyleInterface(in: $0, from: old) } }
+        }
         NotificationCenter.default.post(name: Self.didChange, object: nil)
     }
 

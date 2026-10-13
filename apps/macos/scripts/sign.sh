@@ -16,8 +16,14 @@ if [ "${ADHOC:-0}" != 1 ] && [ -f "$KEYCHAIN" ]; then
 fi
 sign() { codesign --force --options runtime --timestamp=none --sign "$IDENTITY" ${KC_ARGS[@]+"${KC_ARGS[@]}"} "$@"; }
 
+SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+sign "$SPARKLE/XPCServices/Installer.xpc"
+sign --preserve-metadata=entitlements "$SPARKLE/XPCServices/Downloader.xpc"
+sign "$SPARKLE/Autoupdate"
+sign "$SPARKLE/Updater.app"
+sign "$APP/Contents/Frameworks/Sparkle.framework"
 sign "$APP/Contents/Helpers/zephyr"
 sign --entitlements "$ROOT/apps/macos/quick-look/quick-look.entitlements" "$APP/Contents/PlugIns/ZephyrQuickLook.appex"
-sign "$APP"
+sign --entitlements "$ROOT/apps/macos/app/Zephyr.entitlements" "$APP"
 codesign --verify --deep --strict "$APP"
 echo "signed with: $IDENTITY"

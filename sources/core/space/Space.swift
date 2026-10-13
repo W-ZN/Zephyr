@@ -153,14 +153,6 @@ public enum Space {
         return TextPatch(range: NSRange(location: ns.length, length: 0), replacement: lead + line + newline)
     }
 
-    /// A new goal: a heading at the end of the goals note, after a blank line.
-    public static func goalAddition(_ title: String, to text: String) -> TextPatch {
-        let newline = text.contains("\r\n") ? "\r\n" : "\n"
-        let lead = text.isEmpty ? "" : text.hasSuffix(newline + newline) ? "" : text.hasSuffix(newline) ? newline : newline + newline
-        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        return TextPatch(range: NSRange(location: (text as NSString).length, length: 0), replacement: lead + "## " + title + newline)
-    }
-
     // MARK: Files
 
     /// `~/Library/Application Support/Zephyr/Space`: the app's own notes, beside its settings.
@@ -189,21 +181,5 @@ public enum Space {
         let parts = (name as NSString).deletingPathExtension.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
         return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
-    }
-
-    /// Done and all tasks per day, for the days given (newest last), from the daily notes' texts.
-    public static func history(days: [Date], notes: [String: String], calendar: Calendar = .current) -> [(date: Date, done: Int, total: Int)] {
-        days.map { day in
-            let found = notes[dailyName(for: day, calendar: calendar)].map { items(in: $0 as NSString) } ?? []
-            return (day, found.filter(\.done).count, found.count)
-        }
-    }
-
-    /// Days in a row, ending today (or yesterday, when today has nothing done yet), with at least
-    /// one task done.
-    public static func streak(_ history: [(date: Date, done: Int, total: Int)]) -> Int {
-        var days = history.reversed().map(\.done)
-        if days.first == 0 { days.removeFirst() }
-        return days.prefix { $0 > 0 }.count
     }
 }

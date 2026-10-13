@@ -3,16 +3,18 @@ import AppKit
 /// Formatting commands. Each one is a minimal, undoable text edit (design §8: interactions
 /// produce the smallest possible change to the Markdown source).
 extension MarkdownEditor {
-    /// Wrap the selection in `marker` (`**`, `*`, `~~`, `` ` ``) or unwrap it when already wrapped.
-    public func toggleWrap(_ marker: String) {
+    /// Wrap the selection in `marker` (`**`, `*`, `~~`, `` ` ``), or in `marker` and `close`
+    /// (`<u>` and `</u>`), or unwrap it when already wrapped.
+    public func toggleWrap(_ marker: String, close: String? = nil) {
         guard isEditable else { return }
         let ns = source
         let sel = selection
-        let m = (marker as NSString).length
+        let closing = close ?? marker
+        let m = (marker as NSString).length, c = (closing as NSString).length
         let before = NSRange(location: sel.location - m, length: m)
-        let after = NSRange(location: NSMaxRange(sel), length: m)
+        let after = NSRange(location: NSMaxRange(sel), length: c)
         if before.location >= 0, NSMaxRange(after) <= ns.length,
-           ns.substring(with: before) == marker, ns.substring(with: after) == marker {
+           ns.substring(with: before) == marker, ns.substring(with: after) == closing {
             editUndo?.beginUndoGrouping()
             replace(after, with: "")
             replace(before, with: "")
@@ -21,13 +23,13 @@ extension MarkdownEditor {
             return
         }
         let selected = ns.substring(with: sel)
-        if selected.hasPrefix(marker), selected.hasSuffix(marker), sel.length >= 2 * m {
-            let inner = (selected as NSString).substring(with: NSRange(location: m, length: sel.length - 2 * m))
+        if selected.hasPrefix(marker), selected.hasSuffix(closing), sel.length >= m + c {
+            let inner = (selected as NSString).substring(with: NSRange(location: m, length: sel.length - m - c))
             replace(sel, with: inner)
             selection = NSRange(location: sel.location, length: (inner as NSString).length)
             return
         }
-        replace(sel, with: marker + selected + marker)
+        replace(sel, with: marker + selected + closing)
         selection = NSRange(location: sel.location + m, length: sel.length)
     }
 

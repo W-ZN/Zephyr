@@ -21,3 +21,4 @@ xcuserdata/
 /docs/design.md
 /docs/progress.md
 /docs/font-settings.md
+__pycache__/

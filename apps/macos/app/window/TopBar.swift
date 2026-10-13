@@ -358,9 +358,10 @@ final class FolderMenu: NSObject, NSMenuDelegate {
     }
 
     func popUp(below view: NSView) {
-        // The menu holds this object for as long as it is open.
+        // The menu holds this object for as long as it is open; popping up returns once it closes.
         objc_setAssociatedObject(menu, &Self.key, self, .OBJC_ASSOCIATION_RETAIN)
         menu.popUp(below: view)
+        objc_setAssociatedObject(menu, &Self.key, nil, .OBJC_ASSOCIATION_RETAIN)
     }
 
     private static var key = 0

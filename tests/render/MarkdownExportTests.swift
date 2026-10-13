@@ -169,7 +169,7 @@ import ZephyrCore
         let folder = try folder()
         defer { try? FileManager.default.removeItem(at: folder) }
         let output = folder.appendingPathComponent("diagram-orientation.png")
-        var settings = AppearanceState(active: "zephyr").settings()
+        var settings = AppearanceState(active: "zephyr", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path).settings()
         try settings.set("appearance", "light")
         try MarkdownExport.write(text: "```mermaid\nflowchart LR\n    A[F]\n```\n", typography: Typography(settings), baseURL: folder, format: .png, output: output)
         let image = try #require(NSBitmapImageRep(data: Data(contentsOf: output)))
@@ -231,8 +231,8 @@ import ZephyrCore
         let folder = try folder()
         defer { try? FileManager.default.removeItem(at: folder) }
         let output = folder.appendingPathComponent("theme.html")
-        let export = MarkdownExport.Settings(themeID: "anthology")
-        var appearance = AppearanceState(active: "anthology")
+        let export = MarkdownExport.Settings(themeID: "anthology", textSize: nil)
+        var appearance = AppearanceState(active: "anthology", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path)
         appearance.adjustments["anthology"] = ["appearance": .text("light")]
         let typography = try MarkdownExport.typography(for: export, appearance: appearance)
         try MarkdownExport.write(text: "# Theme\n", typography: typography, baseURL: folder, format: .html, output: output, settings: export)
@@ -245,8 +245,8 @@ import ZephyrCore
         let folder = try folder()
         defer { try? FileManager.default.removeItem(at: folder) }
         let output = folder.appendingPathComponent("theme.png")
-        let export = MarkdownExport.Settings(themeID: "anthology", rasterWidth: 480, rasterScale: 1)
-        let typography = try MarkdownExport.typography(for: export, appearance: AppearanceState(active: "zephyr"))
+        let export = MarkdownExport.Settings(themeID: "anthology", rasterWidth: 480, rasterScale: 1, textSize: nil)
+        let typography = try MarkdownExport.typography(for: export, appearance: AppearanceState(active: "zephyr", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path))
         let before = Palette.resolved(.codeBackground, dark: false).hexString
         try MarkdownExport.write(text: "```swift\nlet themed = true\n```\n", typography: typography, baseURL: folder, format: .png, output: output, settings: export)
         let image = try #require(NSBitmapImageRep(data: Data(contentsOf: output)))
@@ -258,9 +258,9 @@ import ZephyrCore
     @Test func pinnedDarkThemeDrivesHTMLAndRasterWithoutChangingReaderAppearance() throws {
         let folder = try folder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        var appearance = AppearanceState(active: "anthology")
+        var appearance = AppearanceState(active: "anthology", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path)
         appearance.adjustments["anthology"] = ["appearance": .text("dark")]
-        let export = MarkdownExport.Settings(themeID: "anthology", rasterWidth: 480, rasterScale: 1)
+        let export = MarkdownExport.Settings(themeID: "anthology", rasterWidth: 480, rasterScale: 1, textSize: nil)
         let typography = try MarkdownExport.typography(for: export, appearance: appearance)
         let beforePalette = Palette.resolved(.codeBackground, dark: false).hexString
         let beforeAppearance = NSApplication.shared.appearance?.name
@@ -280,7 +280,7 @@ import ZephyrCore
     @Test func shortDarkPDFPaintsItsPhysicalPage() throws {
         let folder = try folder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        var appearance = AppearanceState(active: "anthology")
+        var appearance = AppearanceState(active: "anthology", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path)
         appearance.adjustments["anthology"] = ["appearance": .text("dark")]
         let export = MarkdownExport.Settings(themeID: "anthology", paper: .a4, margin: 36)
         let typography = try MarkdownExport.typography(for: export, appearance: appearance)
@@ -288,15 +288,19 @@ import ZephyrCore
         try MarkdownExport.write(text: "# Dark\n", typography: typography, baseURL: folder, format: .pdf, output: output, settings: export)
         let document = try #require(PDFDocument(url: output))
         let page = try #require(document.page(at: 0))
-        let thumbnail = page.thumbnail(of: page.bounds(for: .mediaBox).size, for: .mediaBox)
-        let image = try #require(NSBitmapImageRep(data: thumbnail.tiffRepresentation!))
-        #expect(try pixel(image, x: image.pixelsWide / 2, y: image.pixelsHigh - 10) == [0x1F, 0x1E, 0x1D])
+        // Rasterize the PDF itself in sRGB, independent of PDFKit's display-oriented thumbnail.
+        let size = page.bounds(for: .mediaBox).size
+        let context = try #require(CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.drawPDFPage(try #require(page.pageRef))
+        let image = NSBitmapImageRep(cgImage: try #require(context.makeImage()))
+        let pageColor = try pixel(image, x: image.pixelsWide / 2, y: image.pixelsHigh - 10)
+        #expect(pageColor == [0x1F, 0x1E, 0x1D])
     }
 
     @Test func exportTextSizeAndLineHeightReplaceTheThemes() throws {
-        let theme = try MarkdownExport.typography(for: MarkdownExport.Settings(themeID: "zephyr"), appearance: AppearanceState(active: "zephyr"))
+        let theme = try MarkdownExport.typography(for: MarkdownExport.Settings(themeID: "zephyr", textSize: nil), appearance: AppearanceState(active: "zephyr", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path))
         let export = MarkdownExport.Settings(themeID: "zephyr", textSize: 12, lineHeight: 1.5)
-        let typography = try MarkdownExport.typography(for: export, appearance: AppearanceState(active: "zephyr"))
+        let typography = try MarkdownExport.typography(for: export, appearance: AppearanceState(active: "zephyr", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path))
         #expect(typography.settings.number("text.size") == 12 && typography.settings.number("text.lineHeight") == 1.5)
         #expect(typography.fontSize < theme.fontSize)
         // Headings keep their size relative to the text.
@@ -314,10 +318,11 @@ import ZephyrCore
     }
 
     @Test func exportTextSizeWinsOverTheThemesCSS() throws {
-        var appearance = AppearanceState(active: "zephyr")
+        var appearance = AppearanceState(active: "zephyr", themesFolder: FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path)
         appearance.adjustments["zephyr"] = ["css": .text("body { font-size: 20pt; line-height: 2; }")]
-        let theme = try MarkdownExport.typography(for: MarkdownExport.Settings(), appearance: appearance)
+        let theme = try MarkdownExport.typography(for: MarkdownExport.Settings(textSize: nil), appearance: appearance)
         #expect(theme.fontSize == 20)
+        #expect(MarkdownExport.Settings().textSize == 11, "a new export starts at a printed page's size")
         let export = try MarkdownExport.typography(for: MarkdownExport.Settings(textSize: 12, lineHeight: 1.5), appearance: appearance)
         #expect(export.fontSize == 12 && export.lineSpacing == 1.5)
     }

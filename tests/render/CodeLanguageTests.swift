@@ -32,11 +32,23 @@ import Testing
         type("/code", e)
         e.blockCanvas.view.doCommand(by: #selector(NSResponder.insertNewline(_:)))
         #expect(e.slashMenu == nil)
-        #expect(e.languageMenu?.items.first?.hint == "stata", "the language of the block above comes first")
+        // No language first (Return alone leaves it blank), then the language of the block above.
+        #expect(e.languageMenu?.items.map(\.hint).prefix(2) == ["```", "stata"], "no language, then the language of the block above")
+        e.blockCanvas.view.doCommand(by: #selector(NSResponder.moveDown(_:)))
         e.blockCanvas.view.doCommand(by: #selector(NSResponder.insertNewline(_:)))
         #expect(e.string == text + "\n\n```stata\n\n```")
         #expect(e.selectedRange.location == (text as NSString).length + 11, "on the first line of code")
         #expect(e.languageMenu == nil)
+    }
+
+    @Test func returnAfterTheFenceLeavesTheLanguageBlank() {
+        let (e, window) = editor("Notes.")
+        defer { window.close() }
+        e.pressReturn()
+        e.pressReturn()
+        type("```", e)
+        e.blockCanvas.view.doCommand(by: #selector(NSResponder.insertNewline(_:)))
+        #expect(e.string == "Notes.\n\n```\n\n```" && e.selectedRange.location == 12)
     }
 
     @Test func typedLettersFilterAndAnOpenFenceIsClosed() {

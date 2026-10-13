@@ -83,12 +83,15 @@ class PanelPage: NSView {
     let subtitle = flatLabel("", size: 13, color: Tokens.ink2)
     let actions = NSStackView()
     private let scroll = NSScrollView()
+    private let preferredWidth: CGFloat
+    private var columnWidth: NSLayoutConstraint!
     /// The identifier of a field to focus again once the sections are rebuilt (an entry that
     /// just added a line, which a reload replaces).
     var refocus: String?
 
     init(_ controller: DocumentWindowController, title: String, width: CGFloat = 680) {
         self.controller = controller
+        preferredWidth = width
         heading = flatLabel(title, size: 28, weight: .bold)
         super.init(frame: .zero)
         let document = FlippedView()
@@ -122,8 +125,7 @@ class PanelPage: NSView {
         header.widthAnchor.constraint(equalTo: column.widthAnchor).isActive = true
         document.addSubview(column)
         // Below the window's own size: a page fits the window, it never widens it.
-        let width = column.widthAnchor.constraint(equalToConstant: width)
-        width.priority = NSLayoutConstraint.Priority(490)
+        columnWidth = column.widthAnchor.constraint(equalToConstant: width)
         NSLayoutConstraint.activate([
             scroll.leadingAnchor.constraint(equalTo: leadingAnchor), scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
             scroll.topAnchor.constraint(equalTo: topAnchor), scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
@@ -131,8 +133,7 @@ class PanelPage: NSView {
             column.topAnchor.constraint(equalTo: document.topAnchor, constant: 44),
             column.bottomAnchor.constraint(equalTo: document.bottomAnchor, constant: -96),
             column.centerXAnchor.constraint(equalTo: document.centerXAnchor),
-            width,
-            column.leadingAnchor.constraint(greaterThanOrEqualTo: document.leadingAnchor, constant: 32),
+            columnWidth,
         ])
         document.translatesAutoresizingMaskIntoConstraints = false
         document.topAnchor.constraint(equalTo: scroll.contentView.topAnchor).isActive = true
@@ -141,6 +142,13 @@ class PanelPage: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    override func layout() {
+        // Child fitting sizes must never become a window minimum. Size the reading column from
+        // the actual viewport, including when a page replaces a document in a resized window.
+        columnWidth.constant = max(0, min(preferredWidth, bounds.width - 64))
+        super.layout()
+    }
 
     override var wantsUpdateLayer: Bool { true }
     override func updateLayer() {
@@ -304,7 +312,7 @@ final class ActivityPanel: PanelPage {
         let opened = days.reduce(0) { $0 + $1.opened.count }
         let changes = days.reduce(0) { $0 + $1.observedChanges }
         let saturated = days.contains(where: \.saturated)
-        subtitle.stringValue = String(localized: "Opened Markdown files, successful saves and folder changes Zephyr observed on demand")
+        subtitle.stringValue = String(localized: "Files you opened and changed.")
         actions.arrangedSubviews.forEach { $0.removeFromSuperview() }
         if controller?.scopeRoot != nil {
             actions.addArrangedSubview(FlatButton(title: String(localized: "Refresh Folder"), symbol: "arrow.clockwise", style: .text) { [weak self] in self?.controller?.refreshActivityScope() })
@@ -316,10 +324,10 @@ final class ActivityPanel: PanelPage {
         tiles.distribution = .fillEqually
         tiles.spacing = 36
         let limit = saturated ? " " + String(localized: "A busy day reached the activity storage limit, so its totals are shown with +.") : ""
-        let note = Self.empty(String(localized: "The first scan of a folder is a baseline. Successful saves and later Refresh Folder scans count each changed file once per day; no files are watched in the background.") + limit)
+        let note = Self.empty(String(localized: "Changes count on save and Refresh Folder, once per file a day. Nothing runs in the background.") + limit)
         // Where the reader worked lately, one click from working there again (in this window), two
         // to a line like the figures; after the record, which is what the page is about.
-        let folders: [NSView] = Preferences.recentRootURLs.map { url in
+        let folders: [NSView] = Preferences.recentRootURLs.prefix(4).map { url in
             LinkRow(title: url.lastPathComponent, target: url) { [weak self] _ in self?.controller?.openFolder(url) }
         }
         let lines = stride(from: 0, to: folders.count, by: 2).map { i -> NSView in
@@ -337,13 +345,21 @@ final class ActivityPanel: PanelPage {
 }
 
 /// A GitHub-like calendar: each cell is one local day, shaded by unique opens plus observed file
-/// changes. Pointer and accessibility text reveal the exact daily totals.
+/// changes; each column is a week from the locale's first weekday, top to bottom, so the current
+/// week is the last, partial column. Pointer and accessibility text reveal the exact daily totals.
 final class ActivityHeatmap: NSView {
     private let days: [Activity.Day]
+    /// Empty slots before the first day, so every day lands on its weekday's row.
+    private let lead: Int
     private var hovered: Int? { didSet { if hovered != oldValue { needsDisplay = true } } }
 
     init(_ days: [Activity.Day]) {
         self.days = days
+        let calendar = Calendar.current
+        let parts = days.last?.date.split(separator: "-").compactMap { Int($0) } ?? []
+        let last = parts.count == 3 ? calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2])) : nil
+        let lastRow = ((last.map { calendar.component(.weekday, from: $0) } ?? calendar.firstWeekday) - calendar.firstWeekday + 7) % 7
+        lead = ((lastRow - (days.count - 1)) % 7 + 7) % 7
         super.init(frame: .zero)
         heightAnchor.constraint(equalToConstant: 132).isActive = true
         setAccessibilityElement(true)
@@ -353,18 +369,35 @@ final class ActivityHeatmap: NSView {
 
     required init?(coder: NSCoder) { fatalError() }
 
+    private let cellSize: CGFloat = 15
+    private let gap: CGFloat = 3
+    var visibleColumns: Range<Int> {
+        let total = max((lead + days.count + 6) / 7, 1)
+        let count = min(total, max(0, Int((bounds.width + gap) / (cellSize + gap))))
+        return (total - count)..<total
+    }
+
+    func cellRect(at index: Int) -> NSRect? {
+        let slot = lead + index
+        guard days.indices.contains(index), visibleColumns.contains(slot / 7) else { return nil }
+        return NSRect(x: CGFloat(slot / 7 - visibleColumns.lowerBound) * (cellSize + gap),
+                      y: CGFloat(6 - slot % 7) * (cellSize + gap) + 8, width: cellSize, height: cellSize)
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        hovered = nil
+        toolTip = nil
+        needsDisplay = true
+    }
+
     override func draw(_ dirtyRect: NSRect) {
-        let columns = max((days.count + 6) / 7, 1)
-        let gap: CGFloat = 3
-        let size = min(15, floor((bounds.width - CGFloat(columns - 1) * gap) / CGFloat(columns)))
         let maxValue = max(days.map(\.total).max() ?? 0, 1)
         for (index, day) in days.enumerated() {
-            let column = index / 7
-            let row = index % 7
+            guard let rect = cellRect(at: index) else { continue }
             let value = day.total
             let strength = value == 0 ? 0.08 : 0.22 + 0.78 * CGFloat(value) / CGFloat(maxValue)
             Tokens.accent.withAlphaComponent(hovered == nil || hovered == index ? strength : strength * 0.55).setFill()
-            let rect = NSRect(x: CGFloat(column) * (size + gap), y: CGFloat(row) * (size + gap) + 8, width: size, height: size)
             NSBezierPath(roundedRect: rect, xRadius: 2, yRadius: 2).fill()
         }
     }
@@ -375,14 +408,8 @@ final class ActivityHeatmap: NSView {
     }
 
     override func mouseMoved(with event: NSEvent) {
-        let columns = max((days.count + 6) / 7, 1)
-        let gap: CGFloat = 3
-        let size = min(15, floor((bounds.width - CGFloat(columns - 1) * gap) / CGFloat(columns)))
         let p = convert(event.locationInWindow, from: nil)
-        let column = Int(p.x / (size + gap))
-        let row = Int((p.y - 8) / (size + gap))
-        let index = column * 7 + row
-        hovered = days.indices.contains(index) ? index : nil
+        hovered = days.indices.first { cellRect(at: $0)?.contains(p) == true }
         if let index = hovered {
             let day = days[index]
             toolTip = String(localized: "\(day.date): \(day.opened.count) opened · \(day.added.count) added · \(day.modified.count) changed · \(day.removed.count) removed")

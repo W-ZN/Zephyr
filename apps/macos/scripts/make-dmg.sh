@@ -21,6 +21,7 @@ cp "$CHECKOUTS/swift-markdown/NOTICE.txt" "$LICENSES/swift-markdown-NOTICE.txt"
 cp "$CHECKOUTS/swift-cmark/COPYING" "$LICENSES/swift-cmark-COPYING.txt"
 cp "$CHECKOUTS/SwaTex/LICENSE" "$LICENSES/SwaTex-LICENSE.txt"
 cp "$CHECKOUTS/SwaTex/THIRD_PARTY_NOTICES.md" "$LICENSES/SwaTex-THIRD_PARTY_NOTICES.md"
+cp "$CHECKOUTS/Sparkle/LICENSE" "$LICENSES/Sparkle-LICENSE.txt"
 # Package checkouts are read-only; writable copies let `xattr -dr` clear the quarantine mark.
 chmod 644 "$LICENSES"/*
 

@@ -37,6 +37,22 @@
 	<false/>
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
+	<key>SUFeedURL</key>
+	<string>https://github.com/W-ZN/Zephyr/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>lgBTqFQmBtT0JRoL27g33gAIWx66OLIQ+p3qwRxA8lE=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUSignedFeedFailureExpirationInterval</key>
+	<integer>0</integer>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

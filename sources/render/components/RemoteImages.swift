@@ -38,7 +38,6 @@ final class RemoteImages {
         guard let date = failed[url] else { return false }
         return Date().timeIntervalSince(date) < Self.retryDelay
     }
-    func isLoading(_ url: URL) -> Bool { pending[url] != nil }
 
     /// Loads `url` unless its pixels are cached; `completion(true)` once they are. The token
     /// cancels the completion (the request itself goes on for anyone else showing the image).

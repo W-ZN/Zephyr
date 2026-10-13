@@ -32,10 +32,6 @@ public struct ChunkIndex: Sendable {
     /// Returns the old chunk indices that were replaced and the new indices to re-analyze.
     @discardableResult
     public mutating func update(text: NSString, editedRange: NSRange, delta: Int) -> (replaced: Range<Int>, fresh: Range<Int>) {
-        if chunks.isEmpty {
-            chunks = Self.scan(text, from: 0) { _ in false }
-            return (0..<0, 0..<chunks.count)
-        }
         let editEndNew = NSMaxRange(editedRange)
         let editEndOld = editEndNew - delta
         // Start one character early: deleting a separating blank line merges with the previous chunk.

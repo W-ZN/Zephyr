@@ -129,7 +129,7 @@ import Testing
         try FileManager.default.removeItem(at: url)
         let rep = try #require(snippet.bitmapImageRepForCachingDisplay(in: snippet.bounds))
         snippet.cacheDisplay(in: snippet.bounds, to: rep)
-        for _ in 0..<100 where changes == 0 { try? await Task.sleep(nanoseconds: 5_000_000) }
+        for _ in 0..<400 where changes == 0 { try? await Task.sleep(nanoseconds: 5_000_000) }   // up to 2 s under a full parallel run
         #expect(changes > 0)
         let after = card.fittingHeight(forWidth: 420, maxHeight: 900)
         #expect(after < before - 200)

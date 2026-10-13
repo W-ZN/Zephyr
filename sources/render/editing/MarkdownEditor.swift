@@ -35,6 +35,8 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
     var blockCache: (revision: Int, region: NSRange, blocks: [MarkdownBlock])?
     var slashMenu: SlashMenu?
     var languageMenu: SlashMenu?
+    /// The image suggestion after a typed `!`.
+    var imageMenu: SlashMenu?
     /// The fence line where Escape put the language list away (until the caret leaves it).
     var languageDismissed: Int?
     var propertyField: PropertyField?
@@ -45,6 +47,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
     private var componentMenuButton: ComponentOverlayButton?
     private weak var previewComponent: ComponentBox?
     private weak var hoveredResizeImage: ImageBox?
+    private var pendingComponentPreview: (id: UUID, work: DispatchWorkItem)?
 
     public init(text: String, typography: Typography, baseURL: URL?, isEditable: Bool = true, canvas: Canvas = .automatic) {
         self.typography = typography
@@ -63,6 +66,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
         NotificationCenter.default.addObserver(self, selector: #selector(scrollPositionChanged), name: NSView.boundsDidChangeNotification, object: blockCanvas.scrollView.contentView)
         blockCanvas.selectionDidChange = { [weak self] in self?.selectionDidChange?() }
         blockCanvas.textDidChange = { [weak self] in
+            self?.cancelPendingComponentPreview()
             self?.clearLinkPreview()
             self?.hideComponentViewButton()
             self?.revision += 1
@@ -85,6 +89,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
         blockCanvas.replaceExternally(patch.range, with: patch.replacement)
     }
     public func apply(typography newTheme: Typography) {
+        cancelPendingComponentPreview()
         clearLinkPreview()
         hideComponentViewButton()
         componentViewer?.dismiss()
@@ -96,6 +101,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
     public var showsPlainText: Bool { blockCanvas.mode == .source }
     public func setPlainText(_ on: Bool) {
         guard on != showsPlainText else { return }
+        cancelPendingComponentPreview()
         componentViewer?.dismiss()
         hideComponentViewButton()
         closeSlashMenu()
@@ -154,7 +160,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
         }
         if let entry = propertyEntry(at: point) { beginPropertyEdit(entry); return true }
         if event.modifierFlags.intersection([.command, .shift, .option, .control]).isEmpty {
-            if let cell = tableCell(at: point) { beginCellEdit(cell.box, row: cell.row, column: cell.column); return true }
+            if let cell = tableCell(at: point) { beginCellEdit(cell.box, row: cell.row, column: cell.column, at: point); return true }
             if let math = mathBlock(at: point) { editMath(math); return true }
         }
         if isEditable, let range = checkbox(at: point) { toggleCheckbox(range); return true }
@@ -165,7 +171,9 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
     @discardableResult
     func openComponentViewer(_ box: ComponentBox) -> Bool {
         guard box is ImageBox || box is DiagramBox, box.viewerNaturalSize() != nil,
-              let host = blockCanvas.view.window?.contentView else { return false }
+              scrollView.window != nil else { return false }
+        cancelPendingComponentPreview()
+        let host = scrollView
         clearLinkPreview()
         hideComponentViewButton()
         commitAttachedEditors()
@@ -191,8 +199,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
 
     func updateComponentViewerHover(at point: NSPoint?) {
         if let point, [componentViewButton, componentMenuButton].compactMap({ $0 }).contains(where: { $0.frame.contains(point) }) { return }
-        guard let point, let box = blockComponent(at: point)?.box, box is ImageBox || box is DiagramBox,
-              box.viewerNaturalSize() != nil else { hideComponentViewButton(); return }
+        guard let point, let box = viewerComponent(at: point) else { hideComponentViewButton(); return }
         if previewComponent !== box {
             hideComponentViewButton()
             let button = ComponentOverlayButton(symbol: "arrow.up.left.and.arrow.down.right")
@@ -228,12 +235,36 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
         _ = openComponentViewer(box)
     }
 
+    func viewerComponent(at point: NSPoint) -> ComponentBox? {
+        guard !blockedImage(at: point), let box = blockComponent(at: point)?.box, box is ImageBox || box is DiagramBox,
+              box.viewerNaturalSize() != nil else { return nil }
+        return box
+    }
+
+    func previewComponentAfterDoubleClickInterval(_ box: ComponentBox) {
+        cancelPendingComponentPreview()
+        let id = UUID()
+        let work = DispatchWorkItem { [weak self, weak box] in
+            guard let self, let box, self.pendingComponentPreview?.id == id else { return }
+            self.pendingComponentPreview = nil
+            _ = self.openComponentViewer(box)
+        }
+        pendingComponentPreview = (id, work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + NSEvent.doubleClickInterval, execute: work)
+    }
+
+    func cancelPendingComponentPreview() {
+        pendingComponentPreview?.work.cancel()
+        pendingComponentPreview = nil
+    }
+
     @objc private func showHoveredComponentMenu(_ sender: NSView) {
         guard let box = previewComponent else { return }
         componentMenu(for: box).popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY), in: sender)
     }
 
-    private func enterComponentSource(_ box: ComponentBox) {
+    func enterComponentSource(_ box: ComponentBox) {
+        cancelPendingComponentPreview()
         guard let range = source(of: box) else { return }
         componentViewer?.removeFromSuperview()
         componentViewer = nil
@@ -518,13 +549,12 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
         var checkbox: Bool
         var contentStart: Int
     }
+    private static let listPrefixPattern = try! NSRegularExpression(pattern: #"^((?:[ \t]*>[ \t]?)*[ \t]*)([-*+]|\d{1,9}[.)])([ \t]+)(\[[ xX]\][ \t]+)?"#)
     func listPrefix(at location: Int) -> ListPrefix? {
         let ns = source
         let line = ns.lineRange(for: NSRange(location: location, length: 0))
         let text = ns.substring(with: line)
-        let pattern = #"^((?:[ \t]*>[ \t]?)*[ \t]*)([-*+]|\d{1,9}[.)])([ \t]+)(\[[ xX]\][ \t]+)?"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: text, range: NSRange(location: 0, length: (text as NSString).length)) else { return nil }
+        guard let match = Self.listPrefixPattern.firstMatch(in: text, range: NSRange(location: 0, length: (text as NSString).length)) else { return nil }
         let t = text as NSString
         return ListPrefix(lineStart: line.location, indent: t.substring(with: match.range(at: 1)), marker: t.substring(with: match.range(at: 2)),
                           spacing: t.substring(with: match.range(at: 3)), checkbox: match.range(at: 4).location != NSNotFound,
@@ -535,6 +565,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
     /// after a blank line, so what is typed there is not drawn into the list or quote above.
     func insertNewline() -> Bool {
         guard isEditable else { return false }
+        if quickBlockOnReturn() { return true }
         let sel = selection, ns = source
         if sel.length == 0, let p = listPrefix(at: sel.location), sel.location >= p.contentStart {
             let line = ns.lineRange(for: NSRange(location: sel.location, length: 0))
@@ -791,18 +822,12 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
         }
     }
 
-    /// Delete on an outlined component: its block, in one undoable step.
     /// Delete on an outlined component: its own lines, not the quote or list item it sits in.
     func deleteComponent(_ component: NSRange) {
         guard isEditable else { return NSSound.beep() }
         let lines = source.lineRange(for: component)
         if let block = BlockMap.block(at: component.location, in: blocks(near: component)), block.range == lines { return delete(block) }
         replace(lines, with: "")
-    }
-
-    func deleteBlock(at location: Int) {
-        guard isEditable, let block = BlockMap.block(at: location, in: blocks(near: NSRange(location: location, length: 0))) else { return NSSound.beep() }
-        delete(block)
     }
 
     /// A click on a block component no attached editor took: the component, to outline.

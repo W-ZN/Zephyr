@@ -15,6 +15,7 @@ final class ComponentViewer: NSView {
     private var viewerLoad: UUID?
     private let allowsSourceEditing: Bool
     let backdrop: NSVisualEffectView = ComponentViewerBackdrop()
+    let closeButton = FlatButton(symbol: "xmark", style: .icon)
     private let content = ComponentViewerContent()
 
     var zoomScale: CGFloat { zoom }
@@ -27,17 +28,20 @@ final class ComponentViewer: NSView {
         self.allowsSourceEditing = allowsSourceEditing
         super.init(frame: frame)
         autoresizingMask = [.width, .height]
-        backdrop.frame = bounds
-        backdrop.autoresizingMask = [.width, .height]
         backdrop.blendingMode = .withinWindow
         backdrop.material = .hudWindow
         backdrop.state = .active
-        backdrop.alphaValue = 0.78
+        backdrop.alphaValue = 1
         addSubview(backdrop)
-        content.frame = bounds
-        content.autoresizingMask = [.width, .height]
         content.viewer = self
         addSubview(content)
+        closeButton.emphasized = true
+        closeButton.toolTip = String(localized: "Close") + " (Esc)"
+        closeButton.setAccessibilityLabel(String(localized: "Close"))
+        closeButton.target = self
+        closeButton.action = #selector(dismiss)
+        addSubview(closeButton)
+        layoutSurfaces()
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -49,18 +53,40 @@ final class ComponentViewer: NSView {
     func show(in host: NSView) {
         frame = host.bounds
         host.addSubview(self)
+        // NSScrollView lays out its own clip view and scrollers, not arbitrary overlay children.
+        // Follow the reading viewport directly, including sidebar drags and window resizing.
+        host.postsFrameChangedNotifications = true
+        NotificationCenter.default.addObserver(self, selector: #selector(hostResized), name: NSView.frameDidChangeNotification, object: host)
+        layoutSurfaces()
         host.window?.makeFirstResponder(self)
         fit()
         requestViewerLoad()
     }
 
-    override func layout() {
-        super.layout()
+    @objc private func hostResized() {
+        guard let superview else { return }
+        frame = superview.bounds
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        layoutSurfaces()
         zoom = max(zoom, minimumZoom)
         clampPan()
+        content.needsDisplay = true
+    }
+
+    private func layoutSurfaces() {
+        backdrop.frame = bounds
+        content.frame = bounds
+        closeButton.frame = NSRect(x: max(0, bounds.width - 40), y: 12, width: 28, height: 28)
     }
 
     fileprivate func drawContent() {
+        // Full-strength native blur plus a quiet veil keeps the document from competing with
+        // the inspected component, without allocating a screenshot or another image cache.
+        Tokens.canvas.withAlphaComponent(0.22).setFill()
+        bounds.fill()
         guard naturalSize.width > 0, naturalSize.height > 0, let ctx = NSGraphicsContext.current?.cgContext else { return }
         let origin = contentOrigin()
         ctx.saveGState()
@@ -128,7 +154,10 @@ final class ComponentViewer: NSView {
     }
 
     override func viewWillMove(toSuperview newSuperview: NSView?) {
-        if newSuperview == nil { cancelViewerLoad() }
+        if newSuperview == nil {
+            cancelViewerLoad()
+            NotificationCenter.default.removeObserver(self, name: NSView.frameDidChangeNotification, object: superview)
+        }
         super.viewWillMove(toSuperview: newSuperview)
     }
 
@@ -169,7 +198,7 @@ final class ComponentViewer: NSView {
     }
 
     var viewportRect: NSRect {
-        NSRect(x: 24, y: 24, width: max(1, bounds.width - 48), height: max(1, bounds.height - 48))
+        NSRect(x: 24, y: 52, width: max(1, bounds.width - 48), height: max(1, bounds.height - 76))
     }
 
     /// The actual visible component. The surrounding visual-effect view is only the blurred

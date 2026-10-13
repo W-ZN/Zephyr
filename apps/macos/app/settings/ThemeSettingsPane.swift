@@ -21,6 +21,8 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
     private var cssPending: DispatchWorkItem?
     /// Disclosure state belongs to this settings window, not to the saved theme.
     private var expandedGroups = Set<String>()
+    private var installedFontFamilies: [String]?
+    private var chineseFontFamilies: [String]?
 
     static let headingScales: [(String, Double)] = [(String(localized: "Compact"), 0.7), (String(localized: "Standard"), 1.0), (String(localized: "Prominent"), 1.3)]
 
@@ -82,7 +84,7 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
         group("headings", String(localized: "Headings")) { [weak self] in self?.headings() }
         group("code", String(localized: "Code and formulas")) { [weak self] in self?.code() }
         group("charts", String(localized: "Charts and images")) { [weak self] in self?.charts() }
-        group("sidebar", String(localized: "Sidebar")) { [weak self] in self?.sidebar() }
+        group("sidebar", String(localized: "Interface")) { [weak self] in self?.interface() }
         group("advanced", String(localized: "Advanced")) { [weak self] in
             self?.preview(String(localized: "# Release plan\n\nThe text below a heading, for comparing sizes and spacing.\n\n> A short quote.\n\n| Stage | Status |\n|---|---|\n| Draft | Done |"), height: 320)
             self?.css(); self?.folder()
@@ -168,11 +170,11 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
     // MARK: Typefaces, light or dark, zoom
 
     private func typefaces() {
-        let installed = NSFontManager.shared.availableFontFamilies.filter { !$0.hasPrefix(".") }
-        let cjk = installed.filter(Self.coversChinese)
-        let latin = fontControl("font.body", presets: Typography.Preset.allCases.map { ($0.rawValue, SettingsWindowController.name(of: $0)) },
-                                families: installed.filter { !cjk.contains($0) }) { [weak self] in self?.store.typography.latinFamily ?? "" }
-        let chinese = fontControl("font.cjk", presets: [("auto", String(localized: "Automatic"))], families: cjk) { [weak self] in self?.store.typography.cjkFamily ?? "" }
+        let latin = lazyFontControl("font.body", presets: Typography.Preset.allCases.map { ($0.rawValue, SettingsWindowController.name(of: $0)) },
+                                    families: { [weak self] in self?.fontFamilies().filter { !(self?.chineseFamilies().contains($0) ?? false) } ?? [] },
+                                    resolved: { [weak self] in self?.store.typography.latinFamily ?? "" })
+        let chinese = lazyFontControl("font.cjk", presets: [("auto", String(localized: "Automatic"))], families: { [weak self] in self?.chineseFamilies() ?? [] },
+                                      resolved: { [weak self] in self?.store.typography.cjkFamily ?? "" })
         let note = flatLabel("", size: 11.5, color: Tokens.ink3, wraps: true)
         // Opens the font's page in the browser; installing it stays the reader's choice.
         final class Page { var url: URL? }
@@ -189,7 +191,11 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
             // The first choice of the list, when it is not installed: say so and where it comes from.
             let wanted = AppearanceSettings.families(self.store.settings.string("font.body")).first ?? ""
             let wantedCJK = AppearanceSettings.families(self.store.settings.string("font.cjk")).first ?? ""
-            let missing = [wanted, wantedCJK].first { !$0.isEmpty && !["system", "serif", "mono"].contains($0) && !installed.contains($0) }
+            let missing = [wanted, wantedCJK].first { family in
+                guard !family.isEmpty && !["auto", "system", "serif", "mono"].contains(family) else { return false }
+                if let installedFontFamilies = self.installedFontFamilies { return !installedFontFamilies.contains(family) }
+                return NSFontManager.shared.font(withFamily: family, traits: [], weight: 5, size: 12) == nil
+            }
             if let missing {
                 note.stringValue = String(localized: "\(missing) is not installed; a fallback is used.")
                 page.url = Self.fontPages[missing].flatMap(URL.init(string:))
@@ -204,19 +210,30 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
 
     /// The system's monospaced face first, then the open-source code families (marked when not
     /// installed) and every other installed fixed-pitch family.
-    private func codeFontControl(installed: [String]) -> NSView {
-        let mono = installed.filter { NSFontManager.shared.font(withFamily: $0, traits: [], weight: 5, size: 12)?.isFixedPitch == true }
-        let offered = Self.codeFamilies.filter(installed.contains) + mono.filter { !Self.codeFamilies.contains($0) }
-        let popup = fontControl("font.code", presets: [("mono", String(localized: "System Monospaced"))], families: offered)
+    private func codeFontControl(families: @escaping () -> [String]) -> NSView {
+        let popup = lazyFontControl("font.code", presets: [("mono", String(localized: "System Monospaced"))], families: {
+            let installed = families()
+            let mono = installed.filter { NSFontManager.shared.font(withFamily: $0, traits: [], weight: 5, size: 12)?.isFixedPitch == true }
+            return Self.codeFamilies.filter(installed.contains) + mono.filter { !Self.codeFamilies.contains($0) }
+        }, extraItems: { _ in
+            Self.codeFamilies.filter { !families().contains($0) }.map { (title: String(localized: "\($0) — Not installed"), toolTip: Self.fontPages[$0]) }
+        })
         popup.autoenablesItems = false
-        let missing = Self.codeFamilies.filter { !installed.contains($0) }
-        if !missing.isEmpty { popup.menu?.addItem(.separator()) }
-        for family in missing {
-            popup.addItem(withTitle: String(localized: "\(family) — Not installed"))
-            popup.lastItem?.isEnabled = false
-            popup.lastItem?.toolTip = Self.fontPages[family]
-        }
         return popup
+    }
+
+    private func fontFamilies() -> [String] {
+        if let installedFontFamilies { return installedFontFamilies }
+        let families = NSFontManager.shared.availableFontFamilies.filter { !$0.hasPrefix(".") }
+        installedFontFamilies = families
+        return families
+    }
+
+    private func chineseFamilies() -> [String] {
+        if let chineseFontFamilies { return chineseFontFamilies }
+        let families = fontFamilies().filter(Self.coversChinese)
+        chineseFontFamilies = families
+        return families
     }
 
     static func labeled(_ title: String, _ control: NSView) -> NSView {
@@ -265,6 +282,16 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
             let buttons = NSStackView(views: [delete, rename, saveAs])
             buttons.spacing = 6
             addRow(store.state.active, nil, control: buttons)
+        }
+        let edit = FlatButton(title: String(localized: "Edit Theme File"), style: .secondary) { [weak self] in
+            guard let self else { return }
+            NSWorkspace.shared.open(ThemeLibrary.themeFile(self.store.state.active, in: self.store.folder))
+        }
+        let fileDetail = flatLabel("", size: 11.5, color: Tokens.ink2, wraps: true)
+        addRow(String(localized: "Theme file"), nil, detailLabel: fileDetail, control: edit)
+        bind { [weak self] in
+            guard let self else { return }
+            fileDetail.stringValue = self.store.fileError ?? String(localized: "Changes apply when you save. App updates keep your theme files.")
         }
     }
 
@@ -332,7 +359,7 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
     private func headings() {
         let sample = String(localized: "# Release plan\n\nThe text below a heading, for comparing sizes and spacing.\n\n## Goals\n\nReading, editing and working with agents.\n\n### Details\n\nOne more paragraph.")
         preview(sample, height: 360, editingColors: true)
-        addRow(String(localized: "Typeface"), nil, control: fontControl("font.heading", presets: [("body", String(localized: "Same as Text"))] + Typography.Preset.allCases.map { ($0.rawValue, SettingsWindowController.name(of: $0)) }, families: NSFontManager.shared.availableFontFamilies.filter { !$0.hasPrefix(".") }))
+        addRow(String(localized: "Typeface"), nil, control: lazyFontControl("font.heading", presets: [("body", String(localized: "Same as Text"))] + Typography.Preset.allCases.map { ($0.rawValue, SettingsWindowController.name(of: $0)) }, families: { [weak self] in self?.fontFamilies() ?? [] }))
         let contrast = SegmentedPicker(items: Self.headingScales.map(\.0))
         contrast.onChange = { [weak self] i in self?.store.set("headings.scale", number: Self.headingScales[i].1) }
         bind { [weak self, weak contrast] in
@@ -390,10 +417,10 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
 
     private func code() {
         preview("```python\n# Greet the reader\ndef greet(name):\n    print(f\"Hello, {name}\", 3)\n```\n\n```json\n{\"name\": \"Zephyr\", \"open\": true}\n```\n\n$$\nE = mc^2\n$$", height: 360, editingColors: true)
-        addRow(String(localized: "Typeface"), nil, control: codeFontControl(installed: NSFontManager.shared.availableFontFamilies.filter { !$0.hasPrefix(".") }))
+        addRow(String(localized: "Typeface"), nil, control: codeFontControl { [weak self] in self?.fontFamilies() ?? [] })
         addRow(String(localized: "Code blocks"), nil, control: choiceControl({ "code.style" }, [("card", String(localized: "Card")), ("shaded", String(localized: "Shaded")), ("outline", String(localized: "Outlined")), ("plain", String(localized: "Plain"))]))
         addRow(String(localized: "Line numbers"), nil, control: flagControl("code.lineNumbers"))
-        addRow(String(localized: "Syntax colors"), String(localized: "Keywords, strings, numbers and comments in fenced code, in the theme's colors."), control: flagControl("code.syntax"))
+        addRow(String(localized: "Syntax colors"), nil, control: flagControl("code.syntax"))
         addRow(String(localized: "Code size"), String(localized: "Relative to the text."), control: numberControl { "code.size" })
         addRow(String(localized: "Code line height"), nil, control: numberControl { "code.lineHeight" })
         addRow(String(localized: "Draw formulas"), String(localized: "Off shows the TeX source."), control: flagControl("math.render"))
@@ -403,14 +430,16 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
 
     /// Pictures are placed like tables and diagrams: their one setting sits with them.
     private func images() {
-        addRow(String(localized: "Position"), String(localized: "For pictures without an explicit HTML align attribute."),
+        addRow(String(localized: "Position"), nil,
                control: choiceControl({ "image.align" }, [("center", String(localized: "Centered")), ("left", String(localized: "Left"))]))
     }
 
-    /// The sidebar's text: size, and how tall its rows are. The open windows follow at once.
-    private func sidebar() {
-        addRow(String(localized: "Text size"), String(localized: "Names in the list; section titles and details follow."), control: numberControl { "sidebar.size" })
-        addRow(String(localized: "Row spacing"), nil, control: choiceControl({ "sidebar.spacing" }, [("compact", String(localized: "Compact")), ("standard", String(localized: "Standard")), ("roomy", String(localized: "Roomy"))]))
+    /// The app's own text: its typeface (the system's by default), and the sidebar's size and
+    /// row height. The open windows follow at once.
+    private func interface() {
+        addRow(String(localized: "Typeface"), nil, control: lazyFontControl("font.interface", presets: Typography.Preset.allCases.map { ($0.rawValue, SettingsWindowController.name(of: $0)) }, families: { [weak self] in self?.fontFamilies() ?? [] }))
+        addRow(String(localized: "Sidebar text size"), nil, control: numberControl { "sidebar.size" })
+        addRow(String(localized: "Sidebar row spacing"), nil, control: choiceControl({ "sidebar.spacing" }, [("compact", String(localized: "Compact")), ("standard", String(localized: "Standard")), ("roomy", String(localized: "Roomy"))]))
     }
 
     /// Tables, diagrams and images: one section, one preview of the first two, then each one's settings.
@@ -505,7 +534,7 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
 
     private func css() {
         addSection(String(localized: "Custom CSS"),
-                   String(localized: "Reads body, p, h1–h6, code, table, th, td, a, blockquote and .mermaid; overrides the settings above."))
+                   String(localized: "Overrides the settings above."))
         cssEditor.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         cssEditor.textColor = Tokens.ink
         cssEditor.insertionPointColor = Tokens.accent
@@ -561,7 +590,7 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
 
     private func folder() {
         addSection(String(localized: "Theme folder"),
-                   String(localized: "One JSON file per theme."))
+                   String(localized: "One JSON file per theme. Updates keep your edits."))
         let path = flatLabel("", size: 11.5, color: Tokens.ink3)
         path.font = .monospacedSystemFont(ofSize: 11.5, weight: .regular)
         path.isSelectable = true
@@ -569,7 +598,7 @@ final class ThemeSettingsPane: SettingsPage, NSTextViewDelegate {
         let choose = FlatButton(title: String(localized: "Choose Folder…"), style: .secondary) { [weak self] in self?.chooseFolder() }
         let open = FlatButton(title: String(localized: "Show in Finder"), style: .plain) { [weak self] in
             guard let self else { return }
-            NSWorkspace.shared.activateFileViewerSelecting([ThemeLibrary.file(self.store.state.active, in: self.store.folder)])
+            NSWorkspace.shared.activateFileViewerSelecting([ThemeLibrary.themeFile(self.store.state.active, in: self.store.folder)])
         }
         let reset = FlatButton(title: String(localized: "Use Default"), style: .plain) { [weak self] in self?.store.setFolder(nil) }
         let buttons = NSStackView(views: [reset, open, choose])
