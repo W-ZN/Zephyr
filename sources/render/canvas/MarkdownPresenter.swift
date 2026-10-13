@@ -408,10 +408,10 @@ final class MarkdownPresenter {
         var above: LineMetrics?
         if j > 0 { above = styledMetrics(at: units.range(of: units.firstUnit(ofLine: units.line(ofUnit: j - 1))).location) }
         if let p = above, p.kind == .body {
-            return LineMetrics(kind: .body, font: font, lineHeight: height, quoteDepth: p.quoteDepth, listDepth: p.listDepth, indent: p.indent)
+            return LineMetrics(kind: .body, font: font, lineHeight: height, quoteDepth: p.quoteDepth, listDepth: p.listDepth, quoteBase: p.quoteBase, indent: p.indent)
         }
         if let item = Self.listOwner(ofLine: units.range(of: j).location, in: text).flatMap({ styledMetrics(at: $0.line.location) }) {
-            return LineMetrics(kind: .body, font: font, lineHeight: height, quoteDepth: item.quoteDepth, listDepth: item.listDepth, indent: item.indent, startsBlock: true)
+            return LineMetrics(kind: .body, font: font, lineHeight: height, quoteDepth: item.quoteDepth, listDepth: item.listDepth, quoteBase: item.quoteBase, indent: item.indent, startsBlock: true)
         }
         return LineMetrics(kind: .body, font: font, lineHeight: height, quoteDepth: 0, listDepth: 0, indent: 0, startsBlock: true)
     }

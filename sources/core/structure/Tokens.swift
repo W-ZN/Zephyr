@@ -22,6 +22,9 @@ public struct LineInfo: Sendable, Equatable {
     public var kind: Kind
     public var quoteDepth: Int
     public var listDepth: Int
+    /// List levels that enclose the outermost quote (`- > note`): the quote bar sits inside them. A
+    /// list inside a quote (`> - item`) leaves it 0, so the bar stays the outermost line.
+    public var quoteListBase: Int = 0
     /// First line of a list item (carries the bullet / number).
     public var isListItemStart: Bool
     /// Width in characters of the list marker incl. trailing spaces, for hanging indents.

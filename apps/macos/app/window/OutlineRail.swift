@@ -5,7 +5,7 @@ import ZephyrRender
 /// and darker for higher levels, with a little more room before each chapter, so the column reads
 /// as the document's structure. One tick is in the accent: the section holding the caret. While
 /// the text scrolls, a second mark in the ink color slides along the ticks to show where the
-/// reading is, then fades. Pointing at the column zooms it in around the pointer like a camera:
+/// reading is; it stays, as the document has no scroll bar. Pointing at the column zooms it in around the pointer like a camera:
 /// the ticks spread to readable rows while the one pointed at stays under the pointer, a rounded
 /// surface grows out of them and the titles grow to their left, parents first. Near the pointer,
 /// ticks lengthen and titles brighten as in the Dock; the pointed row's chapter and section stay
@@ -101,7 +101,6 @@ final class OutlineRail: NSView {
     private var pressed = false
     private var openTimer: Timer?
     private var closeTimer: Timer?
-    private var readingTimer: Timer?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -157,8 +156,8 @@ final class OutlineRail: NSView {
         kick()
     }
 
-    /// Where the reading is: `location` is the character at the reading line. While scrolling the
-    /// ink mark shows it and fades a moment after the text stops.
+    /// Where the reading is: `location` is the character at the reading line. The ink mark shows
+    /// it and follows the text while it scrolls.
     func setReading(location: Int, scrolling: Bool) {
         guard !headings.isEmpty else { return }
         // Between the ticks of the section's heading and the next, by how far into it the reading
@@ -170,17 +169,14 @@ final class OutlineRail: NSView {
             let start = headings[next - 1].location, end = headings[next].location
             reading.target = CGFloat(next - 1) + CGFloat(location - start) / CGFloat(max(end - start, 1))
         }
+        // The mark stays: it is the document's position, in place of a scroll bar.
         guard scrolling else {
             reading.snap()
+            readingAlpha.target = 1
+            readingAlpha.snap()
             return redraw()
         }
-        if readingAlpha.value < 0.05 { reading.snap() }
         readingAlpha.target = 1
-        readingTimer?.invalidate()
-        readingTimer = after(0.8) { rail in
-            rail.readingAlpha.target = 0
-            rail.kick()
-        }
         kick()
     }
 

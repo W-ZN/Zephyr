@@ -384,7 +384,10 @@ private struct Builder {
         }
         switch node {
         case is BlockQuote:
-            for l in lineRange(r) { lines[l].quoteDepth = quote + 1 }
+            for l in lineRange(r) {
+                lines[l].quoteDepth = quote + 1
+                if quote == 0 { lines[l].quoteListBase = list }
+            }
             for child in node.children { walk(child, quote: quote + 1, list: list) }
         case let item as ListItem:
             for l in lineRange(r) { lines[l].listDepth = list + 1 }

@@ -4,10 +4,6 @@ import Testing
 @testable import ZephyrRender
 import ZephyrCore
 
-private final class ReaderScrollerDocumentView: NSView {
-    override var isFlipped: Bool { true }
-}
-
 /// The block canvas rendering Markdown (design §4): measured layout, hidden
 /// syntax revealed at the caret, exact undoable edits, and no jump when typing into a new line.
 @MainActor
@@ -34,66 +30,11 @@ private final class ReaderScrollerDocumentView: NSView {
         #expect(editor.blockCanvas.mode == .rendered)
     }
 
-    func openReaderScroller(style: NSScroller.Style, documentHeight: CGFloat) -> (NSWindow, NSScrollView, ReaderScroller) {
-        let window = NSWindow(contentRect: NSRect(x: -20_000, y: 0, width: 480, height: 320), styleMask: [.titled], backing: .buffered, defer: false)
-        window.isReleasedWhenClosed = false
-        let scrollView = NSScrollView(frame: window.contentView!.bounds)
-        let scroller = ReaderScroller()
-        scrollView.verticalScroller = scroller
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.scrollerStyle = style
-        scrollView.autohidesScrollers = false
-        scrollView.documentView = ReaderScrollerDocumentView(frame: NSRect(x: 0, y: 0, width: 480, height: documentHeight))
-        window.contentView = scrollView
-        window.displayIfNeeded()
-        return (window, scrollView, scroller)
-    }
-
-    @Test func readerScrollerUsesNativeKnobGeometry() {
-        for style in [NSScroller.Style.overlay, .legacy] {
-            for documentHeight: CGFloat in [400, 4_000] {
-                let (window, scrollView, scroller) = openReaderScroller(style: style, documentHeight: documentHeight)
-                defer { window.close() }
-                let clip = scrollView.contentView
-                let maximumY = documentHeight - clip.bounds.height
-                #expect(maximumY > 0)
-                let maximumKnobLength = min(ReaderScroller.maximumKnobLength, scroller.rect(for: .knobSlot).height)
-
-                var knobPositions: [CGFloat] = []
-                for fraction: CGFloat in [0, 0.5, 1] {
-                    clip.scroll(to: NSPoint(x: 0, y: maximumY * fraction))
-                    scrollView.reflectScrolledClipView(clip)
-                    window.displayIfNeeded()
-
-                    let nativeKnob = scroller.rect(for: .knob)
-                    let paintedKnob = ReaderScroller.paintedKnobRect(in: nativeKnob, active: fraction == 0.5)
-                    #expect(abs(CGFloat(scroller.floatValue) - fraction) < 0.02)
-                    #expect(nativeKnob.height <= maximumKnobLength + 0.5)
-                    #expect(nativeKnob.contains(paintedKnob), "\(style), document height \(documentHeight), position \(fraction)")
-                    knobPositions.append(nativeKnob.midY)
-                }
-                #expect(abs(knobPositions[1] - knobPositions[0]) > 0.5)
-                #expect(abs(knobPositions[2] - knobPositions[1]) > 0.5)
-            }
-        }
-    }
-
-    @Test func readerScrollerLeavesAFullFitDocumentToAppKit() {
-        for style in [NSScroller.Style.overlay, .legacy] {
-            let (window, _, scroller) = openReaderScroller(style: style, documentHeight: 200)
-            defer { window.close() }
-            #expect(scroller.knobProportion == 0 || scroller.knobProportion == 1)
-            #expect(scroller.floatValue == 0)
-        }
-    }
-
-    @Test func blockCanvasInstallsTheReaderScroller() {
+    @Test func theReadingSurfaceShowsNoScrollBar() {
         let (editor, _) = open(String(repeating: "A long reading line.\n", count: 400))
         let scrollView = editor.blockCanvas.scrollView
-        #expect(scrollView.verticalScroller is ReaderScroller)
-        #expect(scrollView.scrollerStyle == NSScroller.preferredScrollerStyle)
-        #expect(scrollView.autohidesScrollers == (NSScroller.preferredScrollerStyle == .overlay))
+        #expect(!scrollView.hasVerticalScroller)
+        #expect(scrollView.contentView.frame.width == scrollView.bounds.width)
     }
 
     @Test func syntaxHidesAndShowsAtTheCaret() {

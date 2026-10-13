@@ -86,6 +86,16 @@ import Testing
         #expect(a.markers.filter { $0.style == .structural }.map { sub(s, $0.range) } == ["> ", "> > "])
     }
 
+    @Test func aQuoteBarSitsOutsideTheListsInsideItAndInsideTheOnesAroundIt() {
+        // A list in a quote keeps the quote's bar outermost, even on the indented items.
+        let inside = MarkdownAnalyzer.analyze("> intro\n>\n> 1. one\n>    - nested\n> 2. two\n")
+        #expect(inside.lines.filter { $0.quoteDepth == 1 }.allSatisfy { $0.quoteListBase == 0 })
+        #expect(inside.lines.map(\.listDepth).max() == 2)
+        // A quote in a list item sits inside the item.
+        let around = MarkdownAnalyzer.analyze("- item\n  > note\n")
+        #expect(around.lines[1].quoteDepth == 1 && around.lines[1].quoteListBase == 1)
+    }
+
     @Test func codeBlocks() {
         let s = "```swift\nlet $x$ = 1\n```\n"
         let a = MarkdownAnalyzer.analyze(s)

@@ -40,11 +40,13 @@ public final class LineMetrics: NSObject {
     public let collapsedHeight: CGFloat
     public let quoteDepth: Int
     public let listDepth: Int
+    /// List levels outside the outermost quote bar.
+    public let quoteBase: Int
     /// Left indent of the text, used to place bullets and quote bars.
     public let indent: CGFloat
 
     init(kind: Kind, font: NSFont, lineHeight: CGFloat, spacingBefore: CGFloat = 0, spacingAfter: CGFloat = 0,
-         collapsedHeight: CGFloat = 0, quoteDepth: Int, listDepth: Int, indent: CGFloat,
+         collapsedHeight: CGFloat = 0, quoteDepth: Int, listDepth: Int, quoteBase: Int = 0, indent: CGFloat,
          headingLevel: Int = 0, startsBlock: Bool = false, isListItem: Bool = false, startsList: Bool = false) {
         self.kind = kind
         self.lineHeight = lineHeight
@@ -59,6 +61,7 @@ public final class LineMetrics: NSObject {
         self.collapsedHeight = collapsedHeight
         self.quoteDepth = quoteDepth
         self.listDepth = listDepth
+        self.quoteBase = quoteBase
         self.indent = indent
     }
 
@@ -71,7 +74,7 @@ public final class LineMetrics: NSObject {
         return kind == o.kind && lineHeight == o.lineHeight && spacingBefore == o.spacingBefore && spacingAfter == o.spacingAfter
             && headingLevel == o.headingLevel && startsBlock == o.startsBlock && isListItem == o.isListItem && startsList == o.startsList
             && ascent == o.ascent && descent == o.descent && collapsedHeight == o.collapsedHeight
-            && quoteDepth == o.quoteDepth && listDepth == o.listDepth && indent == o.indent
+            && quoteDepth == o.quoteDepth && listDepth == o.listDepth && quoteBase == o.quoteBase && indent == o.indent
     }
 
     public override var hash: Int { Int(lineHeight * 64) ^ (headingLevel << 8) ^ (listDepth << 12) ^ (quoteDepth << 16) }

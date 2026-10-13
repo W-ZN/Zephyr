@@ -146,13 +146,10 @@ public final class BlockCanvas: NSObject {
         if mode == .rendered, let context { presenter = MarkdownPresenter(canvas: self, context: context, typography: typography) }
         view.canvas = self
         scrollView.documentView = view
-        scrollView.verticalScroller = ReaderScroller()
-        scrollView.hasVerticalScroller = true
+        // No scroll bar, in any "Show scroll bars" mode: the outline's reading mark is the position
+        // indicator, and the text still scrolls by wheel, trackpad and keys.
+        scrollView.hasVerticalScroller = false
         scrollView.hasHorizontalScroller = false
-        // Follow the system's "Show scroll bars" choice. In legacy mode the reading surface keeps
-        // a reserved gutter, while overlay mode remains clear of the canvas's reading margins.
-        scrollView.scrollerStyle = NSScroller.preferredScrollerStyle
-        scrollView.autohidesScrollers = scrollView.scrollerStyle == .overlay
         scrollView.drawsBackground = true
         scrollView.backgroundColor = Tokens.canvas
         view.autoresizingMask = [.width]
@@ -307,7 +304,6 @@ public final class BlockCanvas: NSObject {
         lastUse.removeAll()
         cachedCost = 0
         view.needsDisplay = true
-        scrollView.verticalScroller?.needsDisplay = true
     }
 
     // MARK: - Layout
@@ -959,7 +955,7 @@ public final class BlockCanvas: NSObject {
         let skip = content.quoteSkip
         guard height - skip > 0 else { return }
         Palette.quoteBar.setFill()
-        let base = columnX + CGFloat(m.listDepth) * typography.listIndent
+        let base = columnX + CGFloat(m.quoteBase) * typography.listIndent
         for d in 0..<m.quoteDepth {
             // Square ends: one unit's bar meets the next without a notch.
             NSRect(x: base + CGFloat(d) * typography.quoteIndent, y: unitTop + skip, width: 3, height: height - skip).fill()

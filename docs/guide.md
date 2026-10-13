@@ -56,7 +56,7 @@ JSON, XML and common source files receive native syntax colors. Clicking next to
 
 ## Reading controls and the assistant
 
-The body scrollbar draws its colors from the current theme. Its thumb follows the document's position, with a maximum length of about 120 pt; below this cap, its length follows the visible proportion. Dragging, track clicks and accessibility use the same native knob geometry. It follows the system's preference for overlay or always-visible scrollbars. Hovering or dragging makes it more prominent without covering the reading column.
+The document has no scroll bar, in any "Show scroll bars" setting: it scrolls by wheel, trackpad and keys, and the outline's ink mark shows where the reading is (it follows the text and stays, beside the accent tick of the section holding the caret). Click a tick to jump. A document without headings has no position mark.
 
 The assistant panel starts closed, and its corner button is hidden by default. **Settings → General → Assistant button** shows the entry. Existing explicit preferences are retained, and ⌘J opens the assistant with either choice.
 

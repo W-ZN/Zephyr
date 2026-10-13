@@ -137,14 +137,14 @@ final class MarkdownStyler {
             font = typography.headingFont(level: level)
             if line.quoteDepth == 0 { color = Palette.heading(level: level) }
             metrics = LineMetrics(kind: .heading, font: font, lineHeight: typography.lineHeight(for: font, kind: .heading),
-                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent,
+                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent,
                                   headingLevel: level, startsBlock: starts, isListItem: line.isListItemStart, startsList: line.startsList)
         case .setextUnderline:
             color = Palette.faint
             var level = 1
             if index > 0, case let .heading(l) = a.lines[index - 1].kind { level = l }
             metrics = LineMetrics(kind: .setextUnderline, font: font, lineHeight: typography.lineHeight(for: font, kind: .body),
-                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent, headingLevel: level)
+                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent, headingLevel: level)
         case .codeFence:
             // Collapsed or shown, the fence keeps its band (the shown height is set by the same rounding).
             font = typography.fenceFont
@@ -153,7 +153,7 @@ final class MarkdownStyler {
             let band = typography.fenceBand
             let leading = max(0, (band - font.ascender + font.descender) / 2)
             metrics = LineMetrics(kind: .fence, font: font, lineHeight: band,
-                                  collapsedHeight: round(font.ascender + leading) + round(-font.descender + leading), quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent,
+                                  collapsedHeight: round(font.ascender + leading) + round(-font.descender + leading), quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent,
                                   startsBlock: starts, isListItem: line.isListItemStart, startsList: line.startsList)
         case .code:
             font = typography.codeFont
@@ -165,31 +165,31 @@ final class MarkdownStyler {
             let pad = fenced ? 0 : round(typography.codePadding * 0.85)
             metrics = LineMetrics(kind: .code, font: font, lineHeight: typography.lineHeight(for: font, kind: .code),
                                   spacingBefore: first ? pad : 0, spacingAfter: last ? pad : 0,
-                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent,
+                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent,
                                   startsBlock: starts, isListItem: line.isListItemStart, startsList: line.startsList)
         case .html:
             font = typography.codeFont
             color = Palette.muted
             metrics = LineMetrics(kind: .code, font: font, lineHeight: typography.lineHeight(for: font, kind: .code),
-                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent,
+                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent,
                                   startsBlock: starts, isListItem: line.isListItemStart, startsList: line.startsList)
         case .component:
             font = typography.codeFont
             color = Palette.muted
             metrics = LineMetrics(kind: .component, font: font, lineHeight: typography.lineHeight(for: font, kind: .code),
-                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent,
+                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent,
                                   startsBlock: starts, isListItem: line.isListItemStart, startsList: line.startsList)
         case .blank:
             metrics = LineMetrics(kind: isCode ? .code : .blank, font: isCode ? typography.codeFont : font,
                                   lineHeight: isCode ? typography.lineHeight(for: typography.codeFont, kind: .code) : typography.blankLineHeight,
-                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent)
+                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent)
             if isCode {
                 font = typography.codeFont
                 codeInset = typography.codePadding
             }
         case .paragraph:
             metrics = LineMetrics(kind: .body, font: font, lineHeight: typography.lineHeight(for: font, kind: .body),
-                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, indent: indent,
+                                  quoteDepth: line.quoteDepth, listDepth: line.listDepth, quoteBase: line.quoteListBase, indent: indent,
                                   startsBlock: starts, isListItem: line.isListItemStart, startsList: line.startsList)
         }
         // Body text takes the theme's alignment, and a paragraph's first line its indent (never
