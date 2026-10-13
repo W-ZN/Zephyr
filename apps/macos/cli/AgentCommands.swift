@@ -59,6 +59,7 @@ enum AgentCommands {
         case "find":
             var r = request(.search, session: session)
             r.folder = flag("--folder")
+            r.related = flag("--related") ? true : nil
             guard let query = rest.first else { fail(usage) }
             r.query = query
             for m in call(r).matches ?? [] { print("\(m.file):\(m.line): \(m.text)") }

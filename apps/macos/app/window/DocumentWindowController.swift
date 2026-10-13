@@ -86,6 +86,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         NotificationCenter.default.addObserver(self, selector: #selector(themeChanged), name: AppearanceStore.didChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(frontMatterChanged), name: Preferences.frontMatterDidChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(remoteImagesChanged), name: Preferences.remoteImagesDidChange, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(animateImagesChanged), name: Preferences.animateImagesDidChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(agentAccessChanged), name: AgentAccess.didChange, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(pageMoved(_:)), name: SpaceStore.pageMoved, object: nil)
         canvas.setMinimal(UserDefaults.standard.bool(forKey: Preferences.minimalMode))
@@ -154,6 +155,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         editor.newline = doc.encoding.newline
         editor.frontMatterCollapsed = UserDefaults.standard.bool(forKey: Preferences.frontMatterCollapsed)
         editor.remoteImagesPreferred = UserDefaults.standard.bool(forKey: Preferences.remoteImages)
+        editor.animatesImages = UserDefaults.standard.bool(forKey: Preferences.animateImages)
         connect(editor)
         doc.editor = editor
         tab.document = doc
@@ -1012,15 +1014,31 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         }
         searchTask = Task.detached(priority: .userInitiated) { [weak self] in
             let files = known ?? FolderScanner.markdownFiles(in: root, isCancelled: { Task.isCancelled })
-            var found = false
+            var found = 0
+            var literal = Set<String>()
             FolderScanner.search(query, in: files, isCancelled: { Task.isCancelled }) { batch in
-                found = true
+                found += batch.count
+                literal.formUnion(batch.map { "\($0.file.relativePath):\($0.line)" })
                 DispatchQueue.main.async {
                     guard let self, self.searchGeneration == generation else { return }
                     self.canvas.sidebar.appendResults(batch)
                 }
             }
-            await finished(!found)
+            // Words rather than one exact string, or nothing literal to show: rank passages too.
+            var related: [FolderScanner.Match] = []
+            if !Task.isCancelled, found < 5 || RelatedSearch.termCount(of: query) > 1 {
+                related = RelatedSearch.search(query, in: files, expander: NeighborExpander(), isCancelled: { Task.isCancelled })
+                    .map(FolderScanner.Match.init(related:))
+                    .filter { !literal.contains("\($0.file.relativePath):\($0.line)") }
+            }
+            if !related.isEmpty {
+                let shown = related
+                DispatchQueue.main.async {
+                    guard let self, self.searchGeneration == generation else { return }
+                    self.canvas.sidebar.setRelated(shown)
+                }
+            }
+            await finished(found == 0 && related.isEmpty)
         }
     }
 
@@ -1207,14 +1225,26 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         canvas.toggleOutlineCard()
     }
 
+    // MARK: Find (the document's own bar, FindController)
+
+    @objc func showFind(_ sender: Any?) { editor?.find.show() }
+    @objc func showFindAndReplace(_ sender: Any?) { editor?.find.show(replace: true) }
+    @objc func findNext(_ sender: Any?) { editor?.find.next() }
+    @objc func findPrevious(_ sender: Any?) { editor?.find.previous() }
+    @objc func useSelectionForFind(_ sender: Any?) { editor?.find.useSelection() }
+
     @objc func showScopeSearch(_ sender: Any?) {
-        if scopeRoot == nil { expandScope(to: nil, explicit: false) }
-        canvas.setSidebar(visible: true)
         var selected: String?
         if let editor, (1...200).contains(editor.selectedRange.length) {
             selected = (editor.string as NSString).substring(with: editor.selectedRange)
         }
-        canvas.sidebar.focusSearch(with: selected)
+        showScopeSearch(for: selected)
+    }
+
+    func showScopeSearch(for text: String?) {
+        if scopeRoot == nil { expandScope(to: nil, explicit: false) }
+        canvas.setSidebar(visible: true)
+        canvas.sidebar.focusSearch(with: text)
     }
 
     @objc func openQuickly(_ sender: Any?) {
@@ -1327,6 +1357,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
         for editor in tabs.compactMap(\.editor) { editor.frontMatterCollapsed = UserDefaults.standard.bool(forKey: Preferences.frontMatterCollapsed) }
     }
 
+    @objc private func animateImagesChanged() {
+        for editor in tabs.compactMap(\.editor) { editor.animatesImages = UserDefaults.standard.bool(forKey: Preferences.animateImages) }
+    }
+
     @objc private func remoteImagesChanged() {
         for editor in tabs.compactMap(\.editor) { editor.remoteImagesPreferred = UserDefaults.standard.bool(forKey: Preferences.remoteImages) }
     }
@@ -1348,6 +1382,10 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate, NSMe
             return openTabs.count > 1
         case #selector(mergeAllWindows(_:)):
             return Self.all.count > 1
+        case #selector(showFind(_:)), #selector(findNext(_:)), #selector(findPrevious(_:)), #selector(useSelectionForFind(_:)):
+            return editor != nil && panel == nil
+        case #selector(showFindAndReplace(_:)):
+            return editor?.isEditable == true && panel == nil
         case #selector(showInFinder(_:)), #selector(useEnclosingFolder(_:)):
             return fileURL != nil
         case #selector(closeScope(_:)):

@@ -99,6 +99,17 @@ enum LaunchMode {
                 case "search": controller.showScopeSearch(nil)
                 default: break
                 }
+                // -ZephyrFind text [-ZephyrReplace text]: the Find bar open on that search (and its replace row).
+                if let find = UserDefaults.standard.string(forKey: "ZephyrFind") {
+                    let replacement = UserDefaults.standard.string(forKey: "ZephyrReplace")
+                    editor.find.show(replace: replacement != nil)
+                    editor.find.queryChanged(find)
+                    if let replacement { editor.find.setReplacement(replacement) }
+                }
+                // -ZephyrSearch text: the sidebar's folder search open on that text.
+                if let search = UserDefaults.standard.string(forKey: "ZephyrSearch") {
+                    controller.showScopeSearch(for: search)
+                }
                 // -ZephyrAIPanel YES|demo: the AI panel open (demo: with a sample exchange), early
                 // enough for its slide-in to finish before the capture.
                 if let ai = UserDefaults.standard.string(forKey: "ZephyrAIPanel") {

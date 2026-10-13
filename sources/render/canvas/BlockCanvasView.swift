@@ -1,9 +1,9 @@
 import AppKit
 
-/// The document view of `BlockCanvas`: the text input client, selection owner, find-bar client
+/// The document view of `BlockCanvas`: the text input client, selection owner
 /// and VoiceOver text area (design §2 principle 6: system input methods, keyboard paths and
 /// accessibility come first, also on Zephyr's own canvas).
-public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClient, NSMenuItemValidation {
+public final class BlockCanvasView: NSView, NSTextInputClient, NSMenuItemValidation {
     weak var canvas: BlockCanvas!
     /// The document: clicks on rendered things, list continuation, the slash menu, block moves.
     weak var editor: MarkdownEditor?
@@ -30,15 +30,6 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     var dragged: NSRange?
     /// Where a drop would land.
     var dropCaret: Int?
-    private lazy var finder: NSTextFinder = {
-        let finder = NSTextFinder()
-        finder.client = self
-        finder.findBarContainer = canvas.scrollView
-        finder.isIncrementalSearchingEnabled = true
-        finder.incrementalSearchingShouldDimContentView = false
-        return finder
-    }()
-
     override init(frame: NSRect) {
         super.init(frame: frame)
         caret.color = Tokens.accent
@@ -789,7 +780,7 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
     public override func insertBacktab(_ sender: Any?) { _ = editor?.shiftListItem(outdent: true) == true || editor?.nestBlock(outdent: true) == true }
     public override func insertTabIgnoringFieldEditor(_ sender: Any?) { insertTab(sender) }
     public override func cancelOperation(_ sender: Any?) {
-        if hasMarkedText() { unmarkText() } else { nextResponder?.tryToPerform(#selector(cancelOperation(_:)), with: sender) }
+        if hasMarkedText() { unmarkText() } else if editor?.find.isOpen == true { editor?.find.close() } else { nextResponder?.tryToPerform(#selector(cancelOperation(_:)), with: sender) }
     }
 
     @objc public func copy(_ sender: Any?) {
@@ -826,14 +817,6 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
 
     @objc public func pasteAsPlainText(_ sender: Any?) { paste(sender) }
 
-    @objc public override func performTextFinderAction(_ sender: Any?) {
-        guard let tag = (sender as? NSValidatedUserInterfaceItem)?.tag, let action = NSTextFinder.Action(rawValue: tag) else { return }
-        finder.performAction(action)
-    }
-
-    /// The Find menu sends the TextKit selector; its tags match `NSTextFinder.Action`.
-    @objc public func performFindPanelAction(_ sender: Any?) { performTextFinderAction(sender) }
-
     public func validateMenuItem(_ item: NSMenuItem) -> Bool {
         switch item.action {
         // Formats are text edits and work in plain text too; moving blocks needs the rendered structure.
@@ -849,9 +832,6 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         case #selector(copy(_:)): return canvas.selection.length > 0 || focusedComponent != nil
         case #selector(cut(_:)): return canvas.isEditable && (canvas.selection.length > 0 || focusedComponent != nil)
         case #selector(paste(_:)), #selector(pasteAsPlainText(_:)): return canvas.isEditable && NSPasteboard.general.string(forType: .string) != nil
-        case #selector(performFindPanelAction(_:)), #selector(performTextFinderAction(_:)):
-            guard let action = NSTextFinder.Action(rawValue: item.tag) else { return false }
-            return finder.validateAction(action)
         default: return true
         }
     }
@@ -941,40 +921,6 @@ public final class BlockCanvasView: NSView, NSTextInputClient, NSTextFinderClien
         guard let window else { return NSNotFound }
         return canvas.characterIndex(at: convert(window.convertPoint(fromScreen: point), from: nil))
     }
-
-    // MARK: - NSTextFinderClient
-
-    public var string: String { canvas.text as String }
-    public var isSelectable: Bool { true }
-    public var allowsMultipleSelection: Bool { false }
-    // AppKit asks while detaching a closing window, after its document may have gone away.
-    public var isEditable: Bool { canvas?.isEditable == true }
-    public var firstSelectedRange: NSRange { canvas.selection }
-    public var selectedRanges: [NSValue] {
-        get { [NSValue(range: canvas.selection)] }
-        set {
-            guard let r = newValue.first?.rangeValue else { return }
-            anchor = r.location
-            head = NSMaxRange(r)
-            canvas.select(r)
-        }
-    }
-    public func scrollRangeToVisible(_ range: NSRange) {
-        canvas.scroll(toCharacter: range.location, margin: canvas.scrollView.contentView.bounds.height / 3)
-    }
-    public var visibleCharacterRanges: [NSValue] { [NSValue(range: canvas.visibleCharacterRange)] }
-    public func rects(forCharacterRange range: NSRange) -> [NSValue]? { canvas.rects(for: range).map { NSValue(rect: $0) } }
-    public func contentView(at index: Int, effectiveCharacterRange outRange: NSRangePointer) -> NSView {
-        outRange.pointee = NSRange(location: 0, length: ns.length)
-        return self
-    }
-    public func drawCharacters(in range: NSRange, forContentView view: NSView) {
-        guard let context = NSGraphicsContext.current?.cgContext else { return }
-        for rect in canvas.rects(for: range) { canvas.draw(rect, in: context, background: false) }
-    }
-    public func shouldReplaceCharacters(inRanges ranges: [NSValue], with strings: [String]) -> Bool { canvas.isEditable }
-    public func replaceCharacters(in range: NSRange, with string: String) { canvas.replace(range, with: string, actionName: String(localized: "Replace")) }
-    public func didReplaceCharacters() {}
 
     // MARK: - Accessibility (a text area: value, selection, lines, frames)
 

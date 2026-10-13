@@ -20,6 +20,9 @@ public struct AgentRequest: Codable, Sendable {
     /// `search`: literal text; `folder` searches the folder scope instead of the document.
     public var query: String?
     public var folder: Bool?
+    /// `search`: rank passages of the folder scope by relevance to the words of `query` instead
+    /// of matching its text literally.
+    public var related: Bool?
     /// `propose`
     public var edits: [ProposedEdit]?
     public var summary: String?

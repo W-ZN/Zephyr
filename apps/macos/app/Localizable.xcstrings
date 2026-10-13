@@ -81,6 +81,16 @@
         }
       }
     },
+    "%@ results" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 个结果"
+          }
+        }
+      }
+    },
     "%@ seconds" : {
       "localizations" : {
         "zh-Hans" : {
@@ -247,6 +257,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "列出了 %lld 个模型。"
+          }
+        }
+      }
+    },
+    "%lld of %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld / %@"
           }
         }
       }
@@ -651,6 +671,16 @@
         }
       }
     },
+    "All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
     "Allow Agent Access" : {
       "localizations" : {
         "zh-Hans" : {
@@ -691,6 +721,16 @@
         }
       }
     },
+    "Animated GIFs" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动图"
+          }
+        }
+      }
+    },
     "Another app changed this file where you are editing." : {
       "localizations" : {
         "zh-Hans" : {
@@ -707,6 +747,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "应用"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
           }
         }
       }
@@ -747,6 +797,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重启后生效。"
+          }
+        }
+      }
+    },
+    "Applies to PDF, images and HTML." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适用于 PDF、图片和 HTML。"
           }
         }
       }
@@ -2271,6 +2331,16 @@
         }
       }
     },
+    "Find and Replace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找并替换"
+          }
+        }
+      }
+    },
     "Find and Replace…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3001,6 +3071,16 @@
         }
       }
     },
+    "Invalid pattern" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表达式无效"
+          }
+        }
+      }
+    },
     "Italic" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3381,6 +3461,16 @@
         }
       }
     },
+    "Match Case" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "区分大小写"
+          }
+        }
+      }
+    },
     "Math Block" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3701,6 +3791,16 @@
         }
       }
     },
+    "Next Match" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一个匹配"
+          }
+        }
+      }
+    },
     "Next: %@" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3797,6 +3897,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前没有网络连接。本地文件仍可预览。"
+          }
+        }
+      }
+    },
+    "No results" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无结果"
           }
         }
       }
@@ -4321,6 +4431,16 @@
         }
       }
     },
+    "Play them while on screen; still with Reduce Motion." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在屏幕上时播放；开启“减弱动态效果”时保持静止。"
+          }
+        }
+      }
+    },
     "Position" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4367,6 +4487,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "预览等待时间"
+          }
+        }
+      }
+    },
+    "Previous Match" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一个匹配"
           }
         }
       }
@@ -4621,6 +4751,36 @@
         }
       }
     },
+    "Regular Expression" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正则表达式"
+          }
+        }
+      }
+    },
+    "Related" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相关"
+          }
+        }
+      }
+    },
+    "Related passages" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相关段落"
+          }
+        }
+      }
+    },
     "Relative to the text." : {
       "localizations" : {
         "zh-Hans" : {
@@ -4771,12 +4931,42 @@
         }
       }
     },
+    "Replace All" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部替换"
+          }
+        }
+      }
+    },
     "Replace exported files?" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "替换已存在的导出文件？"
+          }
+        }
+      }
+    },
+    "Replace this match" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换当前匹配"
+          }
+        }
+      }
+    },
+    "Replaced %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已替换 %lld 处"
           }
         }
       }
@@ -5297,6 +5487,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "显示上一个文档"
+          }
+        }
+      }
+    },
+    "Show Replace" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示替换"
           }
         }
       }
@@ -6647,6 +6847,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "“文件 → 导出为”的初始选项。"
+          }
+        }
+      }
+    },
+    "Whole Word" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全字匹配"
           }
         }
       }

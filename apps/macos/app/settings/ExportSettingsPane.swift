@@ -39,6 +39,13 @@ final class ExportSettingsPane: SettingsPage {
         theme.widthAnchor.constraint(equalToConstant: 220).isActive = true
         addRow(String(localized: "Theme"), nil, control: theme)
 
+        // Light, dark, or whatever macOS shows when the export runs; the first keeps the theme's own choice.
+        let modes: [MarkdownExport.Settings.Appearance?] = [nil, .system, .light, .dark]
+        let appearance = SegmentedPicker(items: [String(localized: "Theme"), String(localized: "Follow System"), String(localized: "Light"), String(localized: "Dark")])
+        appearance.selectedIndex = modes.firstIndex(of: export.appearance) ?? 0
+        appearance.onChange = { [weak self] index in self?.update { $0.appearance = modes[index] } }
+        addRow(String(localized: "Appearance"), String(localized: "Applies to PDF, images and HTML."), control: appearance)
+
         // What every visual format shares: the text and the room around it.
         addSection(String(localized: "Page"))
         let size = optionPopUp(ExportOptionsView.textSizes(keeping: export.textSize), selected: export.textSize) { [weak self] value in self?.update { $0.textSize = value } }

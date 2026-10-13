@@ -14,6 +14,7 @@ final class ExportOptionsView: NSView {
     private let grid = NSGridView()
     private let format = NSPopUpButton()
     private let theme = NSPopUpButton()
+    private let mode = NSPopUpButton()
     private let paper = NSPopUpButton()
     private let margin = NSPopUpButton()
     private let width = NSPopUpButton()
@@ -29,6 +30,8 @@ final class ExportOptionsView: NSView {
             guard let (title, id) = choice else { theme.menu?.addItem(.separator()); continue }
             add(title, id, to: theme)
         }
+        add(String(localized: "Same as theme"), "", to: mode)
+        for (title, appearance) in [(String(localized: "Follow System"), MarkdownExport.Settings.Appearance.system), (String(localized: "Light"), .light), (String(localized: "Dark"), .dark)] { add(title, appearance.rawValue, to: mode) }
         for paper in MarkdownExport.Settings.Paper.allCases { add(paper == .letter ? String(localized: "Letter") : String(localized: "A4"), paper.rawValue, to: self.paper) }
         for value in Self.including(settings.margin, in: [0, 36, 54, 72]) { add(value == 0 ? String(localized: "None") : "\(Int(value)) pt", value, to: margin) }
         for value in Self.including(settings.rasterWidth, in: [480, 612, 768, 1024]) { add("\(Int(value)) pt", value, to: width) }
@@ -37,19 +40,20 @@ final class ExportOptionsView: NSView {
         for choice in Self.lineHeights(keeping: settings.lineHeight) { add(choice.title, choice.value.map { NSNumber(value: Double($0)) } ?? NSNull(), to: height) }
         select(settings.format.rawValue, in: format)
         select(settings.themeID ?? "", in: theme)
+        select(settings.appearance?.rawValue ?? "", in: mode)
         select(settings.paper.rawValue, in: paper)
         select(settings.margin, in: margin)
         select(settings.rasterWidth, in: width)
         select(settings.rasterScale, in: scale)
         selectOptional(settings.textSize, in: size)
         selectOptional(settings.lineHeight, in: height)
-        for popUp in [format, theme, size, height, paper, margin, width, scale] {
+        for popUp in [format, theme, mode, size, height, paper, margin, width, scale] {
             popUp.target = self
             popUp.action = #selector(changed)
         }
 
         let rows: [(String, NSPopUpButton)] = [(String(localized: "Format"), format), (String(localized: "Theme"), theme),
-                                               (String(localized: "Text size"), size), (String(localized: "Line height"), height),
+                                               (String(localized: "Appearance"), mode), (String(localized: "Text size"), size), (String(localized: "Line height"), height),
                                                (String(localized: "Paper size"), paper), (String(localized: "Margins"), margin),
                                                (String(localized: "Page width"), width), (String(localized: "Scale"), scale)]
         for (title, popUp) in rows {
@@ -137,10 +141,11 @@ final class ExportOptionsView: NSView {
 
     @objc private func changed() {
         let theme: String? = value(theme)
+        let chosen = (value(mode) as String?).flatMap(MarkdownExport.Settings.Appearance.init(rawValue:))
         settings = MarkdownExport.Settings(format: value(format).flatMap(MarkdownExport.Format.init(rawValue:)) ?? settings.format,
                                            themeID: theme, paper: value(paper).flatMap(MarkdownExport.Settings.Paper.init(rawValue:)) ?? settings.paper,
                                            margin: value(margin) ?? settings.margin, rasterWidth: value(width) ?? settings.rasterWidth,
-                                           rasterScale: value(scale) ?? settings.rasterScale, textSize: optional(size), lineHeight: optional(height))
+                                           rasterScale: value(scale) ?? settings.rasterScale, textSize: optional(size), lineHeight: optional(height), appearance: chosen)
         showRows()
         onChange?(settings)
     }
@@ -149,10 +154,10 @@ final class ExportOptionsView: NSView {
     /// both; plain text has no theme and no text settings.
     private func showRows() {
         let format = settings.format
-        for row in [1, 2, 3] { grid.row(at: row).isHidden = format == .txt }
-        grid.row(at: 4).isHidden = format != .pdf
-        grid.row(at: 5).isHidden = format != .pdf && format != .png && format != .jpg
-        for row in [6, 7] { grid.row(at: row).isHidden = format != .png && format != .jpg }
+        for row in [1, 2, 3, 4] { grid.row(at: row).isHidden = format == .txt }
+        grid.row(at: 5).isHidden = format != .pdf
+        grid.row(at: 6).isHidden = format != .pdf && format != .png && format != .jpg
+        for row in [7, 8] { grid.row(at: row).isHidden = format != .png && format != .jpg }
         // The save panel keeps the width it first gave the options: a narrower fit would leave
         // them off center under the panel, so the width only grows; the height follows the rows.
         let fit = fittingSize

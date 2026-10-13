@@ -936,6 +936,11 @@ final class GeneralSettingsPane: SettingsPage {
                    d.set(on, forKey: Preferences.remoteImages)
                    NotificationCenter.default.post(name: Preferences.remoteImagesDidChange, object: nil)
                })
+        addRow(String(localized: "Animated GIFs"), String(localized: "Play them while on screen; still with Reduce Motion."),
+               control: FlatToggle(isOn: d.bool(forKey: Preferences.animateImages)) { on in
+                   d.set(on, forKey: Preferences.animateImages)
+                   NotificationCenter.default.post(name: Preferences.animateImagesDidChange, object: nil)
+               })
         addRow(String(localized: "Link previews"), String(localized: "Pause the pointer over a link."),
                control: FlatToggle(isOn: d.bool(forKey: Preferences.linkPreviews)) { on in d.set(on, forKey: Preferences.linkPreviews) })
         let delay = FlatPopUpButton()

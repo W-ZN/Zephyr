@@ -26,6 +26,12 @@ final class RemoteImages {
     private var queued: [URL] = []
     private var running = 0
     private var session: URLSession?
+    /// The bytes of the latest few animated GIFs, so they can play (each at most `byteLimit`).
+    private var animations: [URL: Data] = [:]
+    private var animationOrder: [URL] = []
+    nonisolated static let animationLimit = 3
+
+    func animation(for url: URL) -> Data? { animations[url] }
 
     static func key(_ url: URL) -> ImageCache.Key { ImageCache.Key(url: url, modificationDate: nil, fileSize: nil) }
 
@@ -68,13 +74,19 @@ final class RemoteImages {
             self.session = session
             Task.detached(priority: .utility) {
                 let result = await Self.fetch(url, session: session)
-                await MainActor.run { RemoteImages.shared.finish(url, result) }
+                await MainActor.run { RemoteImages.shared.finish(url, result?.image, gif: result?.gif) }
             }
         }
     }
 
-    private func finish(_ url: URL, _ result: (CGImage, CGSize)?) {
+    private func finish(_ url: URL, _ result: (CGImage, CGSize)?, gif: Data?) {
         running -= 1
+        if let gif {
+            animations[url] = gif
+            animationOrder.removeAll { $0 == url }
+            animationOrder.append(url)
+            while animationOrder.count > Self.animationLimit { animations[animationOrder.removeFirst()] = nil }
+        }
         if let (image, size) = result {
             if sizes.updateValue(size, forKey: url) == nil { sizeOrder.append(url) }
             if sizeOrder.count > Self.sizeLimit { sizes[sizeOrder.removeFirst()] = nil }
@@ -100,7 +112,7 @@ final class RemoteImages {
         return URLSession(configuration: configuration)
     }
 
-    private nonisolated static func fetch(_ url: URL, session: URLSession) async -> (CGImage, CGSize)? {
+    private nonisolated static func fetch(_ url: URL, session: URLSession) async -> (image: (CGImage, CGSize), gif: Data?)? {
         var request = URLRequest(url: url)
         request.setValue("image/*", forHTTPHeaderField: "Accept")
         guard let (bytes, response) = try? await session.bytes(for: request),
@@ -115,8 +127,9 @@ final class RemoteImages {
             }
         } catch { return nil }
         let type = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
-        if type.contains("svg") || isSVG(data) { return rasterizeSVG(data) }
-        return decode(data)
+        if type.contains("svg") || isSVG(data) { return rasterizeSVG(data).map { ($0, nil) } }
+        // Animated GIFs keep their bytes (bounded above) for the player.
+        return decode(data).map { ($0, GIFPlayer.info(of: .data(data)) != nil ? data : nil) }
     }
 
     nonisolated static func isSVG(_ data: Data) -> Bool {

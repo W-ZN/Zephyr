@@ -56,6 +56,9 @@ public enum MarkdownExport {
             }
         }
 
+        /// Light, dark or whatever macOS shows at export time.
+        public enum Appearance: String, CaseIterable, Sendable, Codable { case system, light, dark }
+
         public var format: Format
         /// nil follows the currently selected reader theme; a value is a stable theme ID or name.
         public var themeID: String?
@@ -69,6 +72,8 @@ public enum MarkdownExport {
         public var textSize: CGFloat?
         /// Line height as a multiple of the text size; nil follows the theme.
         public var lineHeight: CGFloat?
+        /// Light or dark for the output; nil keeps the theme's own choice (its Light or dark setting).
+        public var appearance: Appearance?
 
         public static let textSizes: ClosedRange<CGFloat> = 11...28
         public static let lineHeights: ClosedRange<CGFloat> = 1.2...2.4
@@ -81,7 +86,8 @@ public enum MarkdownExport {
             ["US", "CA"].contains(Locale.current.region?.identifier ?? "") ? .letter : .a4
         }
 
-        public init(format: Format = .pdf, themeID: String? = nil, paper: Paper = Settings.regionalPaper, margin: CGFloat = 36, rasterWidth: CGFloat = 612, rasterScale: CGFloat = 2, textSize: CGFloat? = Settings.defaultTextSize, lineHeight: CGFloat? = nil) {
+        public init(format: Format = .pdf, themeID: String? = nil, paper: Paper = Settings.regionalPaper, margin: CGFloat = 36, rasterWidth: CGFloat = 612, rasterScale: CGFloat = 2, textSize: CGFloat? = Settings.defaultTextSize, lineHeight: CGFloat? = nil, appearance: Appearance? = nil) {
+            self.appearance = appearance
             self.format = format
             self.themeID = themeID?.isEmpty == false ? themeID : nil
             self.paper = paper
@@ -120,6 +126,7 @@ public enum MarkdownExport {
             // Added later: files written before have neither, and follow the theme.
             let textSize = try values.decodeIfPresent(CGFloat.self, forKey: .textSize)
             let lineHeight = try values.decodeIfPresent(CGFloat.self, forKey: .lineHeight)
+            let appearance = try values.decodeIfPresent(Appearance.self, forKey: .appearance)
             guard (0...144).contains(margin), (320...1440).contains(rasterWidth), [1, 2, 3].contains(rasterScale),
                   textSize.map(Self.textSizes.contains) ?? true, lineHeight.map(Self.lineHeights.contains) ?? true else {
                 throw DecodingError.dataCorruptedError(forKey: .margin, in: values, debugDescription: "Export settings contain a value outside its supported range.")
@@ -132,6 +139,7 @@ public enum MarkdownExport {
             self.rasterScale = rasterScale
             self.textSize = textSize
             self.lineHeight = lineHeight
+            self.appearance = appearance
         }
     }
 
@@ -218,6 +226,7 @@ public enum MarkdownExport {
         // The export's own text size and line height replace the theme's; the rest scales with them.
         if let size = export.textSize { try settings.set("text.size", value: .number(Double(size))) }
         if let height = export.lineHeight { try settings.set("text.lineHeight", value: .number(Double(height))) }
+        if let appearance = export.appearance { try settings.set("appearance", value: .text(appearance.rawValue)) }
         // …and over the theme's custom CSS, which would otherwise set them again.
         var css = CustomStyle.parse(settings.string("css"), baseSize: settings.number("text.size") ?? 16).style
         if export.textSize != nil { css.typography["text.size"] = nil }

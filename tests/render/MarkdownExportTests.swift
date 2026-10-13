@@ -277,6 +277,36 @@ import ZephyrCore
         #expect(NSApplication.shared.appearance?.name == beforeAppearance)
     }
 
+    /// The export's own Light, Dark or Follow System choice replaces the theme's, in every visual format.
+    @Test func exportAppearanceOverridesTheThemesLightOrDark() throws {
+        let folder = try folder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let themes = FileManager.default.temporaryDirectory.appendingPathComponent("zephyr-export-themes-\(UUID())").path
+        // A theme pinned light, exported dark, and one pinned dark, exported light.
+        for (pinned, chosen, background) in [("light", MarkdownExport.Settings.Appearance.dark, "#1F1E1D"), ("dark", .light, "")] as [(String, MarkdownExport.Settings.Appearance, String)] {
+            var appearance = AppearanceState(active: "anthology", themesFolder: themes)
+            appearance.adjustments["anthology"] = ["appearance": .text(pinned)]
+            let export = MarkdownExport.Settings(themeID: "anthology", rasterWidth: 480, rasterScale: 1, textSize: nil, appearance: chosen)
+            let typography = try MarkdownExport.typography(for: export, appearance: appearance)
+            #expect(typography.settings.string("appearance") == chosen.rawValue)
+            let png = folder.appendingPathComponent("\(pinned).png")
+            try MarkdownExport.write(text: "# Mode\n", typography: typography, baseURL: folder, format: .png, output: png, settings: export)
+            let image = try #require(NSBitmapImageRep(data: Data(contentsOf: png)))
+            let page = try pixel(image, x: 0, y: 0)
+            if chosen == .dark { #expect(page == [0x1F, 0x1E, 0x1D]) } else { #expect(page != [0x1F, 0x1E, 0x1D], "light output on a theme pinned dark") }
+            let html = folder.appendingPathComponent("\(pinned).html")
+            try MarkdownExport.write(text: "# Mode\n", typography: typography, baseURL: folder, format: .html, output: html, settings: export)
+            #expect(try String(contentsOf: html, encoding: .utf8).contains("background:#1F1E1D") == (chosen == .dark))
+        }
+        // Saved with the settings; files written before it keep following the theme.
+        let url = folder.appendingPathComponent("export.json")
+        let export = MarkdownExport.Settings(appearance: .system)
+        try export.save(to: url)
+        #expect(try MarkdownExport.Settings.load(from: url).appearance == .system)
+        try Data("{\"format\":\"pdf\",\"paper\":\"a4\",\"margin\":36,\"rasterWidth\":612,\"rasterScale\":2}".utf8).write(to: url)
+        #expect(try MarkdownExport.Settings.load(from: url).appearance == nil)
+    }
+
     @Test func shortDarkPDFPaintsItsPhysicalPage() throws {
         let folder = try folder()
         defer { try? FileManager.default.removeItem(at: folder) }

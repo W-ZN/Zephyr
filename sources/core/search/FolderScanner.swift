@@ -73,6 +73,29 @@ public enum FolderScanner {
         public let snippetRange: NSRange
         /// UTF-16 offset of the hit in the decoded file, for jumping to it.
         public let location: Int
+        /// A ranked-search result (`RelatedSearch`): the heading it sits under, and how many
+        /// UTF-16 units to select at `location` (the matching term, not the whole query).
+        public var heading: String? = nil
+        public var length: Int? = nil
+        public var isRelated: Bool { length != nil }
+
+        public init(related hit: RelatedSearch.Hit) {
+            file = hit.file
+            line = hit.line
+            snippet = hit.snippet
+            snippetRange = hit.snippetRange
+            location = hit.location
+            heading = hit.heading
+            length = hit.length
+        }
+
+        init(file: ScopeFile, line: Int, snippet: String, snippetRange: NSRange, location: Int) {
+            self.file = file
+            self.line = line
+            self.snippet = snippet
+            self.snippetRange = snippetRange
+            self.location = location
+        }
     }
 
     public struct Limits: Sendable {

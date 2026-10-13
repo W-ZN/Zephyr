@@ -13,10 +13,19 @@ public protocol RenderContext: AnyObject {
     /// Remote images load only while this is on (a preference, or allowed for one document; design
     /// §9). Badges Zephyr draws itself and local images never need it.
     var loadsRemoteImages: Bool { get }
+    /// Animated GIFs may play (a preference; off in previews and output). They are stills otherwise.
+    var animatesImages: Bool { get }
+    /// The document is on screen: its window is visible and not covered or minimized.
+    var isShowing: Bool { get }
     func componentNeedsLayout(_ box: ComponentBox)
     func componentNeedsDisplay(_ box: ComponentBox)
     /// Part of a component changed its pixels (one image of an HTML block).
     func componentNeedsDisplay(_ box: ComponentBox, in rect: NSRect)
+}
+
+extension RenderContext {
+    public var animatesImages: Bool { false }
+    public var isShowing: Bool { true }
 }
 
 /// Horizontal room for a block component (design §8.1): the reading column, which every component
@@ -868,7 +877,11 @@ final class ImageBox: ComponentBox {
             drawnRect = frame
             displayedWidth = size.width
             resizeRect = NSRect(x: frame.maxX - 10, y: frame.maxY - 10, width: 10, height: 10)
-            if let image = MainActor.assumeIsolated({ ImageCache.shared.image(for: source.cacheKey) }) {
+            if context?.animatesImages == true, !preparingOutput, source.url.pathExtension.lowercased() == "gif",
+               NSGraphicsContext.current?.isDrawingToScreen == true,
+               let playing = MainActor.assumeIsolated({ GIFPlayer.shared.frame(for: self, key: source.url.path, source: .file(source.url), drawn: size) }) {
+                draw(playing, in: frame, context: ctx)
+            } else if let image = MainActor.assumeIsolated({ ImageCache.shared.image(for: source.cacheKey) }) {
                 draw(image, in: frame, context: ctx)
             } else if preparingOutput || NSGraphicsContext.current?.isDrawingToScreen == false, let image = ImageCache.decode(source.url) {
                 MainActor.assumeIsolated { ImageCache.shared.insert(image, for: source.cacheKey) }
@@ -898,7 +911,13 @@ final class ImageBox: ComponentBox {
                 let frame = NSRect(x: blockFrame.originX(width: size.width, alignment: self.alignment == .center ? .center : .left), y: rect.minY, width: size.width, height: size.height)
                 drawnRect = frame
                 displayedWidth = size.width
-                draw(image, in: frame, context: ctx)
+                if context?.animatesImages == true, !preparingOutput, NSGraphicsContext.current?.isDrawingToScreen == true,
+                   let animation = MainActor.assumeIsolated({ RemoteImages.shared.animation(for: url) }),
+                   let playing = MainActor.assumeIsolated({ GIFPlayer.shared.frame(for: self, key: url.absoluteString, source: .data(animation), drawn: size) }) {
+                    draw(playing, in: frame, context: ctx)
+                } else {
+                    draw(image, in: frame, context: ctx)
+                }
                 return
             }
             let allowed = context?.loadsRemoteImages ?? false

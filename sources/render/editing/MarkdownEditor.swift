@@ -17,6 +17,14 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
     }
     private var remoteImagesAllowedHere = false
     public var loadsRemoteImages: Bool { remoteImagesPreferred || remoteImagesAllowedHere }
+    /// Animated GIFs play on screen (the app's preference; previews and output keep stills).
+    public var isShowing: Bool {
+        guard let window = scrollView.window else { return false }
+        return window.occlusionState.contains(.visible) && !scrollView.isHiddenOrHasHiddenAncestor
+    }
+    public var animatesImages = false {
+        didSet { if !animatesImages { GIFPlayer.shared.stopAll(); blockCanvas.view.needsDisplay = true } }
+    }
     public var frontMatterCollapsed = false {
         didSet {
             guard frontMatterCollapsed != oldValue else { return }
@@ -30,6 +38,14 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
     /// Opens an assistant draft with the preview's bounded excerpt; it never sends a request.
     public var askLinkPreview: ((String, String) -> Void)?
     public var structureDidChange: (() -> Void)?
+    private var findController: FindController?
+    /// Find and Replace for this document, created when first used.
+    public var find: FindController {
+        if let findController { return findController }
+        let controller = FindController(editor: self)
+        findController = controller
+        return controller
+    }
     public var selectionDidChange: (() -> Void)?
     private(set) var revision = 0
     var blockCache: (revision: Int, region: NSRange, blocks: [MarkdownBlock])?
@@ -70,6 +86,7 @@ public final class MarkdownEditor: NSObject, @preconcurrency RenderContext {
             self?.clearLinkPreview()
             self?.hideComponentViewButton()
             self?.revision += 1
+            self?.findController?.documentChanged()
             DispatchQueue.main.async { self?.structureDidChange?() }
         }
     }

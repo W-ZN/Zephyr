@@ -253,8 +253,9 @@ final class AgentAccess {
 
     private func search(_ request: AgentRequest, document url: URL, text: String, starts: [Int], root: URL?, reply: @escaping (AgentResponse) -> Void) {
         guard let query = request.query, !query.isEmpty else { return reply(AgentResponse(error: "Empty query.")) }
-        guard request.folder != true || root != nil else { return reply(AgentResponse(error: "No folder scope is open in Zephyr, so only the document itself can be searched.")) }
-        if request.folder != true {
+        let folderWanted = request.folder == true || request.related == true
+        guard !folderWanted || root != nil else { return reply(AgentResponse(error: "No folder scope is open in Zephyr, so only the document itself can be searched.")) }
+        if !folderWanted {
             let ns = text as NSString
             var matches: [AgentMatch] = []
             var at = NSRange(location: 0, length: ns.length)
@@ -273,6 +274,16 @@ final class AgentAccess {
             return reply(response)
         }
         guard let root else { return }
+        if request.related == true {
+            DispatchQueue.global(qos: .userInitiated).async {
+                var response = AgentResponse()
+                response.matches = RelatedSearch.search(query, in: FolderScanner.markdownFiles(in: root), expander: NeighborExpander(), isCancelled: { false }).map {
+                    AgentMatch(file: $0.file.relativePath, line: $0.line, text: ($0.heading.map { "\($0) — " } ?? "") + $0.snippet)
+                }
+                DispatchQueue.main.async { reply(response) }
+            }
+            return
+        }
         DispatchQueue.global(qos: .userInitiated).async {
             var limits = FolderScanner.Limits()
             limits.maxResults = 200

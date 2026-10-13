@@ -206,6 +206,8 @@ final class ScopeSidebarView: NSView, NSTableViewDataSource, NSTableViewDelegate
     private(set) var isCompact = false
 
     private var results: [FolderScanner.Match] = []
+    /// Ranked passages (`RelatedSearch`), listed after the literal matches under their own heading.
+    private var related: [FolderScanner.Match] = []
     private var rootName: String?
     private var searchDebounce: DispatchWorkItem?
     private var previewWork: DispatchWorkItem?
@@ -788,7 +790,7 @@ final class ScopeSidebarView: NSView, NSTableViewDataSource, NSTableViewDelegate
         let query = !searchField.stringValue.isEmpty
         resultsScroll.isHidden = !(tab == .search && query)
         listScroll.isHidden = !resultsScroll.isHidden
-        let none = tab == .search && query && results.isEmpty && !searching
+        let none = tab == .search && query && results.isEmpty && related.isEmpty && !searching
         empty.stringValue = String(localized: "No matches for “\(searchField.stringValue)”.")
         empty.isHidden = !none
     }
@@ -805,12 +807,19 @@ final class ScopeSidebarView: NSView, NSTableViewDataSource, NSTableViewDelegate
 
     func clearResults() {
         results = []
+        related = []
         resultsTable.reloadData()
         updateStatus()
     }
 
     func appendResults(_ batch: [FolderScanner.Match]) {
         results += batch
+        resultsTable.reloadData()
+        updateStatus()
+    }
+
+    func setRelated(_ batch: [FolderScanner.Match]) {
+        related = batch
         resultsTable.reloadData()
         updateStatus()
     }
@@ -851,9 +860,8 @@ final class ScopeSidebarView: NSView, NSTableViewDataSource, NSTableViewDelegate
     }
 
     @objc private func resultClicked() {
-        let row = resultsTable.clickedRow
-        guard row >= 0, row < results.count else { return }
-        controller?.open(match: results[row], length: (searchField.stringValue as NSString).length)
+        guard let match = match(at: resultsTable.clickedRow) else { return }
+        controller?.open(match: match, length: match.length ?? (searchField.stringValue as NSString).length)
         controller?.sidebarDidOpenItem()
     }
 
@@ -861,11 +869,22 @@ final class ScopeSidebarView: NSView, NSTableViewDataSource, NSTableViewDelegate
 
     func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? { FlatRowView() }
 
-    func numberOfRows(in tableView: NSTableView) -> Int { results.count }
+    func numberOfRows(in tableView: NSTableView) -> Int { results.count + (related.isEmpty ? 0 : related.count + 1) }
+
+    /// The match shown in `row`; nil for the heading above the related ones.
+    private func match(at row: Int) -> FolderScanner.Match? {
+        guard row >= 0 else { return nil }
+        if row < results.count { return results[row] }
+        let i = row - results.count - 1
+        return i >= 0 && i < related.count ? related[i] : nil
+    }
+
+    func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool { match(at: row) != nil }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        guard let match = match(at: row) else { return ResultHeaderCell.make(in: tableView) }
         let cell = ResultCell.make(in: tableView)
-        cell.configure(match: results[row])
+        cell.configure(match: match)
         return cell
     }
 }
@@ -881,6 +900,8 @@ private final class ResultCell: NSTableCellView {
         c.file.font = Tokens.font(11, .medium)
         c.file.textColor = Tokens.ink3
         c.file.lineBreakMode = .byTruncatingMiddle
+        c.file.maximumNumberOfLines = 1
+        c.file.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         c.snippet.font = Tokens.font(12)
         c.snippet.maximumNumberOfLines = 2
         c.snippet.lineBreakMode = .byTruncatingTail
@@ -895,16 +916,38 @@ private final class ResultCell: NSTableCellView {
             stack.leadingAnchor.constraint(equalTo: c.leadingAnchor), stack.trailingAnchor.constraint(equalTo: c.trailingAnchor),
             stack.topAnchor.constraint(equalTo: c.topAnchor), stack.bottomAnchor.constraint(equalTo: c.bottomAnchor),
             c.snippet.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -26),
+            c.file.widthAnchor.constraint(lessThanOrEqualTo: stack.widthAnchor, constant: -26),
         ])
         return c
     }
 
     func configure(match: FolderScanner.Match) {
-        file.stringValue = "\(match.file.relativePath):\(match.line)"
+        file.stringValue = match.isRelated ? match.file.relativePath + (match.heading.map { " › " + $0 } ?? "") : "\(match.file.relativePath):\(match.line)"
         let text = NSMutableAttributedString(string: match.snippet, attributes: [.font: Tokens.font(12), .foregroundColor: Tokens.ink])
         if NSMaxRange(match.snippetRange) <= text.length {
             text.addAttributes([.font: Tokens.font(12, .semibold), .foregroundColor: Tokens.accent], range: match.snippetRange)
         }
         snippet.attributedStringValue = text
+    }
+}
+
+/// The quiet heading between the literal matches and the related passages.
+private final class ResultHeaderCell: NSTableCellView {
+    static func make(in table: NSTableView) -> ResultHeaderCell {
+        if let c = table.makeView(withIdentifier: .init("resultHeader"), owner: nil) as? ResultHeaderCell { return c }
+        let c = ResultHeaderCell()
+        c.identifier = .init("resultHeader")
+        let label = NSTextField(labelWithString: String(localized: "Related"))
+        label.font = Tokens.font(11, .medium)
+        label.textColor = Tokens.ink3
+        label.translatesAutoresizingMaskIntoConstraints = false
+        c.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: c.leadingAnchor, constant: 14),
+            label.topAnchor.constraint(equalTo: c.topAnchor, constant: 12),
+            label.bottomAnchor.constraint(equalTo: c.bottomAnchor, constant: -4),
+        ])
+        c.setAccessibilityLabel(String(localized: "Related passages"))
+        return c
     }
 }

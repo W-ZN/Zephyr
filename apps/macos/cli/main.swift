@@ -11,11 +11,13 @@ let zephyrVersion = "0.1.3"
 let usage = """
 usage: zephyr open <file.md>...         open files in Zephyr
        zephyr files [folder]            list Markdown files in the folder scope
-       zephyr search <text> [folder]    literal search (ASCII case-insensitive)
+       zephyr search <text> [folder] [--related]
+                                        literal search (ASCII case-insensitive); --related ranks passages
+                                        by relevance to the words (a question, other wording, Chinese)
        zephyr outline <file.md> [--depth N]   the headings as Zephyr's outline shows them
        zephyr stats <file.md>           characters, words, paragraphs, as Zephyr counts them
        zephyr export <file.md> --output path [--format pdf|html|png|jpg|txt] [--theme selected|THEME]
-                     [--text-size theme|points] [--line-height theme|N]
+                     [--appearance theme|system|light|dark] [--text-size theme|points] [--line-height theme|N]
                      [--paper letter|a4] [--margin points] [--raster-width points] [--scale 1|2|3] [--overwrite]
        zephyr home [folder]             folder home: Markdown files and home notes
        zephyr activity [--days N]       daily opens and observed changes (1–365 days)
@@ -31,7 +33,7 @@ usage: zephyr open <file.md>...         open files in Zephyr
        zephyr sessions                  list shared documents
        zephyr context                   path, revision, selection and outline
        zephyr read [path] [--lines A:B] the document as edited, or a file in its folder scope
-       zephyr find <text> [--folder]    search the document or its folder scope
+       zephyr find <text> [--folder|--related]   search the document or its folder scope
        zephyr propose --find TEXT --replace TEXT [...] [--summary S] [--wait]
        zephyr propose --json FILE|-     {"summary": "...", "edits": [{"find": "...", "replace": "..."}]}
        zephyr mcp                       MCP server on stdio (get_context, search, read, propose_patch,
@@ -115,11 +117,19 @@ case "activity":
         }
     } catch { fail(error.localizedDescription) }
 case "search":
-    guard let query = args.first else { fail(usage) }
-    let root = scopeRoot(args.dropFirst().first)
+    let related = args.contains("--related")
+    let words = args.filter { $0 != "--related" }
+    guard let query = words.first else { fail(usage) }
+    let root = scopeRoot(words.dropFirst().first)
     let files = FolderScanner.markdownFiles(in: root)
-    FolderScanner.search(query, in: files, isCancelled: { false }) { batch in
-        for m in batch { print("\(m.file.relativePath):\(m.line): \(m.snippet)") }
+    if related {
+        for h in RelatedSearch.search(query, in: files, expander: NeighborExpander(), isCancelled: { false }) {
+            print("\(h.file.relativePath):\(h.line): \(h.heading.map { "\($0) — " } ?? "")\(h.snippet)")
+        }
+    } else {
+        FolderScanner.search(query, in: files, isCancelled: { false }) { batch in
+            for m in batch { print("\(m.file.relativePath):\(m.line): \(m.snippet)") }
+        }
     }
 case "outline":
     var depth = 6
@@ -143,7 +153,7 @@ case "stats":
     print("(prose only: code, formulas, diagrams and front matter are not counted)")
 case "export":
     guard let input = args.first else { fail(usage) }
-    let exportOptions: Set<String> = ["--format", "--theme", "--text-size", "--line-height", "--paper", "--margin", "--raster-width", "--scale", "--output", "--overwrite"]
+    let exportOptions: Set<String> = ["--format", "--theme", "--text-size", "--line-height", "--appearance", "--paper", "--margin", "--raster-width", "--scale", "--output", "--overwrite"]
     if let unknown = args.first(where: { $0.hasPrefix("--") && !exportOptions.contains($0) }) { fail("Unknown export option: \(unknown)") }
     var export: MarkdownExport.Settings
     do { export = try MainActor.assumeIsolated { try MarkdownExport.Settings.load() } }
@@ -170,6 +180,14 @@ case "export":
         else {
             guard let height = Double(args[heightAt + 1]), MarkdownExport.Settings.lineHeights.contains(CGFloat(height)) else { fail("--line-height takes theme or 1.2 to 2.4") }
             export.lineHeight = CGFloat(height)
+        }
+    }
+    if let at = args.firstIndex(of: "--appearance") {
+        guard at + 1 < args.count, !args[at + 1].hasPrefix("--") else { fail("--appearance takes theme, system, light or dark") }
+        if args[at + 1] == "theme" { export.appearance = nil }
+        else {
+            guard let mode = MarkdownExport.Settings.Appearance(rawValue: args[at + 1]) else { fail("--appearance takes theme, system, light or dark") }
+            export.appearance = mode
         }
     }
     if let paperAt = args.firstIndex(of: "--paper") {

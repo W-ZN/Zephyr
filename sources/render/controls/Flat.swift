@@ -18,6 +18,9 @@ public enum Tokens {
     public static let accentSoft = Palette.color(.accentSoft)
     /// Text selection on the canvas.
     public static let selection = Palette.color(.selection)
+    /// The Find bar's matches on the canvas, and the one it is on: the accent, thinly and firmly.
+    public static let findMatch = NSColor(name: nil) { _ in Palette.color(.accent).withAlphaComponent(0.22) }
+    public static let findCurrent = NSColor(name: nil) { _ in Palette.color(.accent).withAlphaComponent(0.46) }
     public static let onAccent = Palette.color(.onAccent)
     public static let danger = Palette.color(.danger)
     public static let added = Palette.color(.added)

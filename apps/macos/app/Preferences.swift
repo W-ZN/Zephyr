@@ -31,6 +31,9 @@ enum Preferences {
     /// Images on the web that documents show (a README's release badge, a screenshot), over HTTPS
     /// without cookies (design §9). Static badges are drawn by Zephyr and need no request.
     static let remoteImages = "remoteImages"
+    /// Animated GIFs play while they are on screen (at most two at a time; Reduce Motion and
+    /// Low Power Mode keep them still).
+    static let animateImages = "animateImages"
 
     static func register() {
         UserDefaults.standard.register(defaults: [
@@ -45,6 +48,7 @@ enum Preferences {
             linkPreviews: true,
             linkPreviewDelay: 0.8,
             remoteImages: true,
+            animateImages: true,
             "outlineBesideText": true,
             "outlineDepth": 3,
         ])
@@ -119,4 +123,5 @@ enum Preferences {
 
     static let frontMatterDidChange = Notification.Name("ZephyrFrontMatterDidChange")
     static let remoteImagesDidChange = Notification.Name("ZephyrRemoteImagesDidChange")
+    static let animateImagesDidChange = Notification.Name("ZephyrAnimateImagesDidChange")
 }

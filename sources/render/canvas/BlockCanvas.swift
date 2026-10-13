@@ -40,6 +40,9 @@ public final class BlockCanvas: NSObject {
     public var newline = "\n"
     public var isEditable = true { didSet { view.updateCaret() } }
     public var selectionDidChange: (() -> Void)?
+    /// The Find bar's matches in order, and the index of the one it is on (design §8).
+    var findMatches: [NSRange] = [] { didSet { view.needsDisplay = true } }
+    var findCurrent: Int?
     /// After every change to the text (typed, undone, merged, proposed).
     public var textDidChange: (() -> Void)?
     private(set) var presenter: MarkdownPresenter?
@@ -152,7 +155,6 @@ public final class BlockCanvas: NSObject {
         scrollView.autohidesScrollers = scrollView.scrollerStyle == .overlay
         scrollView.drawsBackground = true
         scrollView.backgroundColor = Tokens.canvas
-        scrollView.findBarPosition = .aboveContent
         view.autoresizingMask = [.width]
         scrollView.contentView.postsBoundsChangedNotifications = true
         NotificationCenter.default.addObserver(self, selector: #selector(boundsChanged), name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
@@ -775,12 +777,37 @@ public final class BlockCanvas: NSObject {
         }
     }
 
+    private func drawFindMatches(in i: Int, dirty: NSRect) {
+        let unit = units.range(of: i)
+        var lo = 0, hi = findMatches.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if NSMaxRange(findMatches[mid]) <= unit.location { lo = mid + 1 } else { hi = mid }
+        }
+        var k = lo
+        while k < findMatches.count, findMatches[k].location < NSMaxRange(unit) {
+            let current = k == findCurrent
+            (current ? Tokens.findCurrent : Tokens.findMatch).setFill()
+            for r in rects(for: findMatches[k], inUnit: i, area: dirty) {
+                let path = NSBezierPath(roundedRect: r.insetBy(dx: -1, dy: 1), xRadius: 3, yRadius: 3)
+                path.fill()
+                if current {
+                    Tokens.accent.setStroke()
+                    path.lineWidth = 1
+                    path.stroke()
+                }
+            }
+            k += 1
+        }
+    }
+
     private func drawUnit(_ i: Int, _ layout: UnitLayout, at unitTop: CGFloat, dirty: NSRect, in context: CGContext, background: Bool, needsToDraw: ((NSRect) -> Bool)?) {
         let content = layout.content
         let m = content.metrics
         if background {
             if let code = content.code { drawCodeSlice(code, layout, at: unitTop) }
             drawInlineCode(layout, at: unitTop)
+            if !findMatches.isEmpty { drawFindMatches(in: i, dirty: dirty) }
             if selection.length > 0 {
                 Tokens.selection.setFill()
                 for r in rects(for: selection, inUnit: i, area: dirty) { r.fill(using: .sourceOver) }

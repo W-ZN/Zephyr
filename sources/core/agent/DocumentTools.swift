@@ -38,8 +38,9 @@ public enum DocumentTools {
             properties = ["path": ["type": "string", "description": "Relative to the folder scope; omit for the document."],
                           "lines": ["type": "array", "items": ["type": "integer"], "minItems": 2, "maxItems": 2]]
         case .search:
-            description = "Find literal text (case-insensitive) in the document, or with folder=true in the Markdown files of its folder scope. Returns file:line: text."
-            properties = ["query": ["type": "string"], "folder": ["type": "boolean"]]
+            description = "Find literal text (case-insensitive) in the document, or with folder=true in the Markdown files of its folder scope. Returns file:line: text. With related=true, instead rank passages of the folder scope by how well they answer the words of query (a question or topic, not exact text; works across wording and in Chinese); returns file:line: heading — text, best first."
+            properties = ["query": ["type": "string"], "folder": ["type": "boolean"],
+                          "related": ["type": "boolean", "description": "Rank folder passages by relevance to the query's words (implies folder)."]]
             required = ["query"]
         case .proposePatch:
             description = "Propose edits to the document. Each edit replaces the only occurrence of `find` (exact current text; include enough context to be unique) with `replace`. The user reviews it in Zephyr and applies or discards it; nothing changes without approval."
@@ -82,6 +83,10 @@ public enum DocumentTools {
             if let folder = a["folder"] {
                 guard let f = folder as? Bool else { return .failure(ToolError("folder must be true or false.")) }
                 request.folder = f
+            }
+            if let related = a["related"] {
+                guard let r = related as? Bool else { return .failure(ToolError("related must be true or false.")) }
+                request.related = r
             }
         case .proposePatch:
             guard let summary = a["summary"] as? String, let raw = a["edits"] as? [[String: Any]], !raw.isEmpty else {

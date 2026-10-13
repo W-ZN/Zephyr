@@ -112,12 +112,12 @@ enum MainMenu {
         m.addItem(item(String(localized: "Select All"), #selector(NSText.selectAll(_:)), "a"))
         m.addItem(.separator())
         let find = NSMenu()
-        let findAction = #selector(NSTextView.performFindPanelAction(_:))
-        find.addItem(item(String(localized: "Find…"), findAction, "f", tag: Int(NSFindPanelAction.showFindPanel.rawValue)))
-        find.addItem(item(String(localized: "Find and Replace…"), findAction, "f", [.command, .option], tag: 12))
-        find.addItem(item(String(localized: "Find Next"), findAction, "g", tag: Int(NSFindPanelAction.next.rawValue)))
-        find.addItem(item(String(localized: "Find Previous"), findAction, "g", [.command, .shift], tag: Int(NSFindPanelAction.previous.rawValue)))
-        find.addItem(item(String(localized: "Use Selection for Find"), findAction, "e", tag: Int(NSFindPanelAction.setFindString.rawValue)))
+        // Zephyr's own bar (FindController): the window controller answers, whoever has the focus.
+        find.addItem(item(String(localized: "Find…"), #selector(DocumentWindowController.showFind(_:)), "f"))
+        find.addItem(item(String(localized: "Find and Replace…"), #selector(DocumentWindowController.showFindAndReplace(_:)), "f", [.command, .option]))
+        find.addItem(item(String(localized: "Find Next"), #selector(DocumentWindowController.findNext(_:)), "g"))
+        find.addItem(item(String(localized: "Find Previous"), #selector(DocumentWindowController.findPrevious(_:)), "g", [.command, .shift]))
+        find.addItem(item(String(localized: "Use Selection for Find"), #selector(DocumentWindowController.useSelectionForFind(_:)), "e"))
         // ⌘J opens the assistant (design §8), as in Notion; this keeps its place without the key.
         find.addItem(item(String(localized: "Jump to Selection"), #selector(NSTextView.centerSelectionInVisibleArea(_:)), ""))
         m.addItem(submenu(String(localized: "Find"), find))
